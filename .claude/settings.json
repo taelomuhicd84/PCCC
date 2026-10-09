@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m pccc_checker:*)",
+      "Bash(PYTHONPATH=src python -m pccc_checker:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(python scripts/make_sample_pdf.py:*)",
+      "PowerShell(python -m pccc_checker:*)",
+      "PowerShell(python -m pytest:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./api.txt)"
+    ]
+  },
+  "env": {
+    "PYTHONPATH": "src",
+    "PYTHONIOENCODING": "utf-8"
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .claude/hooks/run_tests_on_stop.py",
+            "timeout": 300
+          }
+        ]
+      }
+    ]
+  }
+}

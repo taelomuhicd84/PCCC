@@ -1,0 +1,14 @@
+# Cấu hình chung. Khoá API đặt trong .env (KHÔNG commit).
+gemini:
+  model: gemini-2.5-flash     # đổi sang gemini-2.5-pro nếu bản vẽ phức tạp
+  dpi: 150                    # độ phân giải render ảnh gửi Gemini
+  max_tile_px: 3000           # cạnh dài tối đa của mỗi ảnh tile
+  temperature: 0.1
+  retries: 4                  # số lần thử lại mỗi model (chờ 5,10,20,40 s) khi Gemini quá tải 503/429
+  fallback_models:            # model dự phòng khi model chính lỗi liên tục
+    - gemini-2.5-flash-lite
+rules:
+  packs:                      # các rule pack trong thư mục rules/ (thêm TCVN khác sau này)
+    - qcvn06_2022_sd01_2023.yaml
+annotate:
+  min_severity: info          # error | warning | info

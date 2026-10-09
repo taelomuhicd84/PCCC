@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+data/input/*
+data/output/*
+data/cache/*
+!data/**/.gitkeep
+.claude/settings.local.json
+api.txt

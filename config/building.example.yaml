@@ -1,0 +1,11 @@
+# Thông tin công trình — điền khi khung tên/thuyết minh không thể hiện. Dùng: --building config/building.yaml
+function_group: F1.3          # nhóm nguy hiểm cháy theo công năng (Phụ lục A QCVN 06)
+height_pccc_m: 24.5           # chiều cao PCCC
+floors_above: 8
+basements: 1
+fire_resistance_level: II     # bậc chịu lửa
+structural_hazard_class: S0
+floor_area_m2: 600
+max_occupants_per_floor: 60
+has_auto_fire_alarm: true
+has_auto_sprinkler: true

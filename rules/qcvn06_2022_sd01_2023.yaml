@@ -1,0 +1,387 @@
+# Rule pack: QCVN 06:2022/BXD + Sửa đổi 1:2023 (Thông tư 09/2023/TT-BXD, hiệu lực 01/12/2023)
+#
+# Nguồn đối chiếu: docs/regulations/QCVN 06 SỬA ĐỔI BỔ SUNG 10.2023.pdf/.docx (bản hợp nhất QCVN 06:2022 + SĐ1:2023).
+# - `verified: true`  = giá trị + điều kiện đã đối chiếu nguyên văn bản hợp nhất trên.
+# - `source: SD01`    = nội dung được sửa/bổ sung bởi SĐ1:2023; `QCVN06` = giữ nguyên từ bản 2022.
+# - Tool chỉ kiểm tra được phần thể hiện bằng số trên bản vẽ; các ngoại lệ phức tạp ghi trong `message`/comment
+#   để reviewer (agent compliance-reviewer hoặc kỹ sư) xem xét.
+# - Đơn vị: mét. Điều kiện `when`/`filter`: thông tin công trình + thuộc tính phần tử.
+#   Hậu tố: _lt _lte _gt _gte _in _nin _ne ; không hậu tố = bằng ; `any: [...]` = HOẶC.
+#   Giá trị thiếu => điều kiện không khớp.
+
+meta:
+  name: QCVN06_2022_SD01_2023
+  title: "QCVN 06:2022/BXD - An toàn cháy cho nhà và công trình (hợp nhất Sửa đổi 1:2023)"
+  version: 0.2.0
+  checked_against: "docs/regulations/QCVN 06 SỬA ĐỔI BỔ SUNG 10.2023 (đối chiếu 2026-10-10)"
+
+rules:
+  # ================================================================ 3.2 LỐI RA THOÁT NẠN
+  - id: EXIT-DOOR-HEIGHT
+    source: QCVN06
+    clause: "QCVN 06:2022 khoản 3.2.9"
+    title: Chiều cao thông thuỷ lối ra thoát nạn >= 1,9 m
+    check: min_attr
+    target: [exit_door]
+    attr: height_m
+    value: 1.9
+    severity: error
+    message: "Lối ra {label}: chiều cao thông thuỷ {actual} m < {required} m"
+    verified: true
+
+  - id: EXIT-DOOR-WIDTH
+    source: QCVN06
+    clause: "QCVN 06:2022 khoản 3.2.9"
+    title: Chiều rộng thông thuỷ lối ra thoát nạn
+    check: min_attr
+    target: [exit_door]
+    attr: width_m
+    value: 0.8
+    default_note: "các trường hợp còn lại"
+    cases:
+      - when: {function_group: F1.1, occupants_gt: 15}
+        value: 1.2
+        note: "gian phòng F1.1 > 15 người"
+      - when: {function_group_nin: [F1.1, F1.3], occupants_gt: 50}
+        value: 1.2
+        note: "> 50 người thoát nạn (trừ F1.3)"
+    severity: error
+    message: "Lối ra {label}: chiều rộng thông thuỷ {actual} m < {required} m (cửa 2 cánh chỉ tính bên cánh mở)"
+    verified: true
+
+  - id: EXIT-DOOR-EI30-28M
+    source: QCVN06
+    clause: "QCVN 06:2022 khoản 3.2.9"
+    title: Cửa thoát nạn nhà > 28 m phải là cửa chống cháy >= EI 30
+    check: min_fire_rating
+    target: [exit_door, fire_door, door]
+    filter: {height_pccc_m_gt: 28, function_group_nin: [F1.3, F1.4], leads_to_in: [stair, corridor, lobby]}
+    value: EI30
+    severity: error
+    message: "Cửa {label}: giới hạn chịu lửa {actual} < {required} (nhà cao PCCC > 28 m, cửa từ hành lang/sảnh/buồng thang)"
+    verified: true
+
+  - id: EXIT-DOOR-EI30-28M-MISSING
+    source: QCVN06
+    clause: "QCVN 06:2022 khoản 3.2.9"
+    title: Cửa thoát nạn nhà > 28 m chưa ghi giới hạn chịu lửa
+    check: required_attr
+    target: [exit_door, door]
+    filter: {height_pccc_m_gt: 28, function_group_nin: [F1.3, F1.4], leads_to_in: [stair, corridor, lobby]}
+    attr: fire_rating
+    severity: warning
+    message: "Cửa {label}: nhà cao PCCC > 28 m — cửa thoát nạn từ hành lang/sảnh/buồng thang phải là cửa chống cháy >= EI 30 nhưng bản vẽ chưa thể hiện EI"
+    verified: true
+
+  - id: EXIT-DOOR-DIRECTION
+    source: QCVN06
+    clause: "QCVN 06:2022 khoản 3.2.10"
+    title: Cửa trên đường thoát nạn mở theo chiều thoát ra ngoài
+    check: bool_attr
+    target: [exit_door, fire_door, door]
+    filter: {is_exit: true, function_group_nin: [F1.3, F1.4]}
+    attr: opens_outward
+    value: true
+    severity: warning
+    message: "Cửa {label} trên lối ra thoát nạn mở ngược chiều thoát nạn. Ngoại lệ 3.2.10: gian phòng <= 15 người (trừ hạng A, B), kho <= 200 m² không có người thường xuyên, buồng vệ sinh, lối ra chiếu thang loại 3"
+    verified: true
+
+  - id: EXIT-DOOR-DATA
+    source: QCVN06
+    clause: "QCVN 06:2022 khoản 3.2.9"
+    title: Thiếu kích thước cửa thoát nạn
+    check: missing_data
+    target: [exit_door]
+    attrs: [width_m, height_m]
+    severity: info
+    message: "Lối ra {label}: bản vẽ không thể hiện/không đọc được {missing} — cần kiểm tra thủ công"
+    verified: true
+
+  - id: EXIT-SEPARATION
+    source: SD01
+    clause: "QCVN 06:2022 khoản 3.2.8 (sửa đổi theo SĐ1:2023)"
+    title: Các lối ra thoát nạn phải bố trí phân tán
+    check: exit_separation
+    ratio: 0.5               # >= 1/2 đường chéo lớn nhất mặt bằng
+    ratio_sprinkler: 0.3333  # >= 1/3 nếu toàn nhà có sprinkler
+    measure_threshold_m: 7.0 # SĐ1: đo cạnh xa nhất; nếu < 7 m thì đo cạnh gần nhất
+    default_scale: null      # vd "1:100" nếu bản vẽ không ghi tỉ lệ
+    severity: error
+    message: "Hai lối ra phân tán nhất ({pair}) chỉ cách ~{actual} m < {required} m yêu cầu"
+    verified: true
+
+  - id: MIN-EXITS-PER-FLOOR
+    source: SD01
+    clause: "QCVN 06:2022 khoản 3.2.6, 3.2.7; điểm 3.2.6.2 a (sửa đổi theo SĐ1:2023)"
+    title: Số lối ra thoát nạn từ tầng
+    check: min_exits_per_floor
+    # Điểm 3.2.6.2 a: tầng nhà F1.2, F2, F3, F4.2, F4.3, F4.4 được 1 lối ra khi thoả đồng thời các điều kiện.
+    # Tool CHƯA kiểm: không để xe cơ giới/kho A,B,C ở tầng có lối ra; lối thoát khẩn cấp (ban công, lô gia, cửa sổ
+    # có thiết bị hỗ trợ) hoặc lên sân thượng thoáng; nhà > 3 tầng/> 9 m; các trường hợp b), c), d) (tầng kỹ thuật,
+    # F1.3 500-550 m², F4.1). Reviewer/kỹ sư phải xác nhận khi bản vẽ chỉ có 1 lối ra.
+    single_exit_cases:
+      - any: &groups [{function_group_in: [F1.2, F4.2, F4.3, F4.4]}, {function_class_in: [F2, F3]}]
+        height_pccc_m_lte: 15
+        floor_area_m2_lte: 300
+        max_occupants_per_floor_lte: 20
+      - any: *groups
+        height_pccc_m_gt: 15
+        height_pccc_m_lte: 21
+        floor_area_m2_lte: 200
+        max_occupants_per_floor_lte: 20
+        any_protection: true   # chữa cháy tự động, hoặc báo cháy tự động toàn nhà nếu không thể (xem engine)
+      - any: *groups
+        height_pccc_m_gt: 21
+        height_pccc_m_lte: 25
+        floor_area_m2_lte: 150
+        max_occupants_per_floor_lte: 15
+        has_auto_fire_alarm: true
+        has_auto_sprinkler: true
+    severity: error
+    message: "Tầng chỉ có {actual} lối ra thoát nạn (yêu cầu >= {required}, trừ các trường hợp tại 3.2.6.2)"
+    verified: true
+
+  # ================================================================ 3.3 ĐƯỜNG THOÁT NẠN / HÀNH LANG
+  - id: CORRIDOR-WIDTH
+    source: QCVN06
+    clause: "QCVN 06:2022 khoản 3.3.6"
+    title: Chiều rộng thông thuỷ đoạn nằm ngang của đường thoát nạn
+    check: min_attr
+    target: [corridor]
+    attr: width_m
+    value: 1.0
+    default_note: "các trường hợp còn lại"
+    cases:
+      - when: {function_class: F1, occupants_gt: 15}
+        value: 1.2
+        note: "hành lang chung > 15 người nhóm F1"
+      - when: {function_class_ne: F1, occupants_gt: 50}
+        value: 1.2
+        note: "hành lang chung > 50 người"
+      - when: {single_workplace: true}
+        value: 0.7
+        note: "lối đi đến chỗ làm việc đơn lẻ"
+    severity: error
+    message: "Hành lang {label}: rộng {actual} m < {required} m (trừ phần cánh cửa mở nhô ra hành lang)"
+    verified: true
+
+  - id: CORRIDOR-HEIGHT
+    source: QCVN06
+    clause: "QCVN 06:2022 khoản 3.3.6"
+    title: Chiều cao thông thuỷ đoạn nằm ngang đường thoát nạn >= 2 m
+    check: min_attr
+    target: [corridor]
+    attr: height_m
+    value: 2.0
+    severity: error
+    message: "Hành lang {label}: cao thông thuỷ {actual} m < {required} m"
+    verified: true
+
+  - id: CORRIDOR-LENGTH-60M
+    source: QCVN06
+    clause: "QCVN 06:2022 khoản 3.3.5"
+    title: Hành lang dài hơn 60 m phải phân đoạn
+    check: max_attr
+    target: [corridor]
+    attr: length_m
+    value: 60
+    severity: warning
+    message: "Hành lang {label} dài {actual} m > {required} m: phải phân chia bằng vách ngăn cháy loại 2 (hoặc vách/màn ngăn khói) thành các đoạn <= 60 m"
+    verified: true
+
+  # ================================================================ 3.4 THANG BỘ
+  - id: STAIR-FLIGHT-WIDTH
+    source: SD01
+    clause: "QCVN 06:2022 khoản 3.4.1 (sửa đổi theo SĐ1:2023)"
+    title: Chiều rộng bản thang thoát nạn
+    check: min_attr
+    target: [stair]
+    filter: {is_evacuation: true}
+    attr: flight_width_m
+    value: 0.9
+    default_note: "các trường hợp còn lại"
+    cases:   # case đầu tiên khớp được áp dụng -> xếp từ nghiêm đến nhẹ
+      - when: {function_group: F1.1, people_per_floor_gt: 15}
+        value: 1.2
+        note: "F1.1 > 15 người/tầng thoát qua thang"
+      - when: {function_group: F1.1}
+        value: 1.0
+        note: "F1.1 <= 15 người/tầng thoát qua thang"
+      - when: {max_occupants_per_floor_gt: 200}
+        value: 1.2
+        note: "> 200 người trên tầng bất kỳ (trừ tầng 1)"
+      - when: {single_workplace: true}
+        value: 0.7
+        note: "thang dẫn đến chỗ làm việc đơn lẻ"
+      - when: {height_pccc_m_lte: 15, people_per_floor_lte: 15}
+        value: 0.7
+        note: "nhà cao PCCC <= 15 m và <= 15 người/tầng"
+    severity: error
+    message: "Thang {label}: bản thang rộng {actual} m < {required} m (SĐ1 cho phép tính toán theo tài liệu chuẩn nếu không đảm bảo)"
+    verified: true
+
+  - id: STAIR-TREAD
+    source: QCVN06
+    clause: "QCVN 06:2022 khoản 3.4.2"
+    title: Chiều rộng mặt bậc >= 25 cm
+    check: min_attr
+    target: [stair]
+    filter: {is_evacuation: true}
+    attr: tread_m
+    value: 0.25
+    severity: error
+    message: "Thang {label}: mặt bậc {actual} m < {required} m (trừ cầu thang ngoài nhà; ngoại lệ thang cong đón tiếp, thang lên tầng kỹ thuật/mái)"
+    verified: true
+
+  - id: STAIR-RISER
+    source: QCVN06
+    clause: "QCVN 06:2022 khoản 3.4.2"
+    title: Chiều cao bậc <= 22 cm
+    check: max_attr
+    target: [stair]
+    attr: riser_m
+    value: 0.22
+    severity: error
+    message: "Thang {label}: chiều cao bậc {actual} m > {required} m"
+    verified: true
+
+  - id: STAIR-RISER-MIN
+    source: QCVN06
+    clause: "QCVN 06:2022 khoản 3.4.2"
+    title: Chiều cao bậc >= 5 cm
+    check: min_attr
+    target: [stair]
+    attr: riser_m
+    value: 0.05
+    severity: error
+    message: "Thang {label}: chiều cao bậc {actual} m < {required} m"
+    verified: true
+
+  - id: STAIR-SLOPE
+    source: QCVN06
+    clause: "QCVN 06:2022 khoản 3.4.2"
+    title: Độ dốc thang thoát nạn <= 1:1 (45°)
+    check: compare_attrs
+    target: [stair]
+    filter: {is_evacuation: true}
+    left: riser_m
+    op: "<="
+    right: tread_m
+    severity: error
+    message: "Thang {label}: độ dốc > 1:1 (bậc cao {actual} m > mặt bậc {required} m)"
+    verified: true
+
+  - id: STAIR-LANDING
+    source: QCVN06
+    clause: "QCVN 06:2022 khoản 3.4.3"
+    title: Chiếu thang không hẹp hơn bản thang
+    check: compare_attrs
+    target: [stair]
+    left: landing_width_m
+    op: ">="
+    right: flight_width_m
+    severity: error
+    message: "Thang {label}: chiếu thang rộng {actual} m < bản thang {required} m"
+    verified: true
+
+  - id: STAIR-DATA
+    source: QCVN06
+    clause: "QCVN 06:2022 khoản 3.4.1"
+    title: Thiếu thông số thang thoát nạn
+    check: missing_data
+    target: [stair]
+    filter: {is_evacuation: true}
+    attrs: [flight_width_m]
+    severity: info
+    message: "Thang {label}: không đọc được {missing} — cần kiểm tra thủ công"
+    verified: true
+
+  - id: STAIR-DOOR-SELF-CLOSING
+    source: QCVN06
+    clause: "QCVN 06:2022 khoản 3.2.11"
+    title: Cửa ra vào buồng thang bộ phải có cơ cấu tự đóng, chèn kín khe
+    check: bool_attr
+    target: [door, fire_door, exit_door]
+    filter: {leads_to: stair}
+    attr: self_closing
+    value: true
+    severity: warning
+    message: "Cửa {label} vào buồng thang không có cơ cấu tự đóng (trừ cửa buồng thang mở trực tiếp ra ngoài)"
+    verified: true
+
+  - id: STAIR-TYPE3-HEIGHT
+    source: SD01
+    clause: "QCVN 06:2022 khoản 3.4.11 (bổ sung theo SĐ1:2023)"
+    title: Cầu thang bộ loại 3 làm thang thoát nạn chỉ cho nhà cao PCCC <= 50 m
+    check: condition_flag
+    target: [stair]
+    when: {stair_type: loai3, height_pccc_m_gt: 50}
+    severity: error
+    message: "Thang {label} là cầu thang bộ loại 3 nhưng nhà cao PCCC > 50 m"
+    verified: true
+
+  - id: STAIR-TYPE3-FALL
+    source: SD01
+    clause: "QCVN 06:2022 khoản 3.4.11 (bổ sung theo SĐ1:2023)"
+    title: Cầu thang loại 3 nhà 28-50 m cần chống rơi ngã
+    check: condition_flag
+    target: [stair]
+    when: {stair_type: loai3, height_pccc_m_gt: 28, height_pccc_m_lte: 50}
+    severity: warning
+    message: "Thang {label} loại 3 (nhà > 28–50 m): phần thang trên 28 m phải có biện pháp chống rơi ngã trên toàn bộ chiều cao các mặt hở ra ngoài trời"
+    verified: true
+
+  - id: STAIR-L1-HEIGHT
+    source: QCVN06
+    clause: "QCVN 06:2022 khoản 3.4.11"
+    title: Buồng thang L1 chỉ cho nhà cao PCCC <= 28 m
+    check: condition_flag
+    target: [stair]
+    when: {stair_type: L1, height_pccc_m_gt: 28}
+    severity: error
+    message: "Thang {label} là buồng thang L1 nhưng nhà cao PCCC > 28 m (3.4.13: nhà > 28 m phải có buồng thang không nhiễm khói, trong đó có loại N1)"
+    verified: true
+
+  - id: STAIR-L2-HEIGHT
+    source: QCVN06
+    clause: "QCVN 06:2022 khoản 3.4.12"
+    title: Buồng thang L2 chỉ cho nhà cao PCCC <= 9 m (12 m nếu lỗ lấy sáng tự mở khi cháy)
+    check: condition_flag
+    target: [stair]
+    when: {stair_type: L2, height_pccc_m_gt: 9}
+    severity: warning
+    message: "Thang {label} là buồng thang L2 trong nhà cao PCCC > 9 m: chỉ cho phép tới 12 m nếu lỗ mở lấy sáng trên cao tự động mở khi cháy (trừ cơ sở y tế nội trú), bậc chịu lửa I–III, S0–S1, nhóm F1–F4"
+    verified: true
+
+  # ================================================================ 3.1.7 TẦNG HẦM
+  - id: BASEMENT-SMOKE-LOBBY
+    source: SD01
+    clause: "QCVN 06:2022 khoản 3.1.7 (sửa đổi theo SĐ1:2023)"
+    title: Sảnh ngăn khói tại tầng hầm
+    check: basement_smoke_lobby
+    severity: warning
+    message: "Công trình có tầng hầm nhưng bản vẽ không thể hiện sảnh ngăn khói trước buồng thang thoát nạn. 3.1.7 (SĐ1): tại mọi sàn tầng hầm, >= 1 lối vào buồng thang thoát nạn phải qua sảnh ngăn khói, ngăn bằng vách ngăn cháy loại 1 hoặc giải pháp tương đương; cửa có cơ cấu tự đóng"
+    verified: true
+
+  # ================================================================ BỘ PHẬN NGĂN CHÁY
+  - id: FIRE-DOOR-RATING-SHOWN
+    source: QCVN06
+    clause: "QCVN 06:2022 Phần 4 (bộ phận ngăn cháy)"
+    title: Cửa ngăn cháy phải ghi giới hạn chịu lửa
+    check: required_attr
+    target: [fire_door]
+    attr: fire_rating
+    severity: warning
+    message: "Cửa ngăn cháy {label}: bản vẽ chưa thể hiện giới hạn chịu lửa (EI)"
+    verified: true
+
+  # ================================================================ THÔNG TIN CÔNG TRÌNH
+  - id: BUILDING-INFO
+    source: QCVN06
+    clause: "Dữ liệu đầu vào"
+    title: Thiếu thông tin công trình
+    check: building_missing
+    attrs: [function_group, height_pccc_m, fire_resistance_level]
+    severity: info
+    message: "Thiếu thông tin công trình: {missing} — nhiều luật phụ thuộc thông tin này. Bổ sung bằng --building hoặc --set"
+    verified: true
