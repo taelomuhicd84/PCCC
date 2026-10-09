@@ -23,6 +23,10 @@ CORRIDOR = re.compile(r"HÀNH\s*LANG|\bHL\b", re.I)
 EXIT = re.compile(r"LỐI\s*(RA|THOÁT)|\bEXIT\b", re.I)
 FIRE_DOOR = re.compile(r"NGĂN\s*CHÁY|CHỐNG\s*CHÁY|\bEI\s*\d", re.I)
 WIDTH = re.compile(r"(?:B|R|W|RỘNG|VẾ\s*THANG)\s*[=:]?\s*(\d{3,4})(?:\s*mm)?", re.I)
+NOTE_LINE = re.compile(r"^\s*(\d+[.)]|-|\*|GHI\s*CHÚ|KHOẢNG\s*CÁCH|ĐƯỜNG\s*CHÉO|SỨC\s*CHỨA)", re.I)
+STAIR_LABEL = re.compile(r"^\s*(B?TB|CT|BT)\s*-?\d+\b", re.I)
+TYPE3_NOTE = re.compile(r"THANG\s*(SẮT|THÉP)[^|]*(NGOÀI|HỞ)|CẦU\s*THANG\s*(BỘ\s*)?LOẠI\s*3", re.I)
+NOT_EVAC = re.compile(r"KHÔNG\s*THOÁT\s*NẠN|DI\s*CHUYỂN\s*NỘI\s*BỘ", re.I)
 SCALE = re.compile(r"(?:TỈ\s*LỆ|TỶ\s*LỆ|SCALE)\s*[:]?\s*1\s*[:/]\s*(\d+)", re.I)
 SHEET = re.compile(r"^\s*(MẶT\s*BẰNG|MẶT\s*CẮT|SƠ\s*ĐỒ)", re.I)
 STEP = re.compile(r"(?:BẬC|h\s*=?)\s*(\d{2,3})\s*[xX×/]\s*(\d{2,3})", re.I)
@@ -35,6 +39,21 @@ BUILDING_PATTERNS: dict[str, tuple[re.Pattern, Any]] = {
     "floors_above": (re.compile(r"(\d{1,3})\s*TẦNG\s*(NỔI)?\b", re.I), lambda m: int(m.group(1))),
     "basements": (re.compile(r"(\d)\s*TẦNG\s*HẦM", re.I), lambda m: int(m.group(1))),
 }
+
+
+def _nearest(els, bbox: list[float], max_d: float):
+    def dist(e):
+        ex, ey = (e.bbox[0] + e.bbox[2]) / 2, (e.bbox[1] + e.bbox[3]) / 2
+        tx, ty = (bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2
+        return ((ex - tx) ** 2 + (ey - ty) ** 2) ** 0.5
+    cands = [e for e in els if dist(e) <= max_d]
+    # Ghi chú CAD thường căn thẳng cột/hàng với ký hiệu đối tượng -> ưu tiên ứng viên chồng lấn theo X hoặc Y
+    pad = 10
+    aligned = [e for e in cands
+               if (e.bbox[0] <= bbox[2] + pad and e.bbox[2] >= bbox[0] - pad)
+               or (e.bbox[1] <= bbox[3] + pad and e.bbox[3] >= bbox[1] - pad)]
+    pool = aligned or cands
+    return min(pool, key=dist) if pool else None
 
 
 def _near(a: list[float], b: list[float], d: float) -> bool:
@@ -84,6 +103,8 @@ class VectorTextExtractor(Extractor):
         page.plan_bbox = _largest_rect(pdf, page_no)
         n = 0
         exit_texts: list[dict] = []
+        not_evac_texts: list[dict] = []
+        type3_texts: list[dict] = []
 
         def add(typ: str, t: dict, attrs: dict, label: str = "") -> None:
             nonlocal n
@@ -107,7 +128,7 @@ class VectorTextExtractor(Extractor):
                     attrs["is_exit"] = True
                 typ = "exit_door" if attrs.get("is_exit") else ("fire_door" if f or FIRE_DOOR.search(s) else "door")
                 add(typ, t, attrs, DOOR_LABEL.match(s).group(0) if DOOR_LABEL.match(s) else "")
-            elif STAIR.search(s):
+            elif STAIR_LABEL.match(s) or (STAIR.search(s) and len(s) <= 25 and not NOTE_LINE.match(s)):
                 attrs = {"is_evacuation": True}
                 w = WIDTH.search(s) or WIDTH.search(ctx)
                 if w:
@@ -116,7 +137,14 @@ class VectorTextExtractor(Extractor):
                 if st:
                     a, b = int(st.group(1)), int(st.group(2))
                     attrs["riser_m"], attrs["tread_m"] = min(a, b) / 1000, max(a, b) / 1000
-                add("stair", t, attrs)
+                label = STAIR_LABEL.match(s).group(0).strip() if STAIR_LABEL.match(s) else ""
+                add("stair", t, attrs, label)
+            elif len(s) > 25 or NOTE_LINE.match(s):     # câu ghi chú: chỉ dùng làm căn cứ, không tạo phần tử
+                if NOT_EVAC.search(s):
+                    not_evac_texts.append(t)
+                elif TYPE3_NOTE.search(s):
+                    type3_texts.append(t)
+                continue
             elif CORRIDOR.search(s):
                 attrs = {}
                 w = WIDTH.search(s) or WIDTH.search(ctx)
@@ -136,4 +164,14 @@ class VectorTextExtractor(Extractor):
                         e.type = "exit_door"
             else:
                 add("exit_door", t, {"is_exit": True})
+        # Ghi chú cạnh thang là căn cứ mạnh hơn phỏng đoán của Gemini -> gán cho thang GẦN NHẤT (cờ _..._note)
+        # ưu tiên thang có ký hiệu mã (BTB1, TB3); nhãn chung như "BUỒNG THANG" chỉ dùng khi không có
+        coded = [e for e in page.elements if e.type == "stair" and STAIR_LABEL.match(e.label or "")]
+        stairs = coded or [e for e in page.elements if e.type == "stair"]
+        for texts_, apply in ((not_evac_texts, {"is_evacuation": False, "_evac_note": True}),
+                              (type3_texts, {"stair_type": "loai3", "_type_note": True})):
+            for t in texts_:
+                e = _nearest(stairs, t["bbox"], self.near_pt * 4)
+                if e is not None:
+                    e.attrs.update(apply)
         return page, building

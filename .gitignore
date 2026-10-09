@@ -9,3 +9,8 @@ data/cache/*
 !data/**/.gitkeep
 .claude/settings.local.json
 api.txt
+
+# Bản vẽ thật của khách hàng: không đẩy lên GitHub (chỉ giữ văn bản quy chuẩn)
+docs/regulations/*
+!docs/regulations/.gitkeep
+!docs/regulations/QCVN*

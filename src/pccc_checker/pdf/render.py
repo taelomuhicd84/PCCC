@@ -1,10 +1,13 @@
 """Render trang PDF thành ảnh (PNG) và lấy text vector kèm toạ độ."""
 from __future__ import annotations
 
+import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 
 import pymupdf
+
+from .vn_encoding import fix_span
 
 
 @dataclass
@@ -51,13 +54,14 @@ def page_size(pdf_path: Path, page_no: int) -> tuple[float, float]:
 
 
 def vector_text(pdf_path: Path, page_no: int) -> list[dict]:
-    """Trả về các dòng text vector: [{'text', 'bbox'}]. Rỗng nếu PDF là ảnh scan."""
+    """Trả về các dòng text vector: [{'text', 'bbox'}] (đã chuyển font VNI -> Unicode). Rỗng nếu PDF là ảnh scan."""
     out = []
     with pymupdf.open(pdf_path) as doc:
         page = doc[page_no - 1]
         for block in page.get_text("dict")["blocks"]:
             for line in block.get("lines", []):
-                text = "".join(s["text"] for s in line["spans"]).strip()
+                text = "".join(fix_span(s["text"], s.get("font", "")) for s in line["spans"])
+                text = unicodedata.normalize("NFC", text.replace("\xa0", " ")).strip()
                 if text:
                     out.append({"text": text, "bbox": [round(v, 1) for v in line["bbox"]]})
     return out

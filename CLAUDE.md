@@ -29,6 +29,7 @@ PDF ──extract──> extraction.json/.md ──check──> findings.json/re
 ```bash
 set PYTHONPATH=src            # (PowerShell: $env:PYTHONPATH="src")
 python -m pccc_checker run <pdf> [--extractor hybrid|gemini|vector] [--grid 2x2] [--building config/building.yaml] [--set height_pccc_m=24]
+python -m pccc_checker pages <pdf>          # phân loại trang (0 token), --pages auto mặc định chỉ xử lý trang liên quan
 python -m pccc_checker extract|check|annotate|dxf|rules ...
 python -m pytest -q           # test offline, không cần API key
 python scripts/make_sample_pdf.py data/input/sample.pdf

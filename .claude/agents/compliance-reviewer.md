@@ -10,6 +10,15 @@ Bạn là kỹ sư thẩm duyệt PCCC. Trước khi làm, nạp skill `qcvn06-p
 Đầu vào: thư mục `data/output/<tên>/` chứa `extraction.md`, `findings.json`.
 KHÔNG đọc ảnh/PDF bản vẽ (tốn token). Chỉ làm việc trên 2 file văn bản trên.
 
+Lưu ý khi review hồ sơ thật:
+- `building.assumptions` liệt kê giá trị tool tự suy ra (vd nhóm F từ "KHÁCH SẠN" → F1.2): nêu rõ trong kết luận.
+- Kích thước cửa lấy từ bảng cửa (`dims_from_schedule`) thường là kích thước phủ bì → chiều rộng thông thuỷ nhỏ hơn
+  khoảng 0,1 m; cửa sát ngưỡng thì ghi chú cần kiểm tra thông thuỷ.
+- Bản vẽ thường có bảng tính thoát nạn của người thiết kế (khoảng cách, chiều rộng tính toán, "Đạt"): đối chiếu số liệu
+  đó với quy chuẩn, KHÔNG mặc nhiên tin cột "Kết luận" của họ.
+- Thang ghi "không thoát nạn / di chuyển nội bộ" không được tính là lối ra; thang thép ngoài nhà = cầu thang loại 3.
+- Gian phòng đông người (hội trường, nhà hàng trong khách sạn) có thể thuộc nhóm F2/F3 khác nhóm chung của nhà.
+
 Việc cần làm:
 1. Với mỗi finding trong `findings.json`:
    - Nếu dữ liệu trích xuất cho thấy đây là nhận diện sai (vd chữ tiêu đề bị nhận là cửa, kích thước lấy nhầm của

@@ -53,12 +53,13 @@ class BuildingInfo:
     max_occupants_per_floor: int | None = None
     has_auto_fire_alarm: bool | None = None
     has_auto_sprinkler: bool | None = None
+    assumptions: list[str] = field(default_factory=list)   # giá trị do tool suy ra (không đọc trực tiếp)
 
     @classmethod
     def from_dict(cls, d: dict[str, Any] | None) -> "BuildingInfo":
         d = d or {}
-        known = {k: d.get(k) for k in cls.__dataclass_fields__}
-        return cls(**known)
+        known = {k: d.get(k) for k in cls.__dataclass_fields__ if k != "assumptions"}
+        return cls(**known, assumptions=list(d.get("assumptions") or []))
 
 
 @dataclass
@@ -69,6 +70,8 @@ class PageExtraction:
     sheet_title: str = ""
     scale: str = ""                       # "1:100"
     plan_bbox: list[float] | None = None  # khung bao mặt bằng tầng (để tính đường chéo, 3.2.8)
+    category: str = ""                    # plan | stair | door_schedule | section | site | ... (pdf/classify.py)
+    declared: dict[str, Any] = field(default_factory=dict)  # số liệu người thiết kế ghi trên bản vẽ
     elements: list[Element] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
 
@@ -95,6 +98,7 @@ class DrawingExtraction:
             pages.append(PageExtraction(
                 page=p["page"], width=p["width"], height=p["height"],
                 sheet_title=p.get("sheet_title", ""), scale=p.get("scale", ""), plan_bbox=p.get("plan_bbox"),
+                category=p.get("category", ""), declared=p.get("declared") or {},
                 elements=els, notes=p.get("notes", []),
             ))
         return cls(

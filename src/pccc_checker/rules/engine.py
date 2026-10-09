@@ -85,7 +85,9 @@ def resolve_value(rule: dict[str, Any], ctx: dict[str, Any]) -> tuple[Any, str]:
 
 def targets(rule: dict[str, Any], d: DrawingExtraction) -> list[Element]:
     types = rule.get("target") or []
-    els = [e for e in d.elements() if not types or e.type in types]
+    # bỏ qua các dòng của bảng thống kê cửa (không phải cửa thực trên mặt bằng)
+    els = [e for e in d.elements() if (not types or e.type in types)
+           and not e.attrs.get("schedule_entry") and not e.attrs.get("ref_only")]
     flt = rule.get("filter")
     if flt:
         els = [e for e in els if match_when(flt, context(e, d))]
@@ -99,11 +101,36 @@ def make_finding(rule: dict[str, Any], el: Element | None, actual: Any = None, r
         actual=actual, required=required, label=label or "(không ký hiệu)", **fmt)
     if extra:
         msg += f" [{extra}]"
+    severity = rule.get("severity", "warning")
+    attrs_used = {rule.get(k) for k in ("attr", "left", "right")} | set(rule.get("attrs", []))
+    unverified = [a for a in (el.attrs.get("_unverified", []) if el else []) if a in attrs_used]
+    if unverified and severity == "error":
+        severity = "warning"
+        msg += f" (số đo {', '.join(unverified)} do Gemini đọc, KHÔNG khớp số nào trên bản vẽ — cần kiểm tra lại)"
+    if el and el.attrs.get("dims_from_schedule") and rule.get("attr") in ("width_m", "height_m"):
+        msg += f" (kích thước lấy từ bảng cửa {el.attrs['dims_from_schedule']}, có thể là phủ bì)"
     return Finding(
-        rule_id=rule["id"], clause=rule.get("clause", ""), severity=rule.get("severity", "warning"),
+        rule_id=rule["id"], clause=rule.get("clause", ""), severity=severity,
         message=msg, page=el.page if el else None, bbox=el.bbox if el else None,
         element_ids=[el.id] if el else [], actual=actual, required=required,
         verified_rule=bool(rule.get("verified", False)))
+
+
+def _merge_duplicates(findings: list[Finding]) -> list[Finding]:
+    """Cùng luật + cùng nội dung (vd cùng loại cửa D01 lặp ở nhiều tầng) -> 1 finding, ghi danh sách trang."""
+    merged: dict[tuple, Finding] = {}
+    pages: dict[tuple, list] = {}
+    for f in findings:
+        key = (f.rule_id, f.message)
+        if key in merged:
+            if f.page and f.page not in pages[key]:
+                pages[key].append(f.page)
+            continue
+        merged[key], pages[key] = f, [f.page] if f.page else []
+    for key, f in merged.items():
+        if len(pages[key]) > 1:
+            f.message += f" (lặp lại ở trang {', '.join(map(str, pages[key][1:]))})"
+    return list(merged.values())
 
 
 # ----------------------------------------------------------------- loader / runner
@@ -130,6 +157,7 @@ def run_rules(rules: list[dict[str, Any]], d: DrawingExtraction, only: set[str] 
                                     f"Check '{rule['check']}' chưa được cài đặt"))
             continue
         findings.extend(fn(rule, d))
+    findings = _merge_duplicates(findings)
     order = {"error": 0, "warning": 1, "info": 2}
     findings.sort(key=lambda f: (f.page or 0, order.get(f.severity, 3), f.rule_id))
     return findings

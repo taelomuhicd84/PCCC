@@ -30,7 +30,8 @@ python -m pccc_checker run "D:\HoSo\MB_thoat_nan.pdf"                       # hy
 python -m pccc_checker run ban_ve.pdf --extractor vector                    # offline, không cần API
 python -m pccc_checker run ban_ve_A1.pdf --grid 2x2 --pages 3-6             # bản vẽ khổ lớn: cắt 4 ô
 python -m pccc_checker run ban_ve.pdf --set function_group=F1.3 --set height_pccc_m=24 --set basements=1
-python -m pccc_checker rules                                                # xem danh sách luật (* = chưa xác minh)
+python -m pccc_checker rules                                                # xem danh sách luật
+python -m pccc_checker pages ho_so.pdf                                      # phân loại trang (kiến trúc/kết cấu...), 0 token
 ```
 Hoặc kéo thả: `run.bat "duong\dan\ban_ve.pdf"`.
 
@@ -41,6 +42,14 @@ Kết quả tại `data/output/<tên-pdf>/`:
 | `report.md` | Bảng lỗi: mức độ, trang, điều khoản, nội dung |
 | `extraction.md` / `.json` | Dữ liệu đọc được từ bản vẽ |
 | `drawing.dxf` | Phần tử + lỗi theo layer để mở trong AutoCAD |
+
+Hồ sơ thật (đã thử với hồ sơ thẩm duyệt khách sạn 50 trang kiến trúc + kết cấu):
+- Tự lọc trang liên quan (`--pages auto`), đọc font VNI, tra kích thước cửa từ bảng cửa, dùng số liệu người thiết kế ghi
+  sẵn (khoảng cách 2 lối thoát nạn, đường chéo), hợp nhất thang theo ký hiệu qua các tầng.
+- Mọi giá trị tool tự suy ra (nhóm F theo công năng, chiều cao PCCC ước lượng, sprinkler chưa rõ...) được liệt kê
+  ở đầu `report.md` mục "⚠ Giả định" — hãy xác nhận và chạy lại với `--set`, vd:
+  `--set has_auto_sprinkler=true --set height_pccc_m=30.55`.
+- Gemini free tier giới hạn ~20 request/ngày/model; kết quả đã đọc được cache nên chạy lại không tốn quota.
 
 Thông tin công trình (nhóm F, chiều cao PCCC, bậc chịu lửa…) quyết định ngưỡng của nhiều luật — nếu khung tên không
 ghi, hãy khai báo qua `config/building.yaml` (mẫu: `config/building.example.yaml`).

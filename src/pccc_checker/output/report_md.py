@@ -15,9 +15,14 @@ def extraction_md(d: DrawingExtraction) -> str:
     lines = [f"# Trích xuất bản vẽ: {d.source_pdf}", f"Extractor: `{d.extractor}`", "",
              "## Thông tin công trình", ""]
     for k, v in vars(b).items():
-        lines.append(f"- {k}: {v if v is not None else '—'}")
+        if k != "assumptions":
+            lines.append(f"- {k}: {v if v is not None else '—'}")
+    for a in b.assumptions:
+        lines.append(f"- ⚠ Giả định: {a}")
     for p in d.pages:
-        lines += ["", f"## Trang {p.page} — {p.sheet_title or '(không tên)'}  (tỉ lệ: {p.scale or '?'})", ""]
+        lines += ["", f"## Trang {p.page} [{p.category or '?'}] — {p.sheet_title or '(không tên)'}  (tỉ lệ: {p.scale or '?'})", ""]
+        if p.declared:
+            lines += [f"Số liệu thiết kế ghi trên bản vẽ: {p.declared}", ""]
         if p.elements:
             lines += ["| id | loại | ký hiệu | thuộc tính | conf |", "|---|---|---|---|---|"]
             for e in p.elements:
@@ -36,6 +41,7 @@ def findings_md(d: DrawingExtraction, findings: list[Finding], pdf_out: str = ""
         f"- Bản vẽ: `{d.source_pdf}`",
         f"- Thời gian: {datetime.now():%Y-%m-%d %H:%M}",
         f"- PDF đã ghi chú: `{pdf_out}`" if pdf_out else "",
+        *(f"- ⚠ Giả định: {x}" for x in d.building.assumptions),
         f"- Tổng: {ICON['error']} {c['error']} lỗi · {ICON['warning']} {c['warning']} cảnh báo · {ICON['info']} {c['info']} thông tin",
         f"- Đã bác bỏ sau review: {n_dismissed}" if n_dismissed else "",
         "", "> (*) = luật chưa được kỹ sư đối chiếu nguyên văn văn bản (`verified: false` trong rules/*.yaml).",

@@ -4,6 +4,8 @@ gemini:
   dpi: 150                    # độ phân giải render ảnh gửi Gemini
   max_tile_px: 3000           # cạnh dài tối đa của mỗi ảnh tile
   temperature: 0.1
+  thinking_budget: 1024        # giới hạn 'suy nghĩ' của Gemini 2.5 (đọc bản vẽ là nhận dạng) -> nhanh, rẻ; null = mặc định
+  workers: 4                   # số trang gửi Gemini song song (giảm nếu bị 429 quota)
   retries: 4                  # số lần thử lại mỗi model (chờ 5,10,20,40 s) khi Gemini quá tải 503/429
   fallback_models:            # model dự phòng khi model chính lỗi liên tục
     - gemini-2.5-flash-lite

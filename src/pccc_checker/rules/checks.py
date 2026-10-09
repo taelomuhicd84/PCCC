@@ -128,6 +128,8 @@ def building_missing(rule: dict, d: DrawingExtraction) -> Iterable[Finding]:
 def _exits_by_page(d: DrawingExtraction) -> dict[int, list[Element]]:
     out: dict[int, list[Element]] = defaultdict(list)
     for e in d.elements():
+        if e.attrs.get("schedule_entry"):
+            continue
         if e.type == "exit_door" or (e.type in ("door", "fire_door") and e.get("is_exit")):
             out[e.page].append(e)
         elif e.type == "stair" and e.get("is_evacuation") is not False and e.get("counts_as_exit", True):
@@ -160,13 +162,34 @@ def exit_separation(rule: dict, d: DrawingExtraction) -> Iterable[Finding]:
     (1/3 nếu toàn nhà có sprinkler). Khoảng cách đo giữa 2 cạnh xa nhất; nếu giá trị này < 7 m thì đo giữa
     2 cạnh gần nhất. Tool lấy cặp lối ra phân tán nhất trên tầng để so sánh."""
     pages = {p.page: p for p in d.pages}
-    sprinkler = bool(d.building.has_auto_sprinkler)
-    ratio = float(rule.get("ratio_sprinkler", 1 / 3) if sprinkler else rule.get("ratio", 0.5))
+    sprinkler = d.building.has_auto_sprinkler          # True / False / None (chưa rõ)
+    r_half, r_third = float(rule.get("ratio", 0.5)), float(rule.get("ratio_sprinkler", 1 / 3))
+    ratio = r_third if sprinkler else r_half
     threshold = float(rule.get("measure_threshold_m", 7.0))
     for pno, exits in _exits_by_page(d).items():
         if len(exits) < 2:
             continue
         page = pages[pno]
+        dec = page.declared or {}
+        if dec.get("exit_distance_m") and dec.get("plan_diagonal_m"):
+            # Người thiết kế đã ghi khoảng cách & đường chéo -> kiểm tra trực tiếp số liệu đó
+            diag, dist = float(dec["plan_diagonal_m"]), float(dec["exit_distance_m"])
+            req = round(diag * ratio, 2)
+            if dist + 1e-6 < req:
+                if sprinkler is None and dist + 1e-6 >= diag * r_third:
+                    sev = "warning"
+                    msg = (f"Khoảng cách 2 lối thoát nạn ghi trên bản vẽ {dist} m < {req} m (1/2 đường chéo {diag} m). "
+                           f"Chỉ đạt nếu TOÀN BỘ nhà có sprinkler (cần >= {round(diag * r_third, 2)} m) — "
+                           "bản vẽ chưa thể hiện sprinkler, cần xác nhận")
+                else:
+                    sev = rule.get("severity", "error")
+                    msg = (f"Khoảng cách 2 lối thoát nạn ghi trên bản vẽ {dist} m < {req} m "
+                           f"({'1/3' if sprinkler else '1/2'} đường chéo {diag} m)")
+                f = Finding(rule["id"], rule.get("clause", ""), sev, msg, page=pno, actual=dist, required=req,
+                            verified_rule=bool(rule.get("verified")))
+                f.bbox = dec.get("exit_distance_bbox") or page.plan_bbox
+                yield f
+            continue
         k = page_scale_m_per_pt(page, rule.get("default_scale"))
         plan, approx = _plan_bbox(page)
         if k is None or plan is None:
@@ -203,8 +226,9 @@ def min_exits_per_floor(rule: dict, d: DrawingExtraction) -> Iterable[Finding]:
     ctx = context(None, d)
     allowed_single = any(match_when(c, ctx) for c in rule.get("single_exit_cases", []))
     for p in d.pages:
-        is_plan = any(e.type in ("room", "corridor", "stair", "exit_door") for e in p.elements)
-        if not is_plan:
+        is_plan = p.category == "plan" or (not p.category and any(
+            e.type in ("room", "corridor", "stair", "exit_door") for e in p.elements))
+        if not is_plan or re.search(r"\bMÁI\b", p.sheet_title or "", re.I):
             continue
         n = len(exits.get(p.page, []))
         if n == 0:
@@ -213,7 +237,12 @@ def min_exits_per_floor(rule: dict, d: DrawingExtraction) -> Iterable[Finding]:
                           page=p.page, verified_rule=bool(rule.get("verified")))
         elif n < 2 and not allowed_single:
             e = exits[p.page][0]
-            yield make_finding(rule, e, n, 2)
+            f = make_finding(rule, e, n, 2)
+            if (p.declared or {}).get("unoccupied"):
+                f.severity = "warning"
+                f.message += (" — tầng có ghi chú 'không có người có mặt thường xuyên' (sân thượng/tầng kỹ thuật): "
+                              "kiểm tra có thuộc trường hợp được phép 1 lối ra không (3.2.6.2)")
+            yield f
 
 
 @register("basement_smoke_lobby")
@@ -222,6 +251,7 @@ def basement_smoke_lobby(rule: dict, d: DrawingExtraction) -> Iterable[Finding]:
     (vách ngăn cháy loại 1). Tool chỉ kiểm tra có thể hiện sảnh ngăn khói/khoang đệm hay không."""
     if not (d.building.basements or 0) > 0:
         return
-    has_lobby = any(e.type == "lobby" and e.get("is_smoke_lobby") for e in d.elements())
+    pages = [p for p in d.pages if re.search(r"HẦM", p.sheet_title or "", re.I)] or d.pages
+    has_lobby = any(e.get("is_smoke_lobby") for p in pages for e in p.elements)
     if not has_lobby:
         yield make_finding(rule, None)

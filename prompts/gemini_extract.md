@@ -10,8 +10,10 @@ Trả về DUY NHẤT một JSON đúng schema sau (không markdown, không gi�
   "scale": "tỉ lệ, ví dụ 1:100, nếu thấy",
   "plan_box_2d": [ymin, xmin, ymax, xmax],  // khung bao TƯỜNG NGOÀI của mặt bằng tầng (không gồm khung tên/ghi chú); null nếu không phải mặt bằng
   "building": {                       // chỉ điền trường đọc được từ khung tên / ghi chú, còn lại null
-    "function_group": "F1.3 | F4.3 | ... | null",
-    "height_pccc_m": null, "floors_above": null, "basements": null,
+    "function_group": "F1.3 | F4.3 | ... | null (CHỈ khi ghi rõ nhóm F trên bản vẽ)",
+    "height_pccc_m": null,   // chỉ khi ghi rõ "chiều cao PCCC"
+    "floors_above": null,    // TỔNG số tầng nổi của nhà (không phải số thứ tự tầng đang vẽ)
+    "basements": null,       // số tầng hầm/bán hầm của nhà
     "fire_resistance_level": "I|II|III|IV|V|null", "structural_hazard_class": "S0|S1|S2|S3|null",
     "floor_area_m2": null, "max_occupants_per_floor": null,
     "has_auto_fire_alarm": null, "has_auto_sprinkler": null
@@ -45,3 +47,9 @@ Quy tắc:
 - Kích thước chỉ lấy khi có số ghi rõ trên bản vẽ hoặc text vector. KHÔNG ước lượng bằng mắt.
 - Mỗi cửa/thang/hành lang là một phần tử riêng. box_2d phải ôm sát đối tượng.
 - Nếu tile không có nội dung bản vẽ liên quan, trả về "elements": [].
+- Thang có ghi chú "không thoát nạn", "di chuyển nội bộ" -> is_evacuation=false. Thang thép thoát hiểm ngoài nhà -> stair_type "loai3".
+- BẢNG THỐNG KÊ / CHI TIẾT CỬA: mỗi loại cửa là 1 phần tử door/fire_door với label = ký hiệu (D01, D07...),
+  width_m/height_m lấy theo kích thước ghi trong bảng (mm -> m), fire_rating nếu có (EI30, EI60...).
+- Cửa trên mặt bằng: label = ký hiệu cửa ghi cạnh cửa (D03...), để tool tra kích thước từ bảng cửa.
+- Bảng tính thoát nạn/ghi chú thiết kế (khoảng cách 2 lối thoát nạn, đường chéo, sức chứa, chiều dài đường thoát nạn):
+  chép nguyên văn từng số liệu vào "notes", vd "KHOẢNG CÁCH 2 LỐI THOÁT NẠN L=20.5M".

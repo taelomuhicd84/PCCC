@@ -7,6 +7,7 @@ Pipeline (mỗi bước ghi file trung gian để các agent làm việc độc 
   dxf      : extraction.json (+ findings.json) -> .dxf
   run      : chạy cả 4 bước
   rules    : liệt kê luật
+  pages    : phân loại trang của bộ hồ sơ (kiến trúc/kết cấu/...) — 0 token
 """
 from __future__ import annotations
 
@@ -27,9 +28,11 @@ def _out_dir(pdf: Path, out: str | None) -> Path:
     return d
 
 
-def _pages(spec: str | None) -> list[int] | None:
-    if not spec:
+def _pages(spec: str | None) -> list[int] | str | None:
+    if not spec or spec == "all":
         return None
+    if spec == "auto":
+        return "auto"
     res: list[int] = []
     for part in spec.split(","):
         if "-" in part:
@@ -134,6 +137,15 @@ def cmd_run(a, settings) -> None:
         cmd_dxf(a, settings)
 
 
+def cmd_pages(a, settings) -> None:
+    """Liệt kê phân loại từng trang (0 token) — để chọn --pages trước khi gọi Gemini."""
+    from .pdf.classify import RELEVANT, classify
+    for c in classify(Path(a.pdf)):
+        mark = "*" if c["category"] in RELEVANT else " "
+        print(f"{mark} {c['page']:>3}  {c['category']:<14} {c['title'][:70]}")
+    print("(* = được xử lý khi --pages auto)")
+
+
 def cmd_rules(a, settings) -> None:
     from .rules import load_rules
     for r in load_rules(_rule_paths(settings, a.rules)):
@@ -154,7 +166,8 @@ def main(argv: list[str] | None = None) -> None:
     def common_extract(sp):
         sp.add_argument("pdf")
         sp.add_argument("--extractor", choices=["gemini", "vector", "hybrid"], default="hybrid")
-        sp.add_argument("--pages", help="vd 1-3,5")
+        sp.add_argument("--pages", default="auto",
+                        help="auto (mặc định: chỉ trang liên quan thoát nạn) | all | vd 1-3,5")
         sp.add_argument("--grid", default="1x1", help="cắt trang thành lưới RxC cho bản vẽ khổ lớn, vd 2x2")
         sp.add_argument("--building", help="building.yaml: thông tin công trình (nhóm F, chiều cao PCCC...)")
         sp.add_argument("--set", action="append", help="ghi đè thông tin công trình, vd --set height_pccc_m=24")
@@ -174,11 +187,12 @@ def main(argv: list[str] | None = None) -> None:
     sp.add_argument("--output"); sp.add_argument("--min-severity", choices=["error", "warning", "info"])
     sp.add_argument("--no-dxf", action="store_true")
     sp = sub.add_parser("rules"); sp.add_argument("--rules", action="append")
+    sp = sub.add_parser("pages"); sp.add_argument("pdf")
 
     a = p.parse_args(argv)
     settings = load_settings(Path(a.settings) if a.settings else None)
     {"extract": cmd_extract, "check": cmd_check, "annotate": cmd_annotate, "dxf": cmd_dxf,
-     "run": cmd_run, "rules": cmd_rules}[a.cmd](a, settings)
+     "run": cmd_run, "rules": cmd_rules, "pages": cmd_pages}[a.cmd](a, settings)
 
 
 if __name__ == "__main__":

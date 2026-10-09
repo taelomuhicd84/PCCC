@@ -315,6 +315,7 @@ rules:
     title: Cầu thang bộ loại 3 làm thang thoát nạn chỉ cho nhà cao PCCC <= 50 m
     check: condition_flag
     target: [stair]
+    filter: {is_evacuation: true}
     when: {stair_type: loai3, height_pccc_m_gt: 50}
     severity: error
     message: "Thang {label} là cầu thang bộ loại 3 nhưng nhà cao PCCC > 50 m"
@@ -326,6 +327,7 @@ rules:
     title: Cầu thang loại 3 nhà 28-50 m cần chống rơi ngã
     check: condition_flag
     target: [stair]
+    filter: {is_evacuation: true}
     when: {stair_type: loai3, height_pccc_m_gt: 28, height_pccc_m_lte: 50}
     severity: warning
     message: "Thang {label} loại 3 (nhà > 28–50 m): phần thang trên 28 m phải có biện pháp chống rơi ngã trên toàn bộ chiều cao các mặt hở ra ngoài trời"
@@ -337,6 +339,7 @@ rules:
     title: Buồng thang L1 chỉ cho nhà cao PCCC <= 28 m
     check: condition_flag
     target: [stair]
+    filter: {is_evacuation: true}
     when: {stair_type: L1, height_pccc_m_gt: 28}
     severity: error
     message: "Thang {label} là buồng thang L1 nhưng nhà cao PCCC > 28 m (3.4.13: nhà > 28 m phải có buồng thang không nhiễm khói, trong đó có loại N1)"
@@ -348,6 +351,7 @@ rules:
     title: Buồng thang L2 chỉ cho nhà cao PCCC <= 9 m (12 m nếu lỗ lấy sáng tự mở khi cháy)
     check: condition_flag
     target: [stair]
+    filter: {is_evacuation: true}
     when: {stair_type: L2, height_pccc_m_gt: 9}
     severity: warning
     message: "Thang {label} là buồng thang L2 trong nhà cao PCCC > 9 m: chỉ cho phép tới 12 m nếu lỗ mở lấy sáng trên cao tự động mở khi cháy (trừ cơ sở y tế nội trú), bậc chịu lửa I–III, S0–S1, nhóm F1–F4"

@@ -51,6 +51,24 @@ Thiếu thông tin → nhiều luật không xác định được ngưỡng: gh
   vách ngăn cháy loại 1 (hoặc giải pháp tương đương). F1.2, F1.3, F2, F3, F4 cao PCCC < 28 m: nếu phải đi qua sảnh
   chung, lối vào buồng thang từ tầng hầm phải qua khoang đệm, có vách ngăn cháy loại 1.
 
+## Đặc điểm hồ sơ thật (rút ra từ hồ sơ KS Hoàng Hùng, 2026-10)
+- Font VNI/TCVN3 trong PDF CAD → tool tự chuyển VNI sang Unicode (`pdf/vn_encoding.py`); TCVN3 (.Vn*) chưa hỗ trợ.
+- Hồ sơ gộp kiến trúc + kết cấu (50 trang, chỉ ~19 trang liên quan) → `pages` / `--pages auto`.
+- Cửa chỉ ghi ký hiệu (D03, D07) trên mặt bằng, kích thước + EI ở trang "CHI TIẾT CỬA" → tool tự tra theo ký hiệu.
+- Người thiết kế ghi sẵn "KHOẢNG CÁCH 2 LỐI THOÁT NẠN L=…", "ĐƯỜNG CHÉO CÔNG TRÌNH D=…", "SỨC CHỨA: … NGƯỜI",
+  bảng tính chiều dài đường thoát nạn → tool dùng số liệu này cho 3.2.8, reviewer kiểm tra lại tính hợp lý.
+- Khung tên thường không ghi nhóm F / chiều cao PCCC → tool suy nhóm F từ công năng (ghi vào assumptions);
+  chiều cao PCCC cần lấy từ mặt cắt hoặc hỏi người dùng (`--set height_pccc_m=…`).
+- Gemini (1 ảnh/trang A3) đọc tốt ký hiệu & bảng, nhưng **không đáng tin** ở: phán đoán thang thoát nạn hay không,
+  loại thang (gán cùng giá trị cho mọi thang trên trang), tự "tính" số đo (vd mặt bậc 238 thay vì 250 ghi trên bản vẽ),
+  tự suy "có sprinkler", tự ước lượng chiều cao PCCC. Tool đã chặn: số đo phải khớp text bản vẽ (`_unverified`),
+  sprinkler/báo cháy cần chữ làm căn cứ, thang hợp nhất theo ký hiệu và chỉ tin ghi chú trên bản vẽ (căn thẳng hàng).
+- 3.2.8 phụ thuộc mạnh vào sprinkler: L ≥ 1/2 đường chéo (không sprinkler) hay ≥ 1/3 (sprinkler toàn nhà).
+  Hồ sơ kiến trúc thường không thể hiện sprinkler → luôn hỏi người dùng / hồ sơ cấp nước chữa cháy.
+- Tầng "không có người có mặt thường xuyên" (sân thượng, tầng kỹ thuật) hay chỉ có 1 lối ra → xét ngoại lệ 3.2.6.2.
+- Gemini free tier ~20 request/ngày/model: hồ sơ 19 trang gần hết quota. Cache giúp chạy lại không tốn quota;
+  hết quota thì trang còn lại tự dùng text vector (ghi chú "Gemini không đọc được trang này").
+
 ## Cách review false-positive (thường gặp)
 - Text tiêu đề/ghi chú có chữ "THOÁT NẠN" bị nhận là cửa thoát nạn.
 - Kích thước lấy nhầm của phần tử bên cạnh (vector extractor ghép theo khoảng cách).

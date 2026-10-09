@@ -17,6 +17,15 @@ from ..pdf.render import page_size, render_tiles, vector_text
 from .base import Extractor
 
 
+class GeminiQuotaError(RuntimeError):
+    """Hết quota theo ngày (free tier ~20 request/ngày/model) — thử lại vô ích, cần chờ hoặc nâng gói."""
+
+
+def _is_daily_quota(err: Exception) -> bool:
+    s = str(err)
+    return "RESOURCE_EXHAUSTED" in s and ("PerDay" in s or "free_tier" in s)
+
+
 def _file_hash(path: Path) -> str:
     h = hashlib.sha1()
     with open(path, "rb") as f:
@@ -36,7 +45,8 @@ class GeminiExtractor(Extractor):
 
     def __init__(self, model: str = "gemini-2.5-flash", dpi: int = 150, grid: tuple[int, int] = (1, 1),
                  max_px: int = 3000, temperature: float = 0.1, cache_dir: Path | None = None,
-                 fallback_models: list[str] | None = None, retries: int = 4):
+                 fallback_models: list[str] | None = None, retries: int = 4,
+                 thinking_budget: int | None = None, workers: int = 1):
         key = gemini_api_key()
         if not key:
             raise RuntimeError("Thiếu GEMINI_API_KEY (đặt trong .env hoặc biến môi trường).")
@@ -48,6 +58,9 @@ class GeminiExtractor(Extractor):
         self.cache_dir = cache_dir
         self.fallback_models = fallback_models or []
         self.retries = retries
+        self.thinking_budget = thinking_budget
+        self.quota_exhausted = False
+        self.workers = max(1, workers)
 
     # ------------------------------------------------------------------ API
     def _call(self, png: bytes, texts: list[dict]) -> dict[str, Any]:
@@ -57,8 +70,14 @@ class GeminiExtractor(Extractor):
             types.Part.from_bytes(data=png, mime_type="image/png"),
             f"{self.prompt}\n\nTEXT VECTOR TRONG VÙNG NÀY (toạ độ đã chuẩn hoá 0-1000 theo ảnh, dạng [x0,y0,x1,y1]):\n{ctx}",
         ]
-        cfg = types.GenerateContentConfig(temperature=self.temperature, response_mime_type="application/json")
+        cfg = types.GenerateContentConfig(
+            temperature=self.temperature, response_mime_type="application/json",
+            thinking_config=(types.ThinkingConfig(thinking_budget=self.thinking_budget)
+                             if self.thinking_budget is not None else None))
+        if self.quota_exhausted:
+            raise GeminiQuotaError("Gemini đã hết quota trong lượt chạy này")
         last_err: Exception | None = None
+        quota_models = 0
         for model in [self.model, *self.fallback_models]:
             for attempt in range(self.retries):
                 try:
@@ -68,7 +87,13 @@ class GeminiExtractor(Extractor):
                     last_err = e
                     if "API key" in str(e) or "PERMISSION_DENIED" in str(e):
                         raise
+                    if _is_daily_quota(e):      # hết quota ngày của model này -> sang model dự phòng ngay
+                        quota_models += 1
+                        break
                     time.sleep(min(60, 5 * 2 ** attempt))
+        if quota_models == 1 + len(self.fallback_models):
+            self.quota_exhausted = True
+            raise GeminiQuotaError(f"Gemini hết quota theo ngày cho mọi model ({last_err})")
         raise RuntimeError(f"Gemini lỗi sau khi thử lại và đổi model dự phòng: {last_err}")
 
     # -------------------------------------------------------------- per page
@@ -77,7 +102,8 @@ class GeminiExtractor(Extractor):
         if self.cache_dir:
             self.cache_dir.mkdir(parents=True, exist_ok=True)
             g = f"{self.grid[0]}x{self.grid[1]}"
-            cache = self.cache_dir / f"{_file_hash(pdf)}_p{page_no}_{self.model}_{g}.json"
+            ph = hashlib.sha1(self.prompt.encode("utf-8")).hexdigest()[:8]   # đổi prompt -> cache mới
+            cache = self.cache_dir / f"{_file_hash(pdf)}_p{page_no}_{self.model}_{g}_{ph}.json"
             if cache.exists():
                 raw_tiles = json.loads(cache.read_text(encoding="utf-8"))
                 return self._to_page(pdf, page_no, raw_tiles)

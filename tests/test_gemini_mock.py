@@ -29,3 +29,20 @@ def test_gemini_tiles_to_page_coords(tmp_path, monkeypatch):
     xs = sorted(e.bbox[0] for e in page.elements)
     assert xs[0] == 0 and xs[1] > 500           # tile thứ 2 nằm ở nửa phải trang
     assert all(e.source == "gemini" for e in page.elements)
+
+
+def test_hybrid_falls_back_to_vector_on_daily_quota(tmp_path, monkeypatch):
+    from pccc_checker.extractors import HybridExtractor
+    from pccc_checker.extractors.gemini_extractor import GeminiQuotaError
+    from pccc_checker.extractors.vector_extractor import VectorTextExtractor
+
+    pdf = make(tmp_path / "s.pdf")
+    gem = GeminiExtractor.__new__(GeminiExtractor)
+
+    def boom(*a, **k):
+        raise GeminiQuotaError("429 RESOURCE_EXHAUSTED PerDay")
+
+    monkeypatch.setattr(gem, "extract_page", boom)
+    d = HybridExtractor(gem, VectorTextExtractor()).extract(pdf, log=lambda *_: None)
+    assert d.elements()                                         # vẫn có kết quả từ text vector
+    assert any("Gemini không đọc được" in n for n in d.pages[0].notes)
