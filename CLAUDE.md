@@ -48,3 +48,9 @@ Slash command: `/check-pccc <pdf>` (quy trình đầy đủ nhiều agent), `/ad
 - `.env` và `api.txt` chứa API key — không đọc/in nội dung ra màn hình, không commit.
 - Không commit `.env`, `data/input`, `data/output`.
 - Chạy `python -m pytest -q` trước khi báo xong.
+
+## Đồng bộ GitHub (tự động)
+
+Repo: https://github.com/taelomuhicd84/PCCC (nhánh `main`). Stop hook `.claude/hooks/run_tests_on_stop.py` chạy
+pytest khi Claude kết thúc mỗi lượt: test PASS → tự commit + push (`git_sync.py`); FAIL → bắt Claude sửa tiếp, không push.
+Sửa tay ngoài Claude Code → chạy `sync.bat [message]`. Không bao giờ commit `.env`, `api.txt`, `data/`.

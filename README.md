@@ -51,12 +51,18 @@ ghi, hãy khai báo qua `config/building.yaml` (mẫu: `config/building.example.
 - Bản vẽ khổ lớn / bản scan: dùng `--grid 2x2` (hoặc 3x3) để Gemini đọc chi tiết hơn.
 - Đây là công cụ hỗ trợ rà soát; kết luận cuối cùng thuộc về kỹ sư/cơ quan thẩm duyệt PCCC.
 
+## Đồng bộ GitHub
+Mỗi lượt làm việc của Claude Code trong thư mục này: test đạt → tự commit + push lên
+https://github.com/taelomuhicd84/PCCC. Sửa tay thì chạy `sync.bat "mô tả thay đổi"`.
+
 ## Cấu trúc thư mục
 ```
 pccc-checker/
 ├─ CLAUDE.md                     # hướng dẫn cho Claude Code
+├─ sync.bat                      # đồng bộ GitHub khi sửa tay
 ├─ .claude/
-│  ├─ settings.json              # quyền, biến môi trường
+│  ├─ settings.json              # quyền, biến môi trường, Stop hook
+│  ├─ hooks/                     # run_tests_on_stop.py, git_sync.py (tự push khi test đạt)
 │  ├─ agents/                    # drawing-reader, compliance-reviewer, pdf-annotator, regulation-curator
 │  ├─ commands/                  # /check-pccc, /add-rule, /verify-rules
 │  └─ skills/qcvn06-pccc/        # kiến thức quy chuẩn cho agent
