@@ -1,0 +1,27 @@
+# Golden test cho bước `info` — hồ sơ VP THE SUN (BV TKTD 162 The Sun.pdf, 125 trang, năm 2024).
+# Anh/chị điền giá trị ĐÚNG theo hồ sơ (null = không kiểm tra trường đó). Ghi `conflict` nếu mong đợi tool báo
+# mâu thuẫn (nhà hỗn hợp: nhóm nhà theo tầng F1.4 + F4.3).
+# PDF không commit (data/input) -> test tự skip nếu thiếu file.
+pdf: data/input/vp_the_sun.pdf
+khu_dat:
+  ten_cong_trinh: null
+  dien_tich_khu_dat: null
+hang_muc_chinh: null            # hạng mục kiểm tra luật, 1 tòa nhà, để null
+# Thông tin của hạng mục chính:
+project_info:
+  cong_nang: null
+  dien_tich_xay_dung: null
+  tong_dien_tich_san: null
+  chieu_cao_cong_trinh: null
+  so_tang_noi: null
+  so_tang_ham: null
+  tang_tum_ky_thuat: null
+  khoi_tich: null
+fire_inputs:
+  bac_chiu_lua: null
+  nhom_nha: null
+  hang_chay_no: null
+  chieu_cao_pccc: null
+  cap_nguy_hiem_chay_ket_cau: null
+# Từng hạng mục (tên khớp không phân biệt hoa/thường, "01" = "1"). Chỉ điền trường muốn kiểm.
+# Một tòa nhà (không có hạng mục riêng) -> chỉ điền project_info / fire_inputs ở trên. nhom_nha nhiều nhóm: ghi "F1.4; F4.3"

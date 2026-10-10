@@ -33,8 +33,34 @@ def extraction_md(d: DrawingExtraction) -> str:
     return "\n".join(lines) + "\n"
 
 
-def findings_md(d: DrawingExtraction, findings: list[Finding], pdf_out: str = "") -> str:
-    c = Counter(f.severity for f in findings if not f.dismissed)
+def project_info_md(info, findings: list[Finding]) -> list[str]:
+    """Mục 'Thông tin công trình': mỗi trường + trang nguồn + trạng thái; trường thiếu/mâu thuẫn + số luật ảnh hưởng."""
+    from ..project_info import hang_muc_table, load_spec, table_rows
+    spec = load_spec()
+    head, hm = hang_muc_table(info, spec)
+    hm_md = ["### Các hạng mục trong khu đất", "", "| " + " | ".join(head) + " |", "|" + "---|" * len(head),
+             *("| " + " | ".join(x.replace("|", "/") for x in row) + " |" for row in hm), "",
+             f"Luật được kiểm tra theo hạng mục chính: **{info.hang_muc_chinh}**.", ""] if hm else []
+    lines = ["## Thông tin công trình", "", *hm_md, "| Trường | Giá trị | Trang | Trạng thái |", "|---|---|---|---|"]
+    for _, label, val, pages, st in table_rows(info, spec):
+        lines.append(f"| {label} | {val.replace('|', '/')} | {pages} | {st.replace('|', '/')} |")
+    problems = info.problems(spec)
+    if problems:
+        cannot = [f for f in findings if f.status == "cannot_check"]
+        lines += ["", "**Trường bắt buộc thiếu hoặc mâu thuẫn:**", ""]
+        for k, why in problems.items():
+            label = spec["fire_inputs"][k]["label"]
+            n = sum(why in f.message for f in cannot)
+            lines.append(f"- {label}: {why} → {n} luật không kiểm tra được / không xác định được ngưỡng")
+    for w in info.warnings:
+        lines.append(f"- ⚠ {w}")
+    return lines + [""]
+
+
+def findings_md(d: DrawingExtraction, findings: list[Finding], pdf_out: str = "", info=None) -> str:
+    cannot = [f for f in findings if f.status == "cannot_check" and not f.dismissed]
+    findings_ok = [f for f in findings if f.status != "cannot_check"]
+    c = Counter(f.severity for f in findings_ok if not f.dismissed)
     n_dismissed = sum(f.dismissed for f in findings)
     lines = [
         "# Báo cáo kiểm tra PCCC theo QCVN 06:2022/BXD & Sửa đổi 1:2023", "",
@@ -44,12 +70,15 @@ def findings_md(d: DrawingExtraction, findings: list[Finding], pdf_out: str = ""
         *(f"- ⚠ Giả định: {x}" for x in d.building.assumptions),
         f"- Tổng: {ICON['error']} {c['error']} lỗi · {ICON['warning']} {c['warning']} cảnh báo · {ICON['info']} {c['info']} thông tin",
         f"- Đã bác bỏ sau review: {n_dismissed}" if n_dismissed else "",
-        "", "> (*) = luật chưa được kỹ sư đối chiếu nguyên văn văn bản (`verified: false` trong rules/*.yaml).",
+        f"- Luật không kiểm tra được do thiếu/mâu thuẫn thông tin công trình: {len(cannot)}" if cannot else "",
+        "", *(project_info_md(info, findings) if info else []),
+        "## Kết quả kiểm tra", "",
+        "> (*) = luật chưa được kỹ sư đối chiếu nguyên văn văn bản (`verified: false` trong rules/*.yaml).",
         "> Kết quả do máy đọc bản vẽ — kỹ sư PCCC phải xác nhận trước khi sử dụng chính thức.", "",
         "| # | Mức | Trang | Luật | Điều khoản | Nội dung |", "|---|---|---|---|---|---|",
     ]
     for i, f in enumerate(findings, 1):  # giữ số thứ tự gốc để khớp nhãn #i trên PDF
-        if f.dismissed:
+        if f.dismissed or f.status == "cannot_check":
             continue
         star = "" if f.verified_rule else " (*)"
         msg = f.message.replace("|", "\\|")

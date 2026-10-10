@@ -1,11 +1,12 @@
 """CLI: python -m pccc_checker <lệnh> ...
 
 Pipeline (mỗi bước ghi file trung gian để các agent làm việc độc lập, không phải truyền dữ liệu lớn qua context):
+  info     : PDF  -> project_info.json (thông tin công trình + đầu vào PCCC: bậc chịu lửa, nhóm F, chiều cao PCCC...)
   extract  : PDF  -> extraction.json + extraction.md        (Gemini / vector text)
   check    : extraction.json -> findings.json + report.md   (rule engine, 0 token)
   annotate : PDF + findings.json -> *_annotated.pdf          (ghi chú vị trí sai)
   dxf      : extraction.json (+ findings.json) -> .dxf
-  run      : chạy cả 4 bước
+  run      : info -> extract -> check -> annotate/dxf
   rules    : liệt kê luật
   pages    : phân loại trang của bộ hồ sơ (kiến trúc/kết cấu/...) — 0 token
 """
@@ -63,7 +64,64 @@ def _rule_paths(settings: dict, extra: list[str] | None) -> list[Path]:
     return [RULES_DIR / p for p in settings["rules"]["packs"]] + [Path(p) for p in extra or []]
 
 
+def _load_info(out: Path):
+    from .project_info import ProjectInfo
+    f = out / "project_info.json"
+    return ProjectInfo.from_dict(json.loads(f.read_text(encoding="utf-8"))) if f.exists() else None
+
+
+def _apply_info(d: DrawingExtraction, info, over: dict) -> dict:
+    """Ngưỡng của check lấy từ project_info.json (thay cho building do extractor đọc/suy ra).
+    Trả về {khoá building: lý do} của các trường bắt buộc missing/conflict (trừ khi --set/--building đã điền)."""
+    from .project_info import load_spec
+    spec = load_spec()
+    bmap = spec["building_map"]
+    for k, v in info.to_building(spec).items():
+        setattr(d.building, k, v)
+    d.building.assumptions = [a for a in d.building.assumptions if a.split("=")[0].split(":")[0] not in bmap.values()]
+    blocked = {bmap[k]: why for k, why in info.problems(spec).items() if k in bmap}
+    return {k: v for k, v in blocked.items() if over.get(k) is None}
+
+
+def _print_info(info) -> None:
+    from .project_info import hang_muc_table, load_spec, table_rows
+    spec = load_spec()
+    rows = table_rows(info, spec)
+    head, hm = hang_muc_table(info, spec)
+    if hm:
+        print("Hạng mục trong khu đất:")
+        for r in [head, *hm]:
+            print("  " + " | ".join(r))
+        print()
+    w = [max(len(r[i]) for r in rows) for i in range(4)]
+    print(f"{'trường':<{w[1]}} | {'giá trị':<{min(w[2], 50)}} | {'trang':<{w[3]}} | trạng thái")
+    print("-" * (w[1] + min(w[2], 50) + w[3] + 20))
+    for _, label, val, pages, st in rows:
+        print(f"{label:<{w[1]}} | {val[:50]:<{min(w[2], 50)}} | {pages:<{w[3]}} | {st}")
+    for x in info.warnings:
+        print(f"⚠ {x}")
+
+
 # ------------------------------------------------------------------ commands
+def cmd_info(a, settings) -> Path:
+    from .project_info import info_markdown, info_summary, load_spec, read_project_info
+    pdf = Path(a.pdf)
+    out = _out_dir(pdf, a.out)
+    pages = _pages(a.info_pages) if getattr(a, "info_pages", None) else None
+    info = read_project_info(pdf, settings, a.gemini_info, Path(a.project) if a.project else None,
+                             cache_dir=PROJECT_ROOT / "data" / "cache",
+                             pages=pages if isinstance(pages, list) else None,
+                             log=lambda m: print(m, file=sys.stderr))
+    _write_json(out / "project_info.json", info.to_dict())
+    spec = load_spec()
+    (out / "project_info.md").write_text(info_summary(info, spec), encoding="utf-8")              # bản gọn
+    (out / "project_info_chi_tiet.md").write_text(info_markdown(info, spec), encoding="utf-8")    # mọi căn cứ
+    _print_info(info)
+    print(f"project_info: {out / 'project_info.json'}")
+    print(f"để kiểm tra: {out / 'project_info.md'}")
+    return out / "project_info.json"
+
+
 def cmd_extract(a, settings) -> Path:
     from .extractors import make_extractor
     from .output.report_md import extraction_md
@@ -90,13 +148,19 @@ def cmd_check(a, settings) -> Path:
     ext = Path(a.extraction)
     d = DrawingExtraction.from_dict(json.loads(ext.read_text(encoding="utf-8")))
     over = _building(getattr(a, "building", None), getattr(a, "set", None))
+    info = _load_info(ext.parent)       # không có (extraction.json cũ) -> dùng building trong extraction.json
+    blocked = _apply_info(d, info, over) if info else {}
     for k, v in over.items():
         setattr(d.building, k, v)
-    findings = run_rules(load_rules(_rule_paths(settings, a.rules)), d, set(a.only.split(",")) if a.only else None)
+    findings = run_rules(load_rules(_rule_paths(settings, a.rules)), d, set(a.only.split(",")) if a.only else None,
+                         blocked=blocked)
     out = ext.parent
     _write_json(out / "findings.json", [f.to_dict() for f in findings])
-    (out / "report.md").write_text(findings_md(d, findings), encoding="utf-8")
-    sev = {s: sum(f.severity == s for f in findings) for s in ("error", "warning", "info")}
+    (out / "report.md").write_text(findings_md(d, findings, info=info), encoding="utf-8")
+    if not info:
+        print("(không có project_info.json — dùng thông tin công trình trong extraction.json)")
+    sev = {s: sum(f.severity == s and f.status != "cannot_check" for f in findings) for s in ("error", "warning", "info")}
+    sev["cannot_check"] = sum(f.status == "cannot_check" for f in findings)
     print(f"findings: {out / 'findings.json'} {sev}")
     return out / "findings.json"
 
@@ -111,7 +175,8 @@ def cmd_annotate(a, settings) -> Path:
     ext = fj.parent / "extraction.json"
     if ext.exists():  # cập nhật report để phản ánh review (dismissed / reviewer_note)
         d = DrawingExtraction.from_dict(json.loads(ext.read_text(encoding="utf-8")))
-        (fj.parent / "report.md").write_text(findings_md(d, findings, str(out_pdf)), encoding="utf-8")
+        (fj.parent / "report.md").write_text(findings_md(d, findings, str(out_pdf), info=_load_info(fj.parent)),
+                                             encoding="utf-8")
     print(f"annotated: {out_pdf} ({n} ghi chú)")
     return out_pdf
 
@@ -128,6 +193,7 @@ def cmd_dxf(a, settings) -> Path:
 
 
 def cmd_run(a, settings) -> None:
+    cmd_info(a, settings)
     ext = cmd_extract(a, settings)
     a.extraction = str(ext)
     fj = cmd_check(a, settings)
@@ -173,6 +239,13 @@ def main(argv: list[str] | None = None) -> None:
         sp.add_argument("--set", action="append", help="ghi đè thông tin công trình, vd --set height_pccc_m=24")
         sp.add_argument("--out", help="thư mục kết quả (mặc định data/output/<tên pdf>)")
 
+    def common_info(sp):
+        sp.add_argument("--project", help="project.yaml: người dùng xác nhận/bổ sung thông tin (luôn ưu tiên)")
+        sp.add_argument("--gemini-info", choices=["auto", "always", "never"], default="auto",
+                        help="auto: Gemini chỉ đọc trang không có text / bảng regex không tách được")
+        sp.add_argument("--info-pages", help="chỉ đọc các trang này cho bước info, vd 1,5,43")
+
+    sp = sub.add_parser("info"); sp.add_argument("pdf"); sp.add_argument("--out"); common_info(sp)
     sp = sub.add_parser("extract"); common_extract(sp)
     sp = sub.add_parser("check")
     sp.add_argument("extraction"); sp.add_argument("--rules", action="append")
@@ -182,7 +255,7 @@ def main(argv: list[str] | None = None) -> None:
     sp.add_argument("pdf"); sp.add_argument("findings"); sp.add_argument("--output")
     sp.add_argument("--min-severity", choices=["error", "warning", "info"])
     sp = sub.add_parser("dxf"); sp.add_argument("extraction"); sp.add_argument("--findings")
-    sp = sub.add_parser("run"); common_extract(sp)
+    sp = sub.add_parser("run"); common_extract(sp); common_info(sp)
     sp.add_argument("--rules", action="append"); sp.add_argument("--only")
     sp.add_argument("--output"); sp.add_argument("--min-severity", choices=["error", "warning", "info"])
     sp.add_argument("--no-dxf", action="store_true")
@@ -191,7 +264,7 @@ def main(argv: list[str] | None = None) -> None:
 
     a = p.parse_args(argv)
     settings = load_settings(Path(a.settings) if a.settings else None)
-    {"extract": cmd_extract, "check": cmd_check, "annotate": cmd_annotate, "dxf": cmd_dxf,
+    {"info": cmd_info, "extract": cmd_extract, "check": cmd_check, "annotate": cmd_annotate, "dxf": cmd_dxf,
      "run": cmd_run, "rules": cmd_rules, "pages": cmd_pages}[a.cmd](a, settings)
 
 

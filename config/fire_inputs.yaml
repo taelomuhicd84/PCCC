@@ -1,0 +1,95 @@
+# Danh sách giá trị hợp lệ cho thông tin đầu vào PCCC (bước `info`).
+#
+# Nguồn đối chiếu: docs/regulations/QCVN 06 SỬA ĐỔI BỔ SUNG 10.2023.docx (bản hợp nhất QCVN 06:2022 + SĐ1:2023).
+# `quote` = câu nguyên văn trích từ file trên để kỹ sư đối chiếu. `verified: false` cho đến khi kỹ sư xác nhận.
+# Giá trị đọc được nằm ngoài `values` -> bị loại (không dùng cho check) và ghi cảnh báo.
+
+fire_inputs:
+  bac_chiu_lua:
+    label: Bậc chịu lửa
+    values: [I, II, III, IV, V]
+    required: true
+    source: "QCVN 06:2022 mục 2.4 (Bảng 4)"
+    quote: "Nhà, công trình, khoang cháy được phân thành 5 bậc chịu lửa I, II, III, IV, V."
+    verified: false
+
+  nhom_nha:
+    label: Nhóm nhà theo công năng
+    values: [F1.1, F1.2, F1.3, F1.4,
+             F2.1, F2.2, F2.3, F2.4,
+             F3.1, F3.2, F3.3, F3.4, F3.5, F3.6,
+             F4.1, F4.2, F4.3, F4.4,
+             F5.1, F5.2, F5.3]
+    required: true
+    multiple: true            # nhà hỗn hợp có thể ghi nhiều nhóm, vd "F2.1; F3.2"
+    source: "QCVN 06:2022 mục 2.6 (Bảng 6 - Phân nhóm nhà dựa trên tính nguy hiểm cháy theo công năng)"
+    quote: "Bảng 6 - Phân nhóm nhà 1) dựa trên tính nguy hiểm cháy theo công năng"
+    verified: false
+
+  hang_chay_no:
+    label: Hạng nguy hiểm cháy nổ
+    # C1..C4 là hạng GIAN PHÒNG; hạng NHÀ chỉ có A, B, C, D, E -> giữ cả "C" để không loại nhầm bản vẽ ghi "hạng C".
+    values: [A, B, C, C1, C2, C3, C4, D, E]
+    required_when: {nhom_nha_prefix: F5}     # chỉ bắt buộc khi nhóm nhà là F5.x
+    source: "QCVN 06:2022 mục 2.7 + Phụ lục C (Bảng C.1)"
+    quote: "Theo tính nguy hiểm cháy và cháy nổ, nhà, công trình được phân thành các hạng A, B, C, D và E."
+    verified: false
+
+  chieu_cao_pccc:
+    label: Chiều cao PCCC
+    unit: m
+    required: true
+    source: "QCVN 06:2022 mục 1.4 (thuật ngữ chiều cao PCCC)"
+    verified: false
+
+  cap_nguy_hiem_chay_ket_cau:
+    label: Cấp nguy hiểm cháy kết cấu
+    values: [S0, S1, S2, S3]
+    required: true
+    source: "QCVN 06:2022 mục 2.5 (Bảng 5)"
+    quote: "Nhà, công trình và khoang cháy được phân thành 4 cấp nguy hiểm cháy kết cấu S0, S1, S2 và S3"
+    verified: false
+
+# Thông tin chung của khu đất / dự án (một hồ sơ = một khu đất, có thể nhiều hạng mục).
+khu_dat:
+  ten_cong_trinh:       {label: Tên công trình / dự án}
+  dien_tich_khu_dat:    {label: Diện tích khu đất, unit: m²}
+
+# Thông tin của TỪNG hạng mục (karaoke, nhà ở, nhà xe...) — cùng với fire_inputs ở trên.
+project_info:
+  cong_nang:            {label: Công năng}
+  dien_tich_xay_dung:   {label: Diện tích xây dựng, unit: m²}
+  tong_dien_tich_san:   {label: Tổng diện tích sàn, unit: m²}
+  chieu_cao_cong_trinh: {label: Chiều cao kiến trúc, unit: m}
+  so_tang_nha:          {label: Số tầng nhà (QCVN 06 1.4.50)}
+  so_tang_noi:          {label: Số tầng nổi}
+  so_tang_ham:          {label: Số tầng hầm}
+  so_tang_ban_ham:      {label: Số tầng bán hầm}
+  tang_tum_ky_thuat:    {label: Tầng tum / kỹ thuật}
+  khoi_tich:            {label: Khối tích, unit: m³}
+
+# Ánh xạ sang khoá BuildingInfo cũ mà rule engine dùng (rules/*.yaml không phải sửa).
+building_map:
+  nhom_nha: function_group
+  chieu_cao_pccc: height_pccc_m
+  bac_chiu_lua: fire_resistance_level
+  cap_nguy_hiem_chay_ket_cau: structural_hazard_class
+  so_tang_noi: floors_above
+  so_tang_ham: basements
+
+# Cách tính số tầng từ BẢNG THEO TẦNG (bước `info`). Nguồn: QCVN 06:2022 (hợp nhất SĐ1:2023) mục 1.4.
+so_tang:
+  source: "QCVN 06:2022 1.4.50 Số tầng nhà; 1.4.57 Tầng hầm; 1.4.59 Tầng nửa/bán hầm; 1.4.61 Tầng trên mặt đất"
+  quote_1_4_50: >-
+    Số tầng của tòa nhà bao gồm toàn bộ các tầng trên mặt đất (kể cả tầng kỹ thuật, tầng tum) và tầng bán/nửa hầm,
+    không bao gồm tầng áp mái. CHÚ THÍCH: Tầng tum không tính vào số tầng nhà của công trình khi chỉ có chức năng sử
+    dụng để bao che lồng cầu thang bộ/giếng thang máy và che chắn các thiết bị kỹ thuật của công trình (nếu có), có
+    diện tích mái tum không vượt quá 30% diện tích sàn mái. Đối với nhà nhóm F1 đến F4, tầng lửng không tính vào số
+    tầng nhà của công trình khi được sử dụng làm khu kỹ thuật và có diện tích sàn xây dựng không vượt quá 10 % diện
+    tích sàn ngay bên dưới và không vượt quá 300 m2 (chỉ được 01 tầng lửng không tính vào số tầng nhà).
+  tum_max_ratio: 0.30        # diện tích tum / diện tích sàn mái (lấy = diện tích sàn tầng ngay dưới)
+  lung_max_ratio: 0.10       # diện tích lửng / diện tích sàn ngay bên dưới
+  lung_max_m2: 300
+  # Quy ước của người dùng (2026-10-10): "SÂN THƯỢNG" là tầng trên cùng của bảng -> coi là tầng tum;
+  # diện tích vượt 30% sàn mái thì tính là 1 tầng.
+  verified: false

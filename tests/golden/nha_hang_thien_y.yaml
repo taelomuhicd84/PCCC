@@ -1,0 +1,39 @@
+# Golden test cho bước `info` — hồ sơ NHÀ HÀNG THIÊN Ý (bv463a.pdf, 54 trang, năm 2024).
+# Anh/chị điền giá trị ĐÚNG theo hồ sơ (null = không kiểm tra trường đó). Ghi `conflict` nếu mong đợi tool báo
+# mâu thuẫn (vd chiều cao PCCC nhà hàng: bảng tr.3-4 ghi 5 m, ghi chú tr.4-5 ghi 7 m).
+# PDF không commit (data/input) -> test tự skip nếu thiếu file.
+pdf: data/input/nha_hang_thien_y.pdf
+khu_dat:
+  ten_cong_trinh: null
+  dien_tich_khu_dat: null
+hang_muc_chinh: null            # hạng mục kiểm tra luật, vd NHÀ HÀNG 01
+# Thông tin của hạng mục chính:
+project_info:
+  cong_nang: null
+  dien_tich_xay_dung: null
+  tong_dien_tich_san: null
+  chieu_cao_cong_trinh: null
+  so_tang_noi: null
+  so_tang_ham: null
+  tang_tum_ky_thuat: null
+  khoi_tich: null
+fire_inputs:
+  bac_chiu_lua: null
+  nhom_nha: null
+  hang_chay_no: null
+  chieu_cao_pccc: null
+  cap_nguy_hiem_chay_ket_cau: null
+# Từng hạng mục (tên khớp không phân biệt hoa/thường, "01" = "1"). Chỉ điền trường muốn kiểm.
+hang_muc:
+  NHÀ HÀNG 01:
+    fire_inputs: {bac_chiu_lua: null, nhom_nha: null, hang_chay_no: null, chieu_cao_pccc: null, cap_nguy_hiem_chay_ket_cau: null}
+  NHÀ HÀNG 02:
+    fire_inputs: {bac_chiu_lua: null, nhom_nha: null, hang_chay_no: null, chieu_cao_pccc: null, cap_nguy_hiem_chay_ket_cau: null}
+  NHÀ XE 1:
+    fire_inputs: {bac_chiu_lua: null, nhom_nha: null, hang_chay_no: null, chieu_cao_pccc: null, cap_nguy_hiem_chay_ket_cau: null}
+  NHÀ XE 2:
+    fire_inputs: {bac_chiu_lua: null, nhom_nha: null, hang_chay_no: null, chieu_cao_pccc: null, cap_nguy_hiem_chay_ket_cau: null}
+  NHÀ Ở GIA ĐÌNH:
+    fire_inputs: {bac_chiu_lua: null, nhom_nha: null, hang_chay_no: null, chieu_cao_pccc: null, cap_nguy_hiem_chay_ket_cau: null}
+  TRẠM BƠM PCCC:
+    fire_inputs: {bac_chiu_lua: null, nhom_nha: null, hang_chay_no: null, chieu_cao_pccc: null, cap_nguy_hiem_chay_ket_cau: null}

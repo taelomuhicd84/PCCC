@@ -46,7 +46,7 @@ class GeminiExtractor(Extractor):
     def __init__(self, model: str = "gemini-2.5-flash", dpi: int = 150, grid: tuple[int, int] = (1, 1),
                  max_px: int = 3000, temperature: float = 0.1, cache_dir: Path | None = None,
                  fallback_models: list[str] | None = None, retries: int = 4,
-                 thinking_budget: int | None = None, workers: int = 1):
+                 thinking_budget: int | None = None, workers: int = 1, prompt_file: str = "gemini_extract.md"):
         key = gemini_api_key()
         if not key:
             raise RuntimeError("Thiếu GEMINI_API_KEY (đặt trong .env hoặc biến môi trường).")
@@ -54,7 +54,8 @@ class GeminiExtractor(Extractor):
         self._genai = genai
         self.client = genai.Client(api_key=key)
         self.model, self.dpi, self.grid, self.max_px, self.temperature = model, dpi, grid, max_px, temperature
-        self.prompt = (PROMPTS_DIR / "gemini_extract.md").read_text(encoding="utf-8")
+        self.prompt = (PROMPTS_DIR / prompt_file).read_text(encoding="utf-8")
+        self.last_model = model                 # model thực sự trả lời (có thể là model dự phòng)
         self.cache_dir = cache_dir
         self.fallback_models = fallback_models or []
         self.retries = retries
@@ -82,7 +83,9 @@ class GeminiExtractor(Extractor):
             for attempt in range(self.retries):
                 try:
                     resp = self.client.models.generate_content(model=model, contents=contents, config=cfg)
-                    return _parse_json(resp.text or "{}")
+                    data = _parse_json(resp.text or "{}")
+                    self.last_model = model
+                    return data
                 except Exception as e:  # 503 quá tải / 429 quota / mạng / JSON lỗi -> chờ rồi thử lại
                     last_err = e
                     if "API key" in str(e) or "PERMISSION_DENIED" in str(e):

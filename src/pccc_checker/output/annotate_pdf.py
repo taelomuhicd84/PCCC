@@ -18,7 +18,8 @@ def annotate(pdf_in: Path, findings: list[Finding], pdf_out: Path, min_severity:
     doc = pymupdf.open(pdf_in)
     groups: "OrderedDict[tuple, list[tuple[int, Finding]]]" = OrderedDict()
     for idx, f in enumerate(findings, 1):
-        if f.dismissed or RANK.get(f.severity, 3) > RANK[min_severity]:
+        # luật không kiểm tra được (thiếu thông tin công trình) chỉ liệt kê trong report.md
+        if f.dismissed or f.status == "cannot_check" or RANK.get(f.severity, 3) > RANK[min_severity]:
             continue
         pno = (f.page or 1) - 1
         if pno >= doc.page_count:

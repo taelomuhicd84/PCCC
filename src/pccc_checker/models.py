@@ -126,6 +126,7 @@ class Finding:
     verified_rule: bool = False           # luật đã được kỹ sư đối chiếu văn bản gốc chưa
     reviewer_note: str = ""               # ghi chú từ agent/kỹ sư review
     dismissed: bool = False               # agent/kỹ sư bác bỏ (false positive) -> không ghi lên PDF
+    status: str = "violation"             # violation | cannot_check (thiếu/mâu thuẫn thông tin công trình)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

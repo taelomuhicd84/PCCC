@@ -1,0 +1,22 @@
+# Golden test cho bước `info` — anh/chị điền giá trị ĐÚNG theo hồ sơ (để null = không kiểm tra trường đó).
+# Ghi `conflict` nếu mong đợi tool báo mâu thuẫn (vd hồ sơ nhiều hạng mục ghi khác nhau).
+# PDF không commit (data/input) -> test tự skip nếu thiếu file.
+pdf: data/input/karaoke_hoang_anh_2.pdf
+khu_dat:
+  ten_cong_trinh: KARAOKE HOÀNG ANH 2 VÀ CÁC CÔNG TRÌNH PHỤ TRỢ
+  dien_tich_khu_dat: 1433.4
+project_info:
+  cong_nang: KARAOKE
+  dien_tich_xay_dung: null       # bảng chỉ có "diện tích điển hình" 607.35 m2 — chưa chắc là DTXD
+  tong_dien_tich_san: null
+  chieu_cao_cong_trinh: 8.55     # chiều cao mái
+  so_tang_noi: 2
+  so_tang_ham: null
+  tang_tum_ky_thuat: null
+  khoi_tich: 4811.83
+fire_inputs:
+  bac_chiu_lua: II
+  nhom_nha: F2.1
+  hang_chay_no: null
+  chieu_cao_pccc: 6
+  cap_nguy_hiem_chay_ket_cau: S0

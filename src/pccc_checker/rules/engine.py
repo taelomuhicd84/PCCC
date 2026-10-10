@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, Optional
 
 import yaml
 
@@ -133,6 +133,45 @@ def _merge_duplicates(findings: list[Finding]) -> list[Finding]:
     return list(merged.values())
 
 
+# ----------------------------------------------------------------- phụ thuộc thông tin công trình
+BUILDING_KEYS = {"function_group", "height_pccc_m", "fire_resistance_level", "structural_hazard_class",
+                 "floors_above", "basements"}
+ALIASES = {"function_class": "function_group"}                 # khoá suy ra trong context()
+CHECK_DEPS = {"basement_smoke_lobby": {"basements"}}           # check Python đọc thẳng d.building
+
+
+def _when_keys(when: Any) -> set:
+    out: set = set()
+    for key, val in (when or {}).items():
+        if key == "any":
+            for sub in val:
+                out |= _when_keys(sub)
+            continue
+        m = re.match(r"(.+)_(lt|lte|gt|gte|in|nin|ne)$", key)
+        k = m.group(1) if m else key
+        out.add(ALIASES.get(k, k))
+    return out & BUILDING_KEYS
+
+
+def rule_deps(rule: dict[str, Any]) -> tuple[set, set]:
+    """-> (phụ thuộc cứng: filter/when/requires -> không chạy được ; phụ thuộc mềm: chỉ trong `cases` -> chạy
+    với ngưỡng mặc định nhưng không xác định được trường hợp đặc biệt)."""
+    hard = _when_keys(rule.get("filter")) | _when_keys(rule.get("when")) | set(rule.get("requires") or [])
+    hard |= CHECK_DEPS.get(rule.get("check", ""), set())
+    soft = set()
+    for case in rule.get("cases") or []:
+        soft |= _when_keys(case.get("when"))
+    return hard, soft - hard
+
+
+def _cannot_check(rule: dict[str, Any], reasons: list[str], partial: bool) -> Finding:
+    msg = (f"Không xác định được ngưỡng theo trường hợp đặc biệt của luật ({'; '.join(reasons)}) — "
+           f"đã kiểm tra với ngưỡng mặc định" if partial else
+           f"Không kiểm tra được: {'; '.join(reasons)}. Xác nhận trong project.yaml rồi chạy lại check")
+    return Finding(rule["id"], rule.get("clause", ""), "info", f"{rule.get('title', rule['id'])}: {msg}",
+                   verified_rule=bool(rule.get("verified", False)), status="cannot_check")
+
+
 # ----------------------------------------------------------------- loader / runner
 def load_rules(paths: list[Path]) -> list[dict[str, Any]]:
     rules: list[dict[str, Any]] = []
@@ -145,12 +184,23 @@ def load_rules(paths: list[Path]) -> list[dict[str, Any]]:
     return rules
 
 
-def run_rules(rules: list[dict[str, Any]], d: DrawingExtraction, only: set[str] | None = None) -> list[Finding]:
+def run_rules(rules: list[dict[str, Any]], d: DrawingExtraction, only: set[str] | None = None,
+              blocked: Optional[dict[str, str]] = None) -> list[Finding]:
+    """blocked: {khoá building: lý do} — trường bắt buộc missing/conflict trong project_info.json.
+    Luật phụ thuộc các trường đó trả về Finding status `cannot_check` thay vì âm thầm bỏ qua."""
     from . import checks  # noqa: F401  (đăng ký các check)
     findings: list[Finding] = []
+    blocked = blocked or {}
     for rule in rules:
         if not rule.get("enabled", True) or (only and rule["id"] not in only):
             continue
+        if blocked and rule["check"] != "building_missing":
+            hard, soft = rule_deps(rule)
+            if hard & blocked.keys():
+                findings.append(_cannot_check(rule, [blocked[k] for k in sorted(hard & blocked.keys())], False))
+                continue
+            if soft & blocked.keys():
+                findings.append(_cannot_check(rule, [blocked[k] for k in sorted(soft & blocked.keys())], True))
         fn = REGISTRY.get(rule["check"])
         if fn is None:
             findings.append(Finding(rule["id"], rule.get("clause", ""), "info",

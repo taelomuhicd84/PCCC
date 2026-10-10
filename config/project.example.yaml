@@ -1,0 +1,63 @@
+# Xác nhận / bổ sung thông tin công trình cho bước `info` (giá trị ở đây LUÔN được ưu tiên, trạng thái `confirmed`).
+# Dùng: python -m pccc_checker info <pdf> --project config/project.yaml   (hoặc run ... --project ...)
+# Để trống (null) = giữ giá trị đọc được từ bản vẽ. Danh sách giá trị hợp lệ: config/fire_inputs.yaml.
+#
+# Cấu trúc: MỘT khu đất (dự án) gồm NHIỀU hạng mục (karaoke, nhà ở, nhà xe, phòng trực PCCC...).
+# - khu_dat        : thông tin chung của cả khu đất.
+# - hang_muc       : thông tin quy mô + PCCC của từng hạng mục. Tên hạng mục = công năng ghi trong bảng quy mô
+#                    (không phân biệt hoa/thường) để khớp với giá trị đọc từ bản vẽ.
+# - hang_muc_chinh : hạng mục mà luật QCVN 06 được kiểm tra theo (mặc định: hạng mục khớp tên công trình,
+#                    nếu không có thì hạng mục có khối tích lớn nhất).
+#
+# Ví dụ dưới đây: hồ sơ "Karaoke Hoàng Anh 2" (data/input/karaoke_hoang_anh_2.pdf).
+
+khu_dat:
+  ten_cong_trinh: KARAOKE HOÀNG ANH 2 VÀ CÁC CÔNG TRÌNH PHỤ TRỢ
+  dien_tich_khu_dat: 1433.4      # m² — "Tổng diện tích khu đất hạng mục thẩm duyệt PCCC" (tr.4, 6, 7)
+
+hang_muc_chinh: KARAOKE
+
+hang_muc:
+  KARAOKE:                       # bảng thống kê tr.5
+    project_info:
+      cong_nang: KARAOKE
+      dien_tich_xay_dung: null   # m² — bảng chỉ ghi "diện tích điển hình" 607.35
+      tong_dien_tich_san: null   # m²
+      chieu_cao_cong_trinh: 8.55 # m — chiều cao mái
+      so_tang_noi: 2
+      so_tang_ham: null
+      tang_tum_ky_thuat: null
+      khoi_tich: 4811.83         # m³
+    fire_inputs:
+      bac_chiu_lua: II           # I | II | III | IV | V
+      nhom_nha: F2.1             # F1.1 ... F5.3
+      hang_chay_no: null         # A | B | C | C1..C4 | D | E — chỉ bắt buộc khi nhóm F5.x
+      chieu_cao_pccc: 6          # m
+      cap_nguy_hiem_chay_ket_cau: S0   # S0 | S1 | S2 | S3
+    # số lượng người lớn nhất: 114 (chưa có trường riêng)
+
+  NHÀ Ở:                         # nhà ở nhân viên — bảng tr.43, 44
+    project_info:
+      cong_nang: NHÀ Ở
+      dien_tich_xay_dung: null   # m² — bảng chỉ ghi "diện tích" 42.75
+      chieu_cao_cong_trinh: 7.8  # m — chiều cao mái
+      so_tang_noi: 2
+      khoi_tich: 346.55          # m³
+    fire_inputs:
+      bac_chiu_lua: II
+      nhom_nha: F1.4
+      chieu_cao_pccc: 5.1        # m
+      cap_nguy_hiem_chay_ket_cau: S0
+
+  PCCC:                          # phòng trực PCCC — bảng tr.56 (công năng ghi "PCCC")
+    project_info:
+      cong_nang: PCCC
+      dien_tich_xay_dung: null   # m² — bảng chỉ ghi "diện tích" 8.37
+      chieu_cao_cong_trinh: 3.2  # m — chiều cao mái
+      so_tang_noi: 1
+      khoi_tich: 26.79           # m³
+    fire_inputs:
+      bac_chiu_lua: II
+      nhom_nha: null             # bảng ghi "-"
+      chieu_cao_pccc: 3.2        # m
+      cap_nguy_hiem_chay_ket_cau: S0
