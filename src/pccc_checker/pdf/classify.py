@@ -13,14 +13,14 @@ from .render import page_count, vector_text
 
 # Thứ tự quan trọng: loại kết cấu được xét trước vì "MẶT BẰNG DẦM TẦNG 1" cũng chứa "MẶT BẰNG TẦNG".
 CATEGORIES: list[tuple[str, re.Pattern]] = [
-    ("structure", re.compile(r"MÓNG|DẦM|ĐÀ KIỀNG|ĐÀ GIẰNG|THÉP SÀN|CỐT THÉP|UỐN THÉP|KẾT CẤU|CỌC BTCT|SÀN BTCT", re.I)),
+    ("structure", re.compile(r"MÓNG|DẦM|ĐÀ KIỀNG|ĐÀ GIẰNG|THÉP SÀN|CỐT THÉP|UỐN THÉP|KẾT CẤU(?!\s*ÁO\s*ĐƯỜNG)|CỌC BTCT|SÀN BTCT", re.I)),
     ("mep", re.compile(r"CẤP NƯỚC|THOÁT NƯỚC|ĐIỆN CHIẾU SÁNG|ĐIỀU HÒA|CHỐNG SÉT", re.I)),
     ("door_schedule", re.compile(r"(CHI TIẾT|THỐNG KÊ|BẢNG)\s*(CỬA|CỬA ĐI)", re.I)),
-    ("site", re.compile(r"(TỔNG\s*MẶT\s*BẰNG|MẶT\s*BẰNG\s*TỔNG\s*THỂ|GIAO THÔNG PCCC|CHI TIẾT BÃI)", re.I)),
+    ("site", re.compile(r"(TỔNG\s*MẶT\s*BẰNG|MẶT\s*BẰNG\s*TỔNG\s*THỂ|MẶT\s*BẰNG\s*PHÒNG\s*CHÁY\s*TỔNG\s*THỂ|GIAO THÔNG PCCC|CHI TIẾT BÃI)", re.I)),
     ("pump", re.compile(r"PHÒNG\s*BƠM", re.I)),
     ("plan", re.compile(r"MẶT\s*BẰNG\s*(TẦNG|TRỆT|HẦM|BÁN HẦM|MÁI|THOÁT NẠN|BỐ TRÍ|PCCC|ĐIỂN HÌNH|LẦU|SÂN\s*THƯỢNG)", re.I)),
     ("stair", re.compile(r"CHI TIẾT\s*(B?TB\d|THANG|CẦU THANG)|(MẶT\s*BẰNG|MẶT\s*CẮT)\s*(BUỒNG|CẦU)\s*THANG", re.I)),
-    ("section", re.compile(r"MẶT\s*CẮT", re.I)),
+    ("section", re.compile(r"MẶT\s*C[ẮĂ]T", re.I)),   # có bản vẽ gõ sai "MẶT CĂT"
     ("elevation", re.compile(r"MẶT\s*ĐỨNG", re.I)),
 ]
 # Trang chứa thông tin công trình (bước `info`). Nhận diện theo nhãn đầu dòng, không chỉ tiêu đề, và xét trước
@@ -35,7 +35,7 @@ INFO_CATEGORIES = {"cover", "bang_quy_mo", "thuyet_minh_pccc", "khu_dat", "ghi_c
 FIRE_INPUT_KEYS = {"bac_chiu_lua", "nhom_nha", "hang_chay_no", "chieu_cao_pccc", "cap_nguy_hiem_chay_ket_cau"}
 DRAWING_CATEGORIES = {"plan", "stair", "door_schedule", "section", "site"}
 RELEVANT = {"plan", "stair", "door_schedule", "section", "site", "unknown"}
-TITLE_LINE = re.compile(r"^(MẶT|CHI TIẾT|BẢNG|THỐNG KÊ|TỔNG|BỐ TRÍ|SƠ ĐỒ|KẾT CẤU)", re.I)
+TITLE_LINE = re.compile(r"^(?!TỔNG\s*GIÁM)(MẶT|CHI TIẾT|BẢNG|THỐNG KÊ|TỔNG|BỐ TRÍ|SƠ ĐỒ|KẾT CẤU)", re.I)
 
 
 def info_kind(texts: List[str]) -> str:

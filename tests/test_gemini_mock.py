@@ -46,3 +46,14 @@ def test_hybrid_falls_back_to_vector_on_daily_quota(tmp_path, monkeypatch):
     d = HybridExtractor(gem, VectorTextExtractor()).extract(pdf, log=lambda *_: None)
     assert d.elements()                                         # vẫn có kết quả từ text vector
     assert any("Gemini không đọc được" in n for n in d.pages[0].notes)
+
+
+def test_backend_web_settings_and_cache_reuse(tmp_path):
+    from pccc_checker.extractors.gemini_extractor import backend_kwargs, cached
+    g = {"model": "gemini-2.5-flash", "backend": "web", "web": {"model": "Pro", "fallback_models": ["Flash"], "headless": True}}
+    assert backend_kwargs(g) == {"model": "Pro", "fallback_models": ["Flash"], "web": {"headless": True}}
+    assert backend_kwargs({**g, "backend": "api"})["model"] == "gemini-2.5-flash"
+    api = tmp_path / "abc_p3_gemini-2.5-flash_2x2_ph.json"
+    api.write_text("[]")
+    assert cached(tmp_path / "abc_p3_Pro_2x2_ph.json", "abc_p3_*_2x2_ph.json") == api   # đổi API -> web vẫn dùng cache
+    assert cached(tmp_path / "abc_p4_Pro_2x2_ph.json", "abc_p4_*_2x2_ph.json") is None

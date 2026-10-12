@@ -33,6 +33,9 @@ class Extractor(ABC):
         page_texts: dict[int, list[str]] = {}
         for p in sorted(set(pages) | set(range(1, min(3, n_pages) + 1))):   # trang bìa: chỉ đọc text (0 token)
             page_texts[p] = [t["text"] for t in vector_text(pdf, p)]
+        prefetch = getattr(getattr(self, "gemini", self), "prefetch", None)   # backend web: tải PDF 1 lần
+        if prefetch:
+            prefetch(pdf, pages, log)
         workers = getattr(self, "workers", 1)
         log(f"[{self.name}] {len(pages)} trang, {workers} luồng song song")
 

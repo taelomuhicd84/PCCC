@@ -14,3 +14,8 @@ api.txt
 docs/regulations/*
 !docs/regulations/.gitkeep
 !docs/regulations/QCVN*
+
+# Profile Chrome đăng nhập Gemini (chứa cookie) + cookie xuất tay + log
+data/chrome_gemini/
+data/*cookies*.json
+data/*.txt

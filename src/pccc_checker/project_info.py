@@ -167,6 +167,8 @@ def _int(s: str) -> Optional[int]:
 
 
 NUM = r"(\d[\d.,]*\d|\d)(?![\d:/])"
+# diện tích / khối tích: cho phép dấu cách phân cách nghìn "36 510 m3" (đứng trước NUM để không cắt còn "36")
+NUM_QTY = r"(\d{1,3}(?: \d{3})+(?![\d.,])|\d[\d.,]*\d|\d)(?![\d:/])"
 UNIT_HDR = r"(?:\s*\(\s*(?:M|M2|M²|M3|M³|m|m2|m²|m3|m³)\s*\))?"   # "CHIỀU CAO PCCC (M)", "KHỐI TÍCH ( M3 )"
 SEP = r"\s*(?:[:=|\-–]|LÀ|ĐẠT)?\s*"
 BULLET = r"^\W{0,4}(?:\d{1,2}[.)]\s*|[a-zđ][.)]\s*)?"                 # "- ", "+ ", "1. ", "a) ", "***"
@@ -200,9 +202,9 @@ LEN_UNIT = r"\s*m\b"
 PATTERNS: Dict[str, List[Tuple[re.Pattern, Conv]]] = {
     "dien_tich_khu_dat": [
         # "***Tổng diện tích khu đất hạng mục thẩm duyệt PCCC: 1433.4m2"
-        (_pat(r"(?:TỔNG\s*)?DIỆN\s*TÍCH\s*KHU\s*ĐẤT[^:|\d]{0,50}", NUM + AREA_UNIT), _area),
+        (_pat(r"(?:TỔNG\s*)?DIỆN\s*TÍCH\s*KHU\s*ĐẤT[^:|\d]{0,50}", NUM_QTY + AREA_UNIT), _area),
         # "TỔNG DIỆN TÍCH ĐẤT : 6075 M2" (không nhận "diện tích đất (không) xây dựng")
-        (_pat(r"(?:TỔNG\s*)?DIỆN\s*TÍCH\s*ĐẤT(?!\s*(?:KHÔNG\s*)?XÂY)", NUM + AREA_UNIT), _area),
+        (_pat(r"(?:TỔNG\s*)?DIỆN\s*TÍCH\s*ĐẤT(?!\s*(?:KHÔNG\s*)?XÂY)", NUM_QTY + AREA_UNIT), _area),
     ],
     "ten_cong_trinh": [
         # bắt buộc "CÔNG TRÌNH:" (có dấu hai chấm) để không dính câu "Công trình có cấp nguy hiểm..."
@@ -213,10 +215,14 @@ PATTERNS: Dict[str, List[Tuple[re.Pattern, Conv]]] = {
         (_pat(r"CÔNG\s*NĂNG(?:\s*(?:SỬ\s*DỤNG|CHÍNH|CÔNG\s*TRÌNH))?", r"([^|]{3,80})"), lambda m: (_clean(m.group(1)), None)),
     ],
     "dien_tich_xay_dung": [
-        (_pat(r"DIỆN\s*TÍCH\s*(?:ĐẤT\s*)?XÂY\s*DỰNG", NUM + AREA_UNIT), _area),
+        (_pat(r"DIỆN\s*TÍCH\s*(?:ĐẤT\s*)?XÂY\s*DỰNG", NUM_QTY + AREA_UNIT), _area),
+        # bảng quy mô: "DIỆN TÍCH ( M2 ) | 42.75", "DIỆN TÍCH ĐIỂN HÌNH (M2) | 607.35" = diện tích xây dựng
+        # (quy ước người dùng 2026-10-12). Bắt buộc có "(M2)" để không dính câu văn "diện tích phòng...".
+        (_pat(r"DIỆN\s*TÍCH(?:\s*ĐIỂN\s*HÌNH)?(?=\s*\(\s*M\s*[2²]\s*\))", NUM_QTY + AREA_UNIT), _area),
     ],
     "tong_dien_tich_san": [
-        (_pat(r"TỔNG\s*DIỆN\s*TÍCH\s*SÀN(?:\s*XÂY\s*DỰNG)?", NUM + AREA_UNIT), _area),
+        # "tổng diện tích xây dựng" = tổng diện tích các tầng cộng lại (quy ước người dùng 2026-10-12)
+        (_pat(r"TỔNG\s*DIỆN\s*TÍCH\s*(?:SÀN(?:\s*XÂY\s*DỰNG)?|XÂY\s*DỰNG)", NUM_QTY + AREA_UNIT), _area),
     ],
     "chieu_cao_cong_trinh": [
         (_pat(r"CHIỀU\s*CAO\s*(?:CÔNG\s*TRÌNH|KIẾN\s*TRÚC|XÂY\s*DỰNG|NHÀ|MÁI)", NUM + r"\s*m?\b"), _len),
@@ -237,7 +243,7 @@ PATTERNS: Dict[str, List[Tuple[re.Pattern, Conv]]] = {
         (_pat(r"TẦNG\s*(?:TUM|KỸ\s*THUẬT|MÁI\s*TUM)", r"([^|]{1,60})"), lambda m: (_clean(m.group(1)), None)),
     ],
     "khoi_tich": [
-        (_pat(r"(?:TỔNG\s*)?KHỐI\s*TÍCH(?:\s*(?:CÔNG\s*TRÌNH|NHÀ|XÂY\s*DỰNG))?", NUM + VOL_UNIT), _vol),
+        (_pat(r"(?:TỔNG\s*)?KHỐI\s*TÍCH(?:\s*(?:CÔNG\s*TRÌNH|NHÀ|XÂY\s*DỰNG))?", NUM_QTY + VOL_UNIT), _vol),
     ],
     "bac_chiu_lua": [
         (_pat(r"BẬC\s*CHỊU\s*LỬA(?:\s*(?:CỦA\s*)?(?:CÔNG\s*TRÌNH|NHÀ))?", r"(?:BẬC\s*)?[\"“']?(IV|V|I{1,3})\b", anchored=False),
@@ -249,6 +255,8 @@ PATTERNS: Dict[str, List[Tuple[re.Pattern, Conv]]] = {
          lambda m: (re.findall(r"F\d\.\d", re.sub(r"\s", "", m.group(1)).replace(",", ".").upper()), None)),
     ],
     "hang_chay_no": [
+        # "Hạng sản xuất : Hạng C" (thuyết minh nhà xưởng) = hạng nguy hiểm cháy nổ
+        (_pat(r"HẠNG\s*SẢN\s*XUẤT", r"(?:HẠNG\s*)?[\"“']?([ABCDE][1-4]?)\b(?![.\d])"), lambda m: (m.group(1).upper(), None)),
         (_pat(r"HẠNG\s*(?:NGUY\s*HIỂM\s*)?CHÁY(?:\s*(?:VÀ\s*)?(?:CHÁY\s*)?NỔ)?(?:\s*(?:CỦA\s*)?(?:NHÀ|CÔNG\s*TRÌNH))?",
               r"(?:HẠNG\s*)?[\"“']?([ABCDE][1-4]?)\b(?![.\d])", anchored=False),
          lambda m: (m.group(1).upper(), None)),
@@ -319,7 +327,8 @@ def row_strings(texts: List[Dict[str, Any]], max_dx: float = 400.0) -> List[str]
 # Chủ ngữ của câu ghi chú: "Nhà hàng 1 & 2 thuộc nhóm nhà F3.2 ...", "Nhà xe 01 & 02 có bậc chịu lửa bậc IV"
 SUBJECT = re.compile(r"^\W{0,4}((?:NHÀ|PHÒNG|TRẠM|KHỐI|KHU|BỂ|TÒA|BLOCK|XƯỞNG|KHO|KARAOKE|MÁI\s*CHE)\b[^,:;.<>=]{0,40}?)"
                      r"\s+(?:CÓ|THUỘC|ĐƯỢC|LÀ)\b", re.I)
-PAIR = re.compile(r"^(.*?)\s*0*(\d{1,2})\s*(?:&|VÀ|,|\+)\s*0*(\d{1,2})$", re.I)
+# 'NHÀ XE 01 & 02', 'NHÀ XƯỞNG 02, 03, 04, 08' (giữ số 0 đầu)
+PAIR = re.compile(r"^(.*?)\s*(\d{1,2}(?:\s*(?:&|VÀ|,|\+)\s*\d{1,2})+)$", re.I)
 
 
 def subject_names(line: str) -> List[str]:
@@ -330,20 +339,19 @@ def subject_names(line: str) -> List[str]:
     name = _clean(m.group(1))
     if _norm_text(name) in ("NHÀ", "CÔNG TRÌNH", "KHU", "KHỐI"):
         return []
-    pm = PAIR.match(name)
-    return [f"{pm.group(1)} {pm.group(2)}", f"{pm.group(1)} {pm.group(3)}"] if pm else [name]
+    return _split_pair(name)
 
 
 # Bảng thống kê hạng mục DẠNG CỘT: hàng tiêu đề (HẠNG MỤC | DIỆN TÍCH | CHIỀU CAO PCCC (m) | ...), mỗi hàng 1 hạng mục.
 TABLE_ANCHOR = re.compile(r"^\W*(?:TÊN\s*)?HẠNG\s*MỤC\W*$", re.I)
 FLOOR_ANCHOR = re.compile(r"^\W*TẦNG\W*$", re.I)          # bảng theo tầng: hàng = tầng, KHÔNG phải hạng mục
-# (tiêu đề cột, key, nhãn chuẩn để chạy lại PATTERNS). Cột "DIỆN TÍCH (m2)" trơn KHÔNG gán cho diện tích xây dựng
-# (có thể là diện tích sàn/điển hình) -> bỏ qua.
+# (tiêu đề cột, key, nhãn chuẩn để chạy lại PATTERNS). Cột "DIỆN TÍCH (m2)" trơn: bảng hạng mục -> diện tích xây dựng
+# (quy ước người dùng 2026-10-12); bảng theo tầng -> diện tích sàn từng tầng.
 COLUMN_KEYS: List[Tuple[re.Pattern, str, str]] = [
     (re.compile(r"CHIỀU\s*CAO.*PCCC", re.I), "chieu_cao_pccc", "CHIỀU CAO PCCC"),
     (re.compile(r"CHIỀU\s*CAO.*(MÁI|CÔNG\s*TRÌNH|KIẾN\s*TRÚC)", re.I), "chieu_cao_cong_trinh", "CHIỀU CAO CÔNG TRÌNH"),
+    (re.compile(r"TỔNG\s*DIỆN\s*TÍCH\s*(SÀN|XÂY\s*DỰNG)", re.I), "tong_dien_tich_san", "TỔNG DIỆN TÍCH SÀN"),
     (re.compile(r"DIỆN\s*TÍCH\s*XÂY\s*DỰNG", re.I), "dien_tich_xay_dung", "DIỆN TÍCH XÂY DỰNG"),
-    (re.compile(r"TỔNG\s*DIỆN\s*TÍCH\s*SÀN", re.I), "tong_dien_tich_san", "TỔNG DIỆN TÍCH SÀN"),
     (re.compile(r"SỐ\s*TẦNG(?!\s*HẦM)", re.I), "so_tang_noi", "SỐ TẦNG"),
     (re.compile(r"TẦNG\s*HẦM", re.I), "so_tang_ham", "SỐ TẦNG HẦM"),
     (re.compile(r"KHỐI\s*TÍCH", re.I), "khoi_tich", "KHỐI TÍCH"),
@@ -352,7 +360,7 @@ COLUMN_KEYS: List[Tuple[re.Pattern, str, str]] = [
     (re.compile(r"HẠNG\s*NGUY\s*HIỂM|CHÁY\s*,?\s*NỔ", re.I), "hang_chay_no", "HẠNG NGUY HIỂM CHÁY NỔ"),
     (re.compile(r"CẤP\s*NGUY\s*HIỂM", re.I), "cap_nguy_hiem_chay_ket_cau", "CẤP NGUY HIỂM CHÁY KẾT CẤU"),
     (re.compile(r"CÔNG\s*NĂNG", re.I), "cong_nang", "CÔNG NĂNG"),
-    (re.compile(r"^\W*DIỆN\s*TÍCH(?!\s*(XÂY|SÀN|KHU|ĐẤT))", re.I), "dien_tich_tang", "DIỆN TÍCH"),   # chỉ bảng theo tầng
+    (re.compile(r"^\W*DIỆN\s*TÍCH(?!\s*(XÂY|SÀN|KHU|ĐẤT))", re.I), "dien_tich_tang", "DIỆN TÍCH"),
 ]
 
 
@@ -495,6 +503,56 @@ def _floor_table(texts, cols, rows, top, pitch, page) -> List[Dict[str, Any]]:
         if res["tum"]:
             hits.append({"key": "tang_tum_ky_thuat", "value": res["tum"], "unit": None, "page": page,
                          "method": "tinh_toan", "text": ev[:400]})
+        # tổng diện tích sàn = tổng diện tích các tầng (bỏ hàng mái); chỉ tính khi mọi tầng đều ghi diện tích
+        sized = [(n, a) for n, a in floors if floor_kind(n) != "mai"]
+        if sized and all(a for _, a in sized):
+            total = round(sum(a for _, a in sized), 2)
+            hits.append({"key": "tong_dien_tich_san", "value": total, "unit": "m²", "page": page, "method": "tinh_toan",
+                         "text": ("tổng diện tích các tầng: " + " + ".join(f"{n} {a:g}" for n, a in sized))[:400]})
+    return hits
+
+
+# Dòng diện tích tầng ghi trên mặt bằng: "TẦNG 1 NHÀ XƯỞNG CHO THUÊ 02, 03:  2000 M2"
+FLOOR_AREA_LINE = re.compile(r"^\W*((?:TẦNG|LẦU)\s*(?:\d{1,2}|TRỆT|LỬNG|TUM|MÁI))\s+"
+                             r"((?:NHÀ|XƯỞNG|KHO|KHỐI|TÒA|BLOCK)\b[^:=|]{2,60}?)\s*[:=]\s*" + NUM_QTY + AREA_UNIT + r"\s*$", re.I)
+
+
+def floor_area_lines(texts: List[Dict[str, Any]], page: int) -> List[Dict[str, Any]]:
+    """-> [{hang_muc, floor, area, page, text}] từ các dòng 'TẦNG n <hạng mục>: X M2'."""
+    out = []
+    for t in texts:
+        m = FLOOR_AREA_LINE.match(t["text"])
+        if m:
+            out.append({"hang_muc": _clean(m.group(2)), "floor": m.group(1).upper(), "page": page,
+                        "area": parse_number(m.group(3), thousands_dot=True), "text": t["text"][:200]})
+    return out
+
+
+def floor_area_hits(lines: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Gom dòng diện tích tầng của mọi trang theo hạng mục -> số tầng (QCVN 06 1.4.50), diện tích xây dựng (tầng 1),
+    tổng diện tích sàn. 'NHÀ XƯỞNG 02, 03' -> tính riêng cho từng xưởng."""
+    by_hm: Dict[str, Dict[str, Dict[str, Any]]] = {}
+    for ln in lines:
+        for name in _split_pair(ln["hang_muc"]):
+            by_hm.setdefault(name, {}).setdefault(ln["floor"], ln)
+    hits: List[Dict[str, Any]] = []
+    for name, floors in by_hm.items():
+        order = sorted(floors, key=lambda f: (floor_kind(f) not in ("ham", "ban_ham"),
+                                              int(re.sub(r"\D", "", f) or (0 if "TRỆT" in f else 99))))
+        rows = [(f, floors[f]["area"]) for f in order]
+        pages = sorted({ln["page"] for ln in floors.values()})
+        ev = "dòng diện tích tầng: " + "; ".join(floors[f]["text"] for f in order)
+        res = count_floors(rows, load_spec()["so_tang"])
+        h0 = {"unit": None, "page": pages[0], "method": "tinh_toan", "hang_muc": name, "text": ev[:400]}
+        for key in ("so_tang_nha", "so_tang_noi", "so_tang_ham", "so_tang_ban_ham"):
+            hits.append(dict(h0, key=key, value=res[key], assumptions=res["assumptions"]))
+        first = next((floors[f] for f in order if floor_kind(f) == "thuong"), None)
+        if first and first["area"]:
+            hits.append(dict(h0, key="dien_tich_xay_dung", value=first["area"], unit="m²", page=first["page"],
+                             method="vector", text=first["text"]))
+        sized = [(f, a) for f, a in rows if floor_kind(f) != "mai"]
+        if len(sized) >= 2 and all(a for _, a in sized):
+            hits.append(dict(h0, key="tong_dien_tich_san", value=round(sum(a for _, a in sized), 2), unit="m²"))
     return hits
 
 
@@ -528,7 +586,13 @@ def column_tables(texts: List[Dict[str, Any]], page: int) -> List[Dict[str, Any]
         if floor_table:
             hits.extend(_floor_table(texts, cols, rows, top, pitch, page))
             continue
+        areas: Dict[str, List[Tuple[float, Any, str]]] = {}      # hạng mục -> [(y, diện tích, text)]
         for c in cols:
+            if c["key"] == "dien_tich_tang":
+                for name, cell in _area_cells(texts, c, rows, top, pitch, h):
+                    areas.setdefault(name, []).append(cell)
+                continue
+            ckey, clabel = c["key"], c["label"]
             for t in texts:
                 if not (c["x0"] - 3 <= _cx(t) <= c["x1"] + 3) or t["bbox"][1] < top - 1:
                     continue
@@ -538,14 +602,75 @@ def column_tables(texts: List[Dict[str, Any]], page: int) -> List[Dict[str, Any]
                 owners = [rows[d[0][1]]]
                 if len(d) > 1 and d[1][0] - d[0][0] < 0.3 * pitch:   # ô gộp giữa 2 hàng -> cả 2 hạng mục
                     owners.append(rows[d[1][1]])
-                for key, v, unit in match_text(f"{c['label']}: {t['text']}"):
-                    if key != c["key"]:
+                for key, v, unit in match_text(f"{clabel}: {t['text']}"):
+                    if key != ckey:
                         continue
                     for r in owners:
                         name = _clean(r["text"])
                         hits.append({"key": key, "value": v, "unit": unit, "page": page, "method": "vector",
                                      "hang_muc": name, "text": f"{name} | {c['head']} | {t['text']}"[:200]})
+        hits.extend(_area_hits(areas, hits, page))
     return hits
+
+
+FLOOR_LABEL = re.compile(r"^\W*(?:TẦNG|LẦU)\s*0*(\d{1,2})\W*$", re.I)
+
+
+def _area_cells(texts, col, rows, top, pitch, h) -> List[Tuple[str, Tuple[float, Any, str]]]:
+    """Ô của cột DIỆN TÍCH -> [(hạng mục, (y, diện tích, text))].
+    Ô có nhãn 'TẦNG 1', 'TẦNG 2'... cùng dòng (cột VỊ TRÍ) là diện tích từng tầng của 1 hạng mục ghi bằng ô gộp:
+    gom các tầng liên tiếp (bắt đầu lại ở TẦNG 1) và gán cho hạng mục gần tâm nhóm nhất."""
+    cells = []
+    for t in texts:
+        if not (col["x0"] - 3 <= _cx(t) <= col["x1"] + 3) or t["bbox"][1] < top - 1:
+            continue
+        m = re.fullmatch(r"\s*" + NUM_QTY + AREA_UNIT + r"\s*", t["text"], re.I)
+        v = parse_number(m.group(1), thousands_dot=True) if m else None
+        if v is None:
+            continue
+        lab = next((FLOOR_LABEL.match(o["text"]) for o in texts if o["bbox"][2] <= col["x0"] + 2
+                    and abs(_cy(o) - _cy(t)) <= 0.6 * h and FLOOR_LABEL.match(o["text"])), None)
+        cells.append((_cy(t), v, t["text"], int(lab.group(1)) if lab else None))
+    cells.sort(key=lambda c: c[0])
+    groups: List[List[Tuple[float, Any, str, Optional[int]]]] = []
+    for c in cells:
+        if c[3] is not None and c[3] != 1 and groups and groups[-1][-1][3] is not None:
+            groups[-1].append(c)
+        else:
+            groups.append([c])
+    out = []
+    for g in groups:
+        y = sum(c[0] for c in g) / len(g)
+        dist, i = min((abs(_cy(r) - y), i) for i, r in enumerate(rows))
+        if dist > (1.5 if len(g) > 1 else 0.6) * pitch:
+            continue
+        name = _clean(rows[i]["text"])
+        for c in g:
+            floor = f" (tầng {c[3]})" if c[3] is not None else ""
+            out.append((name, (c[0], c[1], f"{name} | {col['head']} | {c[2]}{floor}")))
+    return out
+
+
+def _area_hits(areas: Dict[str, List[Tuple[float, Any, str]]], hits: List[Dict[str, Any]], page: int
+               ) -> List[Dict[str, Any]]:
+    """Cột DIỆN TÍCH của bảng hạng mục (quy ước người dùng 2026-10-12):
+    - 1 ô: diện tích xây dựng; nếu hạng mục 1 tầng thì cũng là tổng diện tích xây dựng.
+    - nhiều ô (theo tầng: TẦNG 1, TẦNG 2...): diện tích xây dựng = ô trên cùng (tầng 1), tổng = cộng các tầng."""
+    out = []
+    for name, cells in areas.items():
+        cells = sorted(cells, key=lambda c: c[0])
+        y, v, text = cells[0]
+        out.append({"key": "dien_tich_xay_dung", "value": v, "unit": "m²", "page": page, "method": "vector",
+                    "hang_muc": name, "text": text[:200]})
+        floors = next((h["value"] for h in hits if h["key"] == "so_tang_noi" and h.get("hang_muc") == name), None)
+        if len(cells) > 1:
+            total = round(sum(c[1] for c in cells), 2)
+            out.append({"key": "tong_dien_tich_san", "value": total, "unit": "m²", "page": page, "method": "tinh_toan",
+                        "hang_muc": name, "text": f"{name}: tổng diện tích các tầng " + " + ".join(f"{c[1]:g}" for c in cells)})
+        elif floors == 1:
+            out.append({"key": "tong_dien_tich_san", "value": v, "unit": "m²", "page": page, "method": "tinh_toan",
+                        "hang_muc": name, "text": f"{name}: 1 tầng -> tổng diện tích = {v:g}"})
+    return out
 
 
 def scan_page(texts: List[Dict[str, Any]], page: int) -> List[Dict[str, Any]]:
@@ -726,7 +851,7 @@ def _hm_key(name: Any) -> str:
 def _split_pair(name: str) -> List[str]:
     """'NHÀ XE 01 & 02' -> ['NHÀ XE 01', 'NHÀ XE 02']."""
     m = PAIR.match(name.strip())
-    return [f"{m.group(1)} {m.group(2)}", f"{m.group(1)} {m.group(3)}"] if m else [name]
+    return [f"{m.group(1)} {n}" for n in re.findall(r"\d{1,2}", m.group(2))] if m else [name]
 
 
 TOTAL_KEYS = {"khoi_tich", "dien_tich_xay_dung", "tong_dien_tich_san"}   # số tổng cộng, không chia cho hạng mục ghép
@@ -756,6 +881,19 @@ def _group_hang_muc(hits: List[Dict[str, Any]]) -> Tuple[Dict[str, List[Dict[str
             expanded.append((k, h))
             if len(name) > len(raw.get(k, "")):
                 raw[k] = name
+    # cùng số thứ tự, tên ngắn (>= 2 từ) là phần đầu tên dài: 'NHÀ XƯỞNG 1' ~ 'NHÀ XƯỞNG CHO THUÊ 1' -> 1 hạng mục
+    canon: Dict[str, str] = {}
+    for k in raw:
+        m = re.fullmatch(r"(.+?)\s+(\d{1,2}[A-Z]?)", k)
+        if not m or len(m.group(1).split()) < 2:
+            continue
+        longer = [o for o in raw if o != k and o.endswith(" " + m.group(2))
+                  and (o[:-len(m.group(2))].strip() + " ").startswith(m.group(1) + " ")]
+        if longer:
+            canon[k] = max(longer, key=len)
+    if canon:
+        expanded = [(canon.get(k, k), h) for k, h in expanded]
+        raw = {k: v for k, v in raw.items() if k not in canon}
     keys = set(raw)
     targets: Dict[str, List[str]] = {}
     for k in keys:
@@ -770,6 +908,9 @@ def _group_hang_muc(hits: List[Dict[str, Any]]) -> Tuple[Dict[str, List[Dict[str
         alias[k] = base or k
     groups: Dict[str, List[Dict[str, Any]]] = {}
     for k, h in expanded:
+        if len(targets[k]) > 1 and h["key"] in TOTAL_KEYS:   # khối tích ghi cho tên trần 'Nhà xưởng' -> không rõ xưởng nào
+            h["ambiguous_hm"] = True
+            continue
         for t in targets[k]:
             g = alias[t]
             if not any(x is h for x in groups.get(g, [])):
@@ -810,6 +951,28 @@ def _pick_main(groups: Dict[str, List[Dict[str, Any]]], general: List[Dict[str, 
     return next(iter(pool)), "hạng mục đầu tiên"
 
 
+UPPER_FLOOR_PLAN = re.compile(r"MẶT\s*BẰNG\s*(?:TẦNG\s*(?:0?[2-9]|\d{2})\b|LẦU|TẦNG\s*(?:LỬNG|MÁI|TUM)|SÂN\s*THƯỢNG)",
+                              re.I)
+PLAIN_AREA = re.compile(r"^\W*DIỆN\s*TÍCH(?:\s*ĐIỂN\s*HÌNH)?\s*\(", re.I)
+SO_TANG_NHA_FROM_NOI = "= số tầng nổi (bản vẽ không có tầng hầm / bán hầm)"
+
+
+def fill_so_tang_nha(fields: Dict[str, FieldValue]) -> None:
+    """Công trình không có hầm / bán hầm: số tầng nhà = số tầng nổi (quy ước người dùng 2026-10-12).
+    Chỉ điền khi bản vẽ không ghi số tầng nhà; hầm / bán hầm ghi số > 0 hoặc mâu thuẫn -> để trống."""
+    nha, noi = fields.get("so_tang_nha"), fields.get("so_tang_noi")
+    if nha is None or noi is None:
+        return
+    if nha.status not in (MISSING,) and nha.text != SO_TANG_NHA_FROM_NOI:
+        return
+    below = [fields.get(k) or FieldValue() for k in ("so_tang_ham", "so_tang_ban_ham")]
+    if not noi.usable or any(b.status == CONFLICT or (b.usable and b.value) for b in below):
+        if nha.text == SO_TANG_NHA_FROM_NOI:
+            fields["so_tang_nha"] = FieldValue(unit=nha.unit)
+        return
+    fields["so_tang_nha"] = FieldValue(noi.value, nha.unit, noi.page, SO_TANG_NHA_FROM_NOI, "tinh_toan", FOUND)
+
+
 def merge(hits: List[Dict[str, Any]], spec: Dict[str, Any], hang_muc_chinh: Optional[str] = None) -> ProjectInfo:
     info = ProjectInfo()
     valid = []
@@ -843,6 +1006,10 @@ def merge(hits: List[Dict[str, Any]], spec: Dict[str, Any], hang_muc_chinh: Opti
                                  f"— nghi đọc nhầm nhãn, cần kiểm tra — \"{h['text'][:80]}\"")
     general = [h for h in valid if not h.get("hang_muc")]
     groups, names = _group_hang_muc(valid)
+    for h in valid:
+        if h.pop("ambiguous_hm", False):
+            info.warnings.append(f"trang {h['page']}: {h['key']}={h['value']} ghi cho '{h['hang_muc']}' chung, không rõ "
+                                 f"hạng mục đánh số nào — chưa gán — \"{h['text'][:80]}\"")
     main: List[Dict[str, Any]] = []
     if groups:
         g, why = _pick_main(groups, general, hang_muc_chinh)
@@ -864,6 +1031,8 @@ def merge(hits: List[Dict[str, Any]], spec: Dict[str, Any], hang_muc_chinh: Opti
     general = [h for h in general if h["key"] in PROJECT_KEYS or len(hm_on_page.get(h["page"], ())) < 2]
     for key, fv in _merge_fields(general + main, spec).items():
         getattr(info, section_of(key, spec))[key] = fv
+    for fs in [info.project_info, *info.hang_muc.values()]:
+        fill_so_tang_nha(fs)
     return info
 
 
@@ -940,6 +1109,8 @@ def apply_user(info: ProjectInfo, user: Dict[str, Any], spec: Dict[str, Any]) ->
             fv = info.get(key)
             if fv.status == CONFIRMED:
                 info.hang_muc[main][key] = fv
+    for fs in [info.project_info, *info.hang_muc.values()]:
+        fill_so_tang_nha(fs)
 
 
 # ------------------------------------------------------------------ hiển thị
@@ -1214,6 +1385,13 @@ GEMINI_LABEL: Dict[str, re.Pattern] = {
 }
 
 
+def _quote_on_page(quote: str, value: Any, blob: str) -> bool:
+    """Phần chữ của câu căn cứ (bỏ giá trị, số, dấu) có liền mạch trong text vector không. Câu quá ngắn -> coi như có."""
+    letters = lambda s: re.sub(r"[^a-zà-ỹđ]", "", s.lower())
+    q = letters(quote.replace(_v(value), ""))[:14]
+    return len(q) < 6 or q in letters(blob)
+
+
 def verify_gemini(hits: List[Dict[str, Any]], page_texts: Dict[int, str]) -> List[str]:
     """Bỏ hit Gemini có giá trị không xuất hiện trong text vector của trang (trang có text). -> cảnh báo."""
     warns = []
@@ -1226,11 +1404,17 @@ def verify_gemini(hits: List[Dict[str, Any]], page_texts: Dict[int, str]) -> Lis
         toks = _value_tokens(h["key"], h["value"])
         ok = all(any(_on_page(t, blob) for t in forms) for forms in toks)
         lab = GEMINI_LABEL.get(h["key"])
-        if ok and lab and not lab.search(h.get("text") or ""):
+        on_page = _quote_on_page(h.get("text") or "", h["value"], blob)
+        if ok and lab and not lab.search(h.get("text") or "") and on_page:
             warns.append(f"trang {h['page']} (gemini): {h['key']}={_v(h['value'])} — câu căn cứ không có nhãn của trường "
                          f"(\"{(h.get('text') or '')[:50]}\"), đã bỏ")
             continue
         if ok:
+            keep.append(h)
+        elif not on_page and lab and lab.search(h.get("text") or ""):
+            # câu căn cứ cũng không có trong lớp chữ: ghi chú vẽ bằng nét (vd hồ sơ ICIC) -> không xác minh được, giữ *
+            warns.append(f"trang {h['page']} (gemini): {h['key']}={_v(h['value'])} — câu căn cứ không có trong lớp chữ PDF "
+                         f"(chữ vẽ bằng nét?), giữ * cần kiểm")
             keep.append(h)
         else:
             warns.append(f"trang {h['page']} (gemini): {h['key']}={_v(h['value'])} KHÔNG có trên bản vẽ (text vector) "
@@ -1240,32 +1424,49 @@ def verify_gemini(hits: List[Dict[str, Any]], page_texts: Dict[int, str]) -> Lis
 
 
 def read_project_info(pdf: Path, settings: Dict[str, Any], gemini: str = "auto", project_yaml: Optional[Path] = None,
-                      cache_dir: Optional[Path] = None, pages: Optional[List[int]] = None, log=print) -> ProjectInfo:
-    """gemini: 'auto' (chỉ trang không có text / bảng regex không tách được) | 'always' | 'never'."""
+                      cache_dir: Optional[Path] = None, pages: Optional[List[int]] = None,
+                      gemini_pages: Optional[List[int]] = None, log=print) -> ProjectInfo:
+    """gemini: 'auto' (chỉ trang không có text / bảng regex không tách được) | 'always' | 'never'.
+    gemini_pages: luôn cho Gemini đọc thêm các trang này (trừ khi gemini='never')."""
     from .extractors.gemini_extractor import _file_hash
     from .pdf.classify import info_pages
     from .pdf.render import vector_text
     spec = load_spec()
     targets = info_pages(pdf) if not pages else [(p, "chỉ định") for p in pages]
+    extra = [p for p in gemini_pages or [] if p not in {q for q, _ in targets}]
+    targets = sorted(targets + [(p, "chỉ định") for p in extra])
     log(f"[info] đọc {len(targets)} trang: {', '.join(f'{p}({k})' for p, k in targets)}")
     from .pdf.classify import TITLE_LINE
     hits: List[Dict[str, Any]] = []
     titles: Dict[int, str] = {}
     page_texts: Dict[int, str] = {}
     need_gemini: List[int] = []
+    floor_lines: List[Dict[str, Any]] = []
     for p, kind in targets:
         texts = vector_text(pdf, p)
         titles[p] = page_title(texts, TITLE_LINE)
         page_texts[p] = "\n".join(t["text"] for t in texts)
         ph = scan_page(texts, p)
+        if any(UPPER_FLOOR_PLAN.search(t["text"]) for t in texts):
+            ph = [h for h in ph if not (h["key"] == "dien_tich_xay_dung" and PLAIN_AREA.match(h["text"]))]
         if kind == "khu_dat":                 # trang định vị khu đất: chỉ lấy thông tin chung của khu đất
             ph = [h for h in ph if h["key"] in PROJECT_KEYS or h.get("hang_muc")]
+        fl = floor_area_lines(texts, p)
+        floor_lines += fl
+        # trang mặt bằng của đúng 1 hạng mục ("TẦNG 1 NHÀ XƯỞNG CHO THUÊ 04: 2000 M2") -> ghi chú chưa gắn hạng mục
+        # trên trang ("BẬC CHỊU LỬA LÀ BẬC IV") thuộc hạng mục đó
+        if len({_hm_key(ln["hang_muc"]) for ln in fl}) == 1:
+            for h in ph:
+                if not h.get("hang_muc") and h["key"] not in PROJECT_KEYS:
+                    h["hang_muc"] = fl[0]["hang_muc"]
         hits.extend(ph)
         no_text = sum(len(t["text"]) for t in texts) < 50
         # trang ghi chú PCCC (mặt bằng/mặt đứng) không tính là bảng yếu: text vector là đủ
         weak_table = kind in ("bang_quy_mo", "thuyet_minh_pccc") and len({h["key"] for h in ph}) < 3
-        if no_text or (gemini == "always" and kind != "cover") or (gemini == "auto" and weak_table):
+        if no_text or (gemini == "always" and kind != "cover") or (gemini == "auto" and weak_table) \
+                or p in (gemini_pages or ()):
             need_gemini.append(p)
+    hits.extend(floor_area_hits(floor_lines))
     meta: Dict[str, Any] = {"schema_version": SCHEMA_VERSION, "pdf": str(pdf), "pdf_hash": _file_hash(pdf),
                             "pages": [p for p, _ in targets], "gemini_mode": gemini, "gemini_pages": []}
     warnings: List[str] = []
@@ -1273,6 +1474,7 @@ def read_project_info(pdf: Path, settings: Dict[str, Any], gemini: str = "auto",
         try:
             from .extractors.info_gemini import PROMPT_FILE, make_info_reader
             reader = make_info_reader(settings, cache_dir)
+            reader.prefetch(pdf, need_gemini, log=log)          # 1 file PDF cho mọi trang, tải 1 lần
             for p in need_gemini:
                 try:
                     gh = reader.read_page(pdf, p)

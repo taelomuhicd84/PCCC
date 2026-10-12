@@ -111,6 +111,7 @@ def cmd_info(a, settings) -> Path:
     info = read_project_info(pdf, settings, a.gemini_info, Path(a.project) if a.project else None,
                              cache_dir=PROJECT_ROOT / "data" / "cache",
                              pages=pages if isinstance(pages, list) else None,
+                             gemini_pages=_pages(a.gemini_pages) if getattr(a, "gemini_pages", None) else None,
                              log=lambda m: print(m, file=sys.stderr))
     _write_json(out / "project_info.json", info.to_dict())
     spec = load_spec()
@@ -220,6 +221,28 @@ def cmd_rules(a, settings) -> None:
         print(f"{flag} {r['id']:<26} {r.get('source', ''):<7} {r.get('clause', '')}{on}")
 
 
+def cmd_gemini_login(a, settings):
+    from .extractors.gemini_extractor import backend_kwargs
+    from .extractors.gemini_web import GeminiWeb
+    web = GeminiWeb(**{**backend_kwargs(dict(settings["gemini"], backend="web"))["web"], "headless": False})
+    print("Đăng nhập Google trong cửa sổ Chrome vừa mở (chờ tối đa 10 phút)...")
+    ok = web.login()
+    web.close()
+    print("Đã đăng nhập Gemini web, cookie lưu trong profile." if ok else "Chưa đăng nhập được — chạy lại lệnh.")
+
+
+def cmd_gemini_status(a, settings):
+    """Kiểm tra nhanh đã đăng nhập Gemini web chưa (profile + cookie .env). Exit 1 nếu chưa."""
+    from .extractors.gemini_extractor import backend_kwargs
+    from .extractors.gemini_web import GeminiWeb
+    web = GeminiWeb(**backend_kwargs(dict(settings["gemini"], backend="web"))["web"])
+    ok = web.login(wait_s=0)
+    web.close()
+    print("Gemini web: ĐÃ đăng nhập" if ok else
+          "Gemini web: CHƯA đăng nhập — chạy: python -m pccc_checker gemini-login")
+    sys.exit(0 if ok else 1)
+
+
 def main(argv: list[str] | None = None) -> None:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
@@ -244,6 +267,7 @@ def main(argv: list[str] | None = None) -> None:
         sp.add_argument("--gemini-info", choices=["auto", "always", "never"], default="auto",
                         help="auto: Gemini chỉ đọc trang không có text / bảng regex không tách được")
         sp.add_argument("--info-pages", help="chỉ đọc các trang này cho bước info, vd 1,5,43")
+        sp.add_argument("--gemini-pages", help="thêm: Gemini đọc các trang này (ngoài trang tự chọn), vd 4,15")
 
     sp = sub.add_parser("info"); sp.add_argument("pdf"); sp.add_argument("--out"); common_info(sp)
     sp = sub.add_parser("extract"); common_extract(sp)
@@ -261,11 +285,14 @@ def main(argv: list[str] | None = None) -> None:
     sp.add_argument("--no-dxf", action="store_true")
     sp = sub.add_parser("rules"); sp.add_argument("--rules", action="append")
     sp = sub.add_parser("pages"); sp.add_argument("pdf")
+    sub.add_parser("gemini-login", help="mở Chrome để đăng nhập Gemini web (backend: web)")
+    sub.add_parser("gemini-status", help="kiểm tra đã đăng nhập Gemini web chưa (exit 1 nếu chưa)")
 
     a = p.parse_args(argv)
     settings = load_settings(Path(a.settings) if a.settings else None)
     {"info": cmd_info, "extract": cmd_extract, "check": cmd_check, "annotate": cmd_annotate, "dxf": cmd_dxf,
-     "run": cmd_run, "rules": cmd_rules, "pages": cmd_pages}[a.cmd](a, settings)
+     "run": cmd_run, "rules": cmd_rules, "pages": cmd_pages, "gemini-login": cmd_gemini_login,
+     "gemini-status": cmd_gemini_status}[a.cmd](a, settings)
 
 
 if __name__ == "__main__":

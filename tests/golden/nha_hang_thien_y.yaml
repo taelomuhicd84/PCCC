@@ -26,9 +26,13 @@ fire_inputs:
 # Từng hạng mục (tên khớp không phân biệt hoa/thường, "01" = "1"). Chỉ điền trường muốn kiểm.
 hang_muc:
   NHÀ HÀNG 01:
-    fire_inputs: {bac_chiu_lua: null, nhom_nha: null, hang_chay_no: null, chieu_cao_pccc: null, cap_nguy_hiem_chay_ket_cau: null}
+    project_info: {dien_tich_xay_dung: 1369.6}
+    # chiều cao PCCC: bản vẽ ghi 5 m và 7 m (người thiết kế ghi sai) -> tool phải báo mâu thuẫn
+    fire_inputs: {bac_chiu_lua: null, nhom_nha: null, hang_chay_no: null, chieu_cao_pccc: conflict, cap_nguy_hiem_chay_ket_cau: null}
   NHÀ HÀNG 02:
-    fire_inputs: {bac_chiu_lua: null, nhom_nha: null, hang_chay_no: null, chieu_cao_pccc: null, cap_nguy_hiem_chay_ket_cau: null}
+    project_info: {dien_tich_xay_dung: 295.05}
+    # chiều cao PCCC: bản vẽ ghi 5 m và 7 m (người thiết kế ghi sai) -> tool phải báo mâu thuẫn
+    fire_inputs: {bac_chiu_lua: null, nhom_nha: null, hang_chay_no: null, chieu_cao_pccc: conflict, cap_nguy_hiem_chay_ket_cau: null}
   NHÀ XE 1:
     fire_inputs: {bac_chiu_lua: null, nhom_nha: null, hang_chay_no: null, chieu_cao_pccc: null, cap_nguy_hiem_chay_ket_cau: null}
   NHÀ XE 2:

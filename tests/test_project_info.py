@@ -60,6 +60,10 @@ def _hit(key, value, page, method="vector"):
     ("TỔNG DIỆN TÍCH KHU ĐẤT | 1433.4 (M2)", "dien_tich_khu_dat", 1433.4),
     ("CHIỀU CAO MÁI (M) | 8.55", "chieu_cao_cong_trinh", 8.55),
     ("Tầng tum: 01 tầng tum thang", "tang_tum_ky_thuat", "01 tầng tum thang"),
+    ("DIỆN TÍCH ( M2 ) | 42.75", "dien_tich_xay_dung", 42.75),                 # cột diện tích bảng quy mô = DTXD
+    ("DIỆN TÍCH  ĐIỂN HÌNH ( M2 ) | 607.35", "dien_tich_xay_dung", 607.35),
+    ("TỔNG DIỆN TÍCH XÂY DỰNG: 1.125,05 m2", "tong_dien_tich_san", 1125.05),
+    ("TỔNG DIỆN TÍCH SÀN: 1540.99 m2", "tong_dien_tich_san", 1540.99),
 ])
 def test_regex(text, key, value):
     assert _m(text).get(key) == value
@@ -71,6 +75,9 @@ def test_regex(text, key, value):
     ("MẶT BẰNG TẦNG 2", "so_tang_noi"),
     ("YÊU CẦU THIẾT KẾ: BẬC II", "bac_chiu_lua"),                            # bảng tham chiếu Bảng 4
     ("CHIỀU CAO MÁI (M) | 8.55", "chieu_cao_pccc"),
+    ("+ Diện tích S=8.37m2 > 6m2", "dien_tich_xay_dung"),                      # câu văn, không phải ô bảng
+    ("- Diện tích phòng 20 m2", "dien_tich_xay_dung"),
+    ("TỔNG DIỆN TÍCH XÂY DỰNG: 1125.05 m2", "dien_tich_xay_dung"),             # là tổng, không phải DTXD
 ])
 def test_regex_no_false_match(text, key):
     assert key not in _m(text)
@@ -240,6 +247,46 @@ def test_example_project_yaml_is_valid():
     assert info.warnings[n:] == [] and info.hang_muc_chinh == "KARAOKE"
 
 
+# ------------------------------------------------------------------ diện tích / số tầng nhà
+def _cell(text, x, y, w=30, h=8):
+    return {"text": text, "bbox": [x, y, x + w, y + h]}
+
+
+def test_area_column_per_floor_cells_grouped_to_hang_muc():
+    """Bảng thống kê hạng mục: hạng mục 2 tầng ghi bằng ô gộp (VỊ TRÍ: TẦNG 1 / TẦNG 2), tên lệch xuống dưới."""
+    texts = [_cell("HẠNG MỤC", 100, 100, 60), _cell("VỊ TRÍ", 200, 100), _cell("DIỆN TÍCH", 250, 96),
+             _cell("(m2)", 255, 104), _cell("SỐ TẦNG", 300, 100),
+             _cell("TẦNG 1", 200, 130), _cell("607.35", 255, 130), _cell("KARAOKE", 100, 142, 60),
+             _cell("02", 305, 142), _cell("TẦNG 2", 200, 154), _cell("517.7", 255, 154),
+             _cell("PHÒNG BƠM PCCC", 100, 172, 60), _cell("16.39", 255, 172), _cell("01", 305, 172),
+             _cell("TẦNG 1", 200, 190), _cell("42.75", 255, 190), _cell("NHÀ Ở NHÂN VIÊN", 100, 204, 60),
+             _cell("02", 305, 204), _cell("TẦNG 2", 200, 214), _cell("49.95", 255, 214)]
+    got = {(h["hang_muc"], h["key"]): h["value"] for h in scan_page(texts, 6)
+           if h["key"] in ("dien_tich_xay_dung", "tong_dien_tich_san")}
+    assert got == {("KARAOKE", "dien_tich_xay_dung"): 607.35, ("KARAOKE", "tong_dien_tich_san"): 1125.05,
+                   ("PHÒNG BƠM PCCC", "dien_tich_xay_dung"): 16.39, ("PHÒNG BƠM PCCC", "tong_dien_tich_san"): 16.39,
+                   ("NHÀ Ở NHÂN VIÊN", "dien_tich_xay_dung"): 42.75, ("NHÀ Ở NHÂN VIÊN", "tong_dien_tich_san"): 92.7}
+
+
+@pytest.mark.parametrize("extra,want", [
+    ([], 2),                                                       # không ghi hầm -> số tầng nhà = số tầng nổi
+    ([_hit("so_tang_ham", 0, 5)], 2),
+    ([_hit("so_tang_ham", 1, 5)], None),                           # có hầm -> không tự điền
+    ([_hit("so_tang_ban_ham", 1, 5)], None),
+    ([_hit("so_tang_nha", 3, 5)], 3),                              # bản vẽ ghi số tầng nhà -> giữ nguyên
+])
+def test_so_tang_nha_from_so_tang_noi(extra, want):
+    info = merge([_hit("so_tang_noi", 2, 5), *extra], SPEC)
+    assert info.get("so_tang_nha").value == want
+
+
+def test_so_tang_nha_follows_user_confirmed_basement():
+    info = merge([_hit("so_tang_noi", 2, 5)], SPEC)
+    assert info.get("so_tang_nha").value == 2
+    apply_user(info, {"so_tang_ham": 1}, SPEC)
+    assert info.get("so_tang_nha").value is None
+
+
 # ------------------------------------------------------------------ cannot_check
 # ------------------------------------------------------------------ bảng dạng cột, câu ghi chú, hạng mục đánh số
 def _t(text, x0, y0, x1, y1):
@@ -285,7 +332,7 @@ def test_column_table_needs_two_known_columns():
 
 @pytest.mark.parametrize("line,names", [
     ("Nhà hàng 1 & 2 thuộc nhóm nhà F3.2 có chiều cao PCCC là", ["Nhà hàng 1", "Nhà hàng 2"]),
-    ("- Nhà xe 01 & 02 có chiều cao PCCC là 3.5m < 10m.", ["Nhà xe 1", "Nhà xe 2"]),
+    ("- Nhà xe 01 & 02 có chiều cao PCCC là 3.5m < 10m.", ["Nhà xe 01", "Nhà xe 02"]),
     ("Nhà hàng có bậc chịu lửa bậc IV, cấp nguy hiểm cháy S0:", ["Nhà hàng"]),
     ("Karaoke thuộc nhóm nhà F2.1 có chiều cao PCCC là 6m", ["Karaoke"]),
     ("* Công trình có cấp nguy hiểm cháy S0 theo bảng 5", []),                  # "Công trình" chung -> không gán
@@ -313,12 +360,12 @@ def test_numbered_hang_muc_not_merged_and_bare_name_applies_to_all():
             dict(_hit("khoi_tich", 11163.42, 3), hang_muc="NHÀ XE 01 & 02"),      # tổng 2 nhà -> không chép
             _hit("ten_cong_trinh", "NHÀ HÀNG THIÊN Ý", 1)]
     info = merge(hits, SPEC)
-    assert sorted(info.hang_muc) == ["NHÀ HÀNG 01", "NHÀ HÀNG 02", "NHÀ XE 1", "NHÀ XE 2"]
+    assert sorted(info.hang_muc) == ["NHÀ HÀNG 01", "NHÀ HÀNG 02", "NHÀ XE 01", "NHÀ XE 02"]
     for n in ("NHÀ HÀNG 01", "NHÀ HÀNG 02"):
         hm = info.hang_muc[n]
         assert hm["bac_chiu_lua"].value == "IV" and hm["nhom_nha"].value == ["F3.2"] and hm["chieu_cao_pccc"].value == 5.0
-    assert info.hang_muc["NHÀ XE 1"]["chieu_cao_pccc"].value == 3.5
-    assert info.hang_muc["NHÀ XE 1"]["khoi_tich"].status == MISSING
+    assert info.hang_muc["NHÀ XE 01"]["chieu_cao_pccc"].value == 3.5
+    assert info.hang_muc["NHÀ XE 01"]["khoi_tich"].status == MISSING
     assert info.hang_muc_chinh.startswith("NHÀ HÀNG")
 
 
@@ -552,3 +599,40 @@ def test_golden_pdf(golden):
         assert found, f"không tìm thấy hạng mục {name} (có: {list(info.hang_muc)})"
         for key, want in fields.items():
             _check_field(info.hang_muc[found].get(key) or FieldValue(), key, want, f"[{name}] ")
+
+
+def test_verify_gemini_keeps_labeled_note_drawn_as_graphics():
+    """Ghi chú vẽ bằng nét (không có trong lớp chữ): giữ giá trị Gemini có nhãn trường -> trạng thái * cần kiểm."""
+    from pccc_checker.project_info import verify_gemini
+    pages = {10: "MẶT BẰNG TẦNG 1 | DIỆN TÍCH 3.948,08 m² | NHÀ KHO 1A (44 người)" + " " * 50}
+    hits = [dict(_hit("chieu_cao_pccc", 16.75, 10, "gemini"), text="chiều cao PCCC là 16,75m"),
+            dict(_hit("bac_chiu_lua", "II", 10, "gemini"), text="1 | KHO 1A | II | F5.2")]   # dòng bảng không nhãn
+    warns = verify_gemini(hits, pages)
+    assert [h["key"] for h in hits] == ["chieu_cao_pccc"]
+    assert "giữ * cần kiểm" in warns[0]
+
+
+def test_floor_area_lines_split_workshops_and_count_floors():
+    from pccc_checker.project_info import floor_area_hits, floor_area_lines
+    texts = [_t("TẦNG 1 NHÀ XƯỞNG CHO THUÊ 02, 03:  2000 M2", 0, 0, 300, 10),
+             _t("TẦNG 2 NHÀ XƯỞNG CHO THUÊ 02, 03:  2000 M2", 0, 20, 300, 30)]
+    hits = floor_area_hits(floor_area_lines(texts, 19))
+    got = {(h["hang_muc"], h["key"]): h["value"] for h in hits}
+    for n in ("NHÀ XƯỞNG CHO THUÊ 02", "NHÀ XƯỞNG CHO THUÊ 03"):
+        assert got[(n, "so_tang_noi")] == 2 and got[(n, "dien_tich_xay_dung")] == 2000
+        assert got[(n, "tong_dien_tich_san")] == 4000
+
+
+def test_volume_with_space_thousands_and_hang_san_xuat():
+    m = _m("Khối tích : 36 510 m3 ( 20.000 m3 < 36.510m3 < 50.000 m3)")
+    assert m["khoi_tich"] == 36510
+    assert _m("Hạng sản xuất : Hạng C")["hang_chay_no"] == "C"
+
+
+def test_bare_name_volume_not_copied_to_numbered():
+    hits = [dict(_hit("bac_chiu_lua", "IV", 3), hang_muc="NHÀ XƯỞNG 01"),
+            dict(_hit("bac_chiu_lua", "IV", 4), hang_muc="NHÀ XƯỞNG 02"),
+            dict(_hit("khoi_tich", 36510.0, 127), hang_muc="Nhà xưởng")]
+    info = merge(hits, SPEC)
+    assert info.hang_muc["NHÀ XƯỞNG 01"]["khoi_tich"].status == MISSING
+    assert any("không rõ hạng mục" in w for w in info.warnings)

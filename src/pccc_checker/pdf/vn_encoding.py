@@ -61,3 +61,40 @@ def is_vni_font(font: str) -> bool:
 
 def fix_span(text: str, font: str) -> str:
     return vni_to_unicode(text) if is_vni_font(font) else text
+
+
+# --- Font Arial nhúng kiểu Identity-H thiếu /ToUnicode (vd bản vẽ ICIC): PDF chỉ lưu số glyph (GID), text đọc ra
+# thành rác "3+Ҫ1&+81*" (= "PHẦN CHUNG"). Thứ tự glyph Arial cố định nên tra bảng GID -> Unicode (tạo từ cmap
+# C:/Windows/Fonts/arial.ttf bằng fontTools) rồi gắn /ToUnicode cho font trước khi lấy text.
+# shortcut: Arial nghiêng lệch thứ tự từ GID 748 (chữ Việt nghiêng có thể sai), cần bảng riêng nếu gặp nhiều.
+_ARIAL_GID: dict[int, int] | None = None
+
+
+def _arial_tounicode() -> bytes:
+    global _ARIAL_GID
+    if _ARIAL_GID is None:
+        import json
+        from pathlib import Path
+        _ARIAL_GID = {int(k): v for k, v in json.loads((Path(__file__).with_name("arial_gid.json")).read_text()).items()}
+    pairs = [f"<{g:04X}> <{u:04X}>" for g, u in _ARIAL_GID.items() if g <= 0xFFFF and u <= 0xFFFF]
+    body = "".join(f"{len(c)} beginbfchar\n" + "\n".join(c) + "\nendbfchar\n"
+                   for c in (pairs[i:i + 100] for i in range(0, len(pairs), 100)))
+    return ("/CIDInit /ProcSet findresource begin 12 dict begin begincmap\n"
+            "/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def\n"
+            "/CMapName /Adobe-Identity-UCS def /CMapType 2 def\n"
+            "1 begincodespacerange <0000> <FFFF> endcodespacerange\n" + body +
+            "endcmap CMapName currentdict /CMap defineresource pop end end").encode()
+
+
+def fix_identity_fonts(doc, page) -> int:
+    """Gắn /ToUnicode cho font Arial Identity-H thiếu nó trên trang (sửa trong bộ nhớ, không ghi file). Trả về số font đã sửa."""
+    n = 0
+    for xref, _, typ, name, _, enc, *_ in page.get_fonts(full=True):
+        if typ == "Type0" and enc == "Identity-H" and name.split("+")[-1].startswith("Arial") \
+                and doc.xref_get_key(xref, "ToUnicode")[0] == "null":
+            cmap = doc.get_new_xref()
+            doc.update_object(cmap, "<<>>")
+            doc.update_stream(cmap, _arial_tounicode())
+            doc.xref_set_key(xref, "ToUnicode", f"{cmap} 0 R")
+            n += 1
+    return n

@@ -12,15 +12,15 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from ..pdf.render import render_tiles, vector_text
-from .gemini_extractor import GeminiExtractor, _file_hash
+from .gemini_extractor import GeminiExtractor, _file_hash, backend_kwargs, cached
 
 PROMPT_FILE = "gemini_project_info.md"
 
 
 def make_info_reader(settings: Dict[str, Any], cache_dir: Optional[Path]) -> "InfoGeminiReader":
     g = settings["gemini"]
-    gem = GeminiExtractor(model=g["model"], dpi=g["dpi"], max_px=g["max_tile_px"], temperature=g["temperature"],
-                          cache_dir=cache_dir, fallback_models=g.get("fallback_models"), retries=g.get("retries", 4),
+    gem = GeminiExtractor(**backend_kwargs(g), dpi=g["dpi"], max_px=g["max_tile_px"], temperature=g["temperature"],
+                          cache_dir=cache_dir, retries=g.get("retries", 4),
                           thinking_budget=g.get("thinking_budget"), prompt_file=PROMPT_FILE)
     return InfoGeminiReader(gem)
 
@@ -31,16 +31,48 @@ class InfoGeminiReader:
         self.prompt_hash = hashlib.sha1(gem.prompt.encode("utf-8")).hexdigest()[:8]
         self.models_used: set = set()
 
+    def _cache(self, pdf: Path, page_no: int) -> Optional[Path]:
+        if not self.gem.cache_dir:
+            return None
+        self.gem.cache_dir.mkdir(parents=True, exist_ok=True)
+        return self.gem.cache_dir / f"{_file_hash(pdf)}_p{page_no}_info_{self.gem.model}_{self.prompt_hash}.json"
+
+    def prefetch(self, pdf: Path, pages: List[int], log=print) -> None:
+        """Quy trình chuẩn (backend web): gộp mọi trang chưa có cache thành 1 PDF (lớp chữ đã sửa font), tải lên Gemini
+        1 lần với model trong settings (Pro), nhận JSON từng trang rồi ghi cache. Lỗi -> read_page đọc từng trang."""
+        from .gemini_extractor import _subset_pdf
+        if not getattr(self.gem, "web", None):
+            return
+        todo = [p for p in pages if not ((c := self._cache(pdf, p)) and c.exists())]
+        if not todo:
+            return
+        log(f"[info] Gemini web: tải 1 PDF gồm {len(todo)} trang {todo}, model {self.gem.model}...")
+        text = (f"File PDF đính kèm gồm {len(todo)} trang bản vẽ, lần lượt là các trang số {todo} của hồ sơ gốc. "
+                "Áp dụng hướng dẫn dưới đây cho TỪNG trang (chỉ ghi giá trị có chữ trên chính trang đó). Lớp chữ của PDF "
+                'là text vector để đối chiếu. Trả về {"pages": [{"page": <số trang gốc>, "fields": {...}}, ...]} '
+                "đủ mọi trang.\n\n" + self.gem.prompt)
+        try:
+            data = self.gem._call(_subset_pdf(pdf, todo), [], text, "ban_ve.pdf", "application/pdf")
+        except Exception as e:
+            log(f"[info] ⚠ Gemini đọc PDF lỗi ({str(e)[:120]}) -> đọc từng trang")
+            return
+        got = data.get("pages") or []
+        for k, pd in enumerate(got):
+            p = pd.get("page") if pd.get("page") in todo else (todo[k] if k < len(todo) else None)
+            c = self._cache(pdf, p) if p is not None else None
+            if c:
+                c.write_text(json.dumps({"model": self.gem.last_model, "data": pd}, ensure_ascii=False, indent=1),
+                             encoding="utf-8")
+        log(f"[info] Gemini web: nhận {len(got)}/{len(todo)} trang")
+
     def read_page(self, pdf: Path, page_no: int) -> List[Dict[str, Any]]:
-        """-> danh sách hit {key, value, unit, page, text, method='gemini', hang_muc}."""
+        """-> danh sách hit {key, value, unit, page, text, method='gemini', hang_muc}.
+        Chỉ dùng cache đúng model đang chọn (Pro) — không lấy kết quả Flash cũ."""
         data = None
-        cache = None
-        if self.gem.cache_dir:
-            self.gem.cache_dir.mkdir(parents=True, exist_ok=True)
-            cache = self.gem.cache_dir / f"{_file_hash(pdf)}_p{page_no}_info_{self.gem.model}_{self.prompt_hash}.json"
-            if cache.exists():
-                cached = json.loads(cache.read_text(encoding="utf-8"))
-                data, model = cached.get("data"), cached.get("model", self.gem.model)
+        cache = self._cache(pdf, page_no)
+        if cache and cache.exists():
+            c = json.loads(cache.read_text(encoding="utf-8"))
+            data, model = c.get("data"), c.get("model", self.gem.model)
         if data is None:
             tile = render_tiles(pdf, page_no, self.gem.dpi, (1, 1), max_px=self.gem.max_px)[0]
             W = tile.clip[2] - tile.clip[0]

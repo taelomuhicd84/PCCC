@@ -13,7 +13,7 @@
 
 khu_dat:
   ten_cong_trinh: KARAOKE HOÀNG ANH 2 VÀ CÁC CÔNG TRÌNH PHỤ TRỢ
-  dien_tich_khu_dat: 1433.4      # m² — "Tổng diện tích khu đất hạng mục thẩm duyệt PCCC" (tr.4, 6, 7)
+  dien_tich_khu_dat: 1433.4      # m² — tổng diện tích đất: tổng các miếng đất thuộc hạng mục công trình (tr.4, 6, 7)
 
 hang_muc_chinh: KARAOKE
 
@@ -21,8 +21,8 @@ hang_muc:
   KARAOKE:                       # bảng thống kê tr.5
     project_info:
       cong_nang: KARAOKE
-      dien_tich_xay_dung: null   # m² — bảng chỉ ghi "diện tích điển hình" 607.35
-      tong_dien_tich_san: null   # m²
+      dien_tich_xay_dung: 607.35 # m² — cột DIỆN TÍCH, tầng 1 (tr.6)
+      tong_dien_tich_san: 1125.05 # m² — tổng diện tích xây dựng = tầng 1 + tầng 2 (607.35 + 517.7)
       chieu_cao_cong_trinh: 8.55 # m — chiều cao mái
       so_tang_noi: 2
       so_tang_ham: null
@@ -39,7 +39,8 @@ hang_muc:
   NHÀ Ở:                         # nhà ở nhân viên — bảng tr.43, 44
     project_info:
       cong_nang: NHÀ Ở
-      dien_tich_xay_dung: null   # m² — bảng chỉ ghi "diện tích" 42.75
+      dien_tich_xay_dung: 42.75  # m² — tầng 1
+      tong_dien_tich_san: 92.7   # m² — 42.75 + 49.95
       chieu_cao_cong_trinh: 7.8  # m — chiều cao mái
       so_tang_noi: 2
       khoi_tich: 346.55          # m³
@@ -52,7 +53,8 @@ hang_muc:
   PCCC:                          # phòng trực PCCC — bảng tr.56 (công năng ghi "PCCC")
     project_info:
       cong_nang: PCCC
-      dien_tich_xay_dung: null   # m² — bảng chỉ ghi "diện tích" 8.37
+      dien_tich_xay_dung: 8.37   # m²
+      tong_dien_tich_san: 8.37   # m² — 1 tầng
       chieu_cao_cong_trinh: 3.2  # m — chiều cao mái
       so_tang_noi: 1
       khoi_tich: 26.79           # m³

@@ -7,8 +7,8 @@ khu_dat:
   dien_tich_khu_dat: 1433.4
 project_info:
   cong_nang: KARAOKE
-  dien_tich_xay_dung: null       # bảng chỉ có "diện tích điển hình" 607.35 m2 — chưa chắc là DTXD
-  tong_dien_tich_san: null
+  dien_tich_xay_dung: 607.35      # cột DIỆN TÍCH tầng 1 (tr.6)
+  tong_dien_tich_san: 1125.05     # 607.35 + 517.7 (tầng 1 + tầng 2)
   chieu_cao_cong_trinh: 8.55     # chiều cao mái
   so_tang_noi: 2
   so_tang_ham: null
@@ -20,3 +20,9 @@ fire_inputs:
   hang_chay_no: null
   chieu_cao_pccc: 6
   cap_nguy_hiem_chay_ket_cau: S0
+hang_muc:
+  NHÀ Ở NHÂN VIÊN:
+    project_info: {dien_tich_xay_dung: 42.75, tong_dien_tich_san: 92.7, so_tang_noi: 2}
+    fire_inputs: {nhom_nha: F1.4, chieu_cao_pccc: 5.1}
+  PHÒNG TRỰC PCCC:
+    project_info: {dien_tich_xay_dung: 8.37, khoi_tich: 26.79}

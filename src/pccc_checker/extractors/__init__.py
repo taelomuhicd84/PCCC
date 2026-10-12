@@ -60,11 +60,10 @@ def make_extractor(kind: str, settings: dict[str, Any], cache_dir: Path | None =
                    grid: tuple[int, int] = (1, 1)) -> Extractor:
     if kind == "vector":
         return VectorTextExtractor()
-    from .gemini_extractor import GeminiExtractor
+    from .gemini_extractor import GeminiExtractor, backend_kwargs
     g = settings["gemini"]
-    gem = GeminiExtractor(model=g["model"], dpi=g["dpi"], grid=grid, max_px=g["max_tile_px"],
-                          temperature=g["temperature"], cache_dir=cache_dir,
-                          fallback_models=g.get("fallback_models"), retries=g.get("retries", 4),
+    gem = GeminiExtractor(**backend_kwargs(g), dpi=g["dpi"], grid=grid, max_px=g["max_tile_px"],
+                          temperature=g["temperature"], cache_dir=cache_dir, retries=g.get("retries", 4),
                           thinking_budget=g.get("thinking_budget"), workers=g.get("workers", 1))
     if kind == "gemini":
         return gem

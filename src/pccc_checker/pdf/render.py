@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pymupdf
 
-from .vn_encoding import fix_span
+from .vn_encoding import fix_identity_fonts, fix_span
 
 
 @dataclass
@@ -58,6 +58,7 @@ def vector_text(pdf_path: Path, page_no: int) -> list[dict]:
     out = []
     with pymupdf.open(pdf_path) as doc:
         page = doc[page_no - 1]
+        fix_identity_fonts(doc, page)
         for block in page.get_text("dict")["blocks"]:
             for line in block.get("lines", []):
                 text = "".join(fix_span(s["text"], s.get("font", "")) for s in line["spans"])

@@ -53,13 +53,13 @@ fire_inputs:
 # Thông tin chung của khu đất / dự án (một hồ sơ = một khu đất, có thể nhiều hạng mục).
 khu_dat:
   ten_cong_trinh:       {label: Tên công trình / dự án}
-  dien_tich_khu_dat:    {label: Diện tích khu đất, unit: m²}
+  dien_tich_khu_dat:    {label: Tổng diện tích đất, unit: m²}   # tổng các miếng đất thuộc hạng mục công trình
 
 # Thông tin của TỪNG hạng mục (karaoke, nhà ở, nhà xe...) — cùng với fire_inputs ở trên.
 project_info:
   cong_nang:            {label: Công năng}
-  dien_tich_xay_dung:   {label: Diện tích xây dựng, unit: m²}
-  tong_dien_tich_san:   {label: Tổng diện tích sàn, unit: m²}
+  dien_tich_xay_dung:   {label: Diện tích xây dựng, unit: m²}   # cột "DIỆN TÍCH" của bảng quy mô
+  tong_dien_tich_san:   {label: Tổng diện tích xây dựng (sàn), unit: m²}   # tổng diện tích các tầng cộng lại
   chieu_cao_cong_trinh: {label: Chiều cao kiến trúc, unit: m}
   so_tang_nha:          {label: Số tầng nhà (QCVN 06 1.4.50)}
   so_tang_noi:          {label: Số tầng nổi}
