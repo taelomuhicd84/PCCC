@@ -4,9 +4,13 @@ gemini:
   web:
     model: Pro                # tên model trong menu Gemini web: Pro (3.1 Pro, đọc bản vẽ tốt nhất) | Flash | Flash-Lite
     fallback_models: [Flash]  # khi Pro hết lượt trong ngày
-    profile: data/chrome_gemini   # profile Chrome riêng giữ cookie đăng nhập (không commit)
+    upload: pdf               # LUÔN pdf — người dùng cấm gửi hình cho Gemini (png chỉ còn trong code cũ, không dùng)
+    chunk_pages: 8            # > số trang này -> chia chunk, mỗi chunk 1 tab (cuộc trò chuyện riêng); 72 trang = 9 tab ~3 phút
+    tabs: 10                  # số tab song song khi chia chunk — TỐI ĐA 10 (code khoá), mở giãn cách 8–20 s chống bị coi là bot
+    thinking: Thấp            # mức suy luận của Pro (Thấp | Trung bình | Cao): đọc bảng/ghi chú chỉ cần Thấp, nhanh hơn nhiều
+    profile: data/chrome_gemini   # chỉ dùng khi .env KHÔNG có cookie (gemini-login đăng nhập tay); có cookie -> trình duyệt sạch
     # cookie đăng nhập: dòng GEMINI_COOKIES=<json Cookie-Editor> trong .env (không đặt ở đây)
-    headless: false           # true = chạy ẩn (Google hay chặn trình duyệt ẩn)
+    headless: true            # chạy Chrome ẩn nền (người dùng yêu cầu); Google chặn thì đổi false
     timeout_s: 300            # chờ tối đa mỗi câu trả lời
   model: gemini-2.5-flash     # đổi sang gemini-2.5-pro nếu bản vẽ phức tạp
   dpi: 150                    # độ phân giải render ảnh gửi Gemini

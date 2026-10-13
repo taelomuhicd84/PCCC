@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 from .render import page_count, vector_text
 
@@ -87,14 +87,67 @@ def _fire_note(texts: List[str]) -> str:
     return "ghi_chu_pccc" if any(k in FIRE_INPUT_KEYS for t in texts for k, _, _ in match_text(t)) else ""
 
 
-def info_pages(pdf: Path) -> List[Tuple[int, str]]:
+# Trang có thông tin công trình / PCCC cho Gemini (lọc trước bằng lớp chữ, 0 token). So khớp SAU KHI BỎ DẤU
+# (bản vẽ có chữ không dấu / font VNI đã chuyển).
+SMART_KEY = re.compile(r"THONG\s*KE|QUY\s*MO|BAC\s*CHIU\s*LUA|PCCC|PHONG\s*CHAY|CHUA\s*CHAY|HANG\s*(NGUY\s*HIEM|SAN\s*XUAT)|"
+                       r"NHOM\s*NHA|CHIEU\s*CAO\s*(PCCC|CONG\s*TRINH|NHA)|KHOI\s*TICH|CAP\s*NGUY\s*HIEM|THOAT\s*NAN|"
+                       r"TONG\s*MAT\s*BANG|MAT\s*BANG\s*(TONG|DINH\s*VI|TANG\s*(1|TRET|MOT)\b|TRET)|THUYET\s*MINH|"
+                       r"DIEN\s*TICH\s*(XAY\s*DUNG|SAN|KHU\s*DAT)")
+
+
+def _plain(t: str) -> str:
+    import unicodedata
+    t = unicodedata.normalize("NFD", t.upper().replace("Đ", "D"))
+    return "".join(c for c in t if unicodedata.category(c) != "Mn")
+
+
+def _readable(t: str) -> bool:
+    """Lớp chữ dùng được: >= 50 ký tự, >= 60% là chữ cái/khoảng trắng, >= 8 từ (chữ rác font lỗi '3+Ҫ1&+81*' bị loại)."""
+    if len(t) < 50:
+        return False
+    letters = sum(c.isalpha() or c.isspace() for c in t)
+    return letters / len(t) >= 0.6 and len(re.findall(r"[^\W\d_]{2,}", t)) >= 8
+
+
+def _plain_key(k: str) -> str:
+    return re.sub(r"\s+", "", k)
+
+
+def smart_gemini_pages(pdf: Path, min_readable: float = 0.8, head: int = 3, boiler: float = 0.4) -> Tuple[List[int], str]:
+    """Lọc trước trang gửi Gemini bằng lớp chữ (người dùng đồng ý 13/10/2026: nhanh hơn, ít chunk hơn).
+    >= min_readable số trang có chữ đọc được -> chỉ gửi `head` trang đầu + trang có từ khoá PCCC/quy mô/tổng mặt bằng/
+    mặt bằng tầng 1; ngược lại (scan, font lỗi, chữ vẽ bằng nét) -> gửi cả hồ sơ (an toàn). -> (trang, lý do)."""
+    n = page_count(pdf)
+    texts = {p: " | ".join(t["text"] for t in vector_text(pdf, p)) for p in range(1, n + 1)}
+    readable = [p for p, t in texts.items() if _readable(t)]
+    ratio = len(readable) / n if n else 0
+    if ratio < min_readable:
+        return list(range(1, n + 1)), f"chỉ {ratio:.0%} trang có lớp chữ đọc được (< {min_readable:.0%}) -> gửi cả {n} trang"
+    found = {p: {_plain_key(m.group(0)) for m in SMART_KEY.finditer(_plain(t))} for p, t in texts.items()}
+    freq: Dict[str, int] = {}
+    for ks in found.values():
+        for k in ks:
+            freq[k] = freq.get(k, 0) + 1
+    common = {k for k, c in freq.items() if c > boiler * n}          # khung tên ("HỒ SƠ PCCC") lặp mọi trang -> bỏ
+    unread = [p for p in texts if p not in readable]                  # trang ảnh / chữ vẽ nét: không đánh giá được -> gửi
+    pages = sorted(set(range(1, min(head, n) + 1)) | set(unread) | {p for p, ks in found.items() if ks - common})
+    return pages, (f"{ratio:.0%} trang có lớp chữ -> lọc còn {len(pages)}/{n} trang (từ khoá PCCC/quy mô/mặt bằng"
+                   f"{', bỏ từ khoá khung tên ' + ', '.join(sorted(common)) if common else ''}; + {len(unread)} trang không có chữ)")
+
+
+def info_pages(pdf: Path, max_scan: int = 20) -> List[Tuple[int, str]]:
     """Trang cho bước `info`: bìa, bảng quy mô, thuyết minh PCCC — kể cả trang mặt bằng có kèm bảng quy mô
-    và trang mà `extract` bỏ qua. Trả về [(trang, loại)]."""
+    và trang mà `extract` bỏ qua. Trả về [(trang, loại)].
+    Trang scan (không có text) chỉ lấy `max_scan` trang đầu: thông tin công trình nằm ở bìa/thuyết minh đầu hồ sơ,
+    gửi cả bộ scan 200 trang cho Gemini rất chậm. Trang khác -> --info-pages / --gemini-pages."""
     out = []
+    scans = 0
     for p in range(1, page_count(pdf) + 1):
         texts = [t["text"] for t in vector_text(pdf, p)]
         if sum(len(t) for t in texts) < 50:
-            out.append((p, "unknown"))           # trang scan: không có text -> để Gemini đọc
+            scans += 1
+            if scans <= max_scan:
+                out.append((p, "unknown"))       # trang scan: không có text -> để Gemini đọc
             continue
         kind = info_kind(texts) or ("cover" if classify_page(pdf, p)[0] == "cover" else "") or _fire_note(texts)
         if kind:

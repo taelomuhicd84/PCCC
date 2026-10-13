@@ -19,26 +19,36 @@ python -m pccc_checker info "<pdf>" --project data/input/<ho_so>.project.yaml
 # Bảng trống nhiều ô -> cho Gemini đọc thêm các trang có bảng quy mô / ghi chú PCCC:
 python -m pccc_checker info "<pdf>" --project ... --gemini-info always --info-pages 1,7,10,...
 ```
-0. `gemini-status` báo CHƯA đăng nhập -> vẫn làm tiếp phần vector (0 token), đồng thời nhắc người dùng gõ
-   `! cd /d/1_Claude/TestPCCC/PCCC && PYTHONPATH=src python -m pccc_checker gemini-login` (lệnh `!` chạy BASH, không phải
-   PowerShell; đăng nhập trong Chrome của tool).
-   KHÔNG lưu/đọc/in cookie trong chat hay memory.
+0. Gọi skill `gemini-web` (kiểm tra đăng nhập). CHƯA đăng nhập -> vẫn làm phần vector (0 token) và nhờ người dùng xuất cookie
+   MỚI rồi nạp bằng `gemini-cookie <file>`. KHÔNG lưu/đọc/in cookie trong chat hay memory.
 1. `pages` để chọn trang: bìa, tổng mặt bằng (bảng hạng mục), mặt bằng tầng 1 mỗi hạng mục (ghi chú PCCC), trang nhà phụ trợ.
 2. Chạy `info`. Đọc `data/output/<tên>/project_info.md` (ngắn). Chỉ mở `project_info_chi_tiet.md` khi cần nguyên văn căn cứ.
 3. Hiện nguyên bảng cho người dùng, hỏi xác nhận trường bắt buộc (bậc chịu lửa, nhóm F, chiều cao PCCC, cấp S, hạng cháy nổ nếu F5).
    KHÔNG tự điền giá trị thay người dùng. Giá trị đã xác nhận -> `data/input/<ho_so>.project.yaml` (mẫu `config/project.example.yaml`).
 4. Cần HTML: dựng đúng bố cục project_info.md (tiêu đề, gạch đầu dòng khu đất/hạng mục chính/file, ký hiệu, bảng, mục "* Cần kiểm").
 
-## Gemini (config/settings.yaml)
-- `gemini.backend: web` (mặc định): Chrome + cookie trong `.env` (`GEMINI_COOKIES=<json Cookie-Editor>`). KHÔNG in/đọc .env.
-  Cookie hết hạn -> tool báo "Chưa đăng nhập": nhờ người dùng xuất cookie mới rồi ghi lại vào .env bằng script (không hiển thị).
-  File Cookie-Editor có thể là `[...]` hoặc `{"url":..., "cookies":[...]}` — tool nhận cả hai.
-  Cookie mới mà Gemini vẫn hiện "Sign in" (đã gặp 2026-10-12: Google từ chối cookie chép từ Chrome khác, ràng buộc thiết bị)
-  -> người dùng chạy `gemini-login` để đăng nhập thẳng trong profile Chrome của tool (`data/chrome_gemini`, giữ lâu dài).
-- **QUY TRÌNH CỦA NGƯỜI DÙNG (bắt buộc):** gộp các trang cần đọc thành **1 file PDF**, tải lên Gemini web **1 lần**, model **Pro**
-  (settings.yaml mặc định). KHÔNG dùng Flash, không gửi từng trang. `info` và `extract` đều tự gộp PDF (`prefetch`).
-  Chỉ khi Pro hết lượt tool mới tự hạ Flash (fallback) -> báo người dùng.
-- Kết quả Gemini cache trong `data/cache/` theo hash PDF + trang + model: `info` chỉ dùng cache đúng model Pro.
+## Gemini — GỌI SKILL `gemini-web` TRƯỚC (đăng nhập, cookie, quy tắc gửi, selector, thời gian đo)
+- Bước đầu: skill `gemini-web` (`gemini-status`; cookie chết -> `gemini-cookie`). Mọi quy tắc Playwright nằm ở đó:
+  **CHỈ GỬI FILE PDF, KHÔNG BAO GIỜ GỬI HÌNH**; Pro "Thấp" / 1 cuộc trò chuyện; nhiều trang -> chunk 8 trang, TỐI ĐA 10 tab,
+  giãn cách như người thật;
+  có kết quả -> lưu tạm `data/cache/raw/` rồi xoá cuộc trò chuyện.
+- Lệnh chuẩn: `info "<pdf>" --gemini-pages smart` — tự lọc trang gửi Gemini (giữ trang không có chữ + trang có từ khoá
+  PCCC/quy mô/mặt bằng; bản scan -> cả hồ sơ). Kiểm chứng Liên Minh: 72 -> 49 trang, kết quả giống hệt bản đủ.
+  Cần chắc chắn tuyệt đối thì `--gemini-pages 1-N` (cả hồ sơ). Bản scan chữ nhỏ: vẫn gửi PDF, giá trị nghi ngờ ghi `nghi_ngo.json` (không gửi ảnh).
+- File trên **Google Drive** (`D:.DRIVE CÔNG TY\...`) có thể lỗi đọc giữa chừng (file online-only) -> chép về `data/input/` trước.
+- Cache Gemini: `data/cache/` theo hash PDF + trang + model (+ `_png`). Nghi cache sai -> xoá `data/cache/<hash>*`
+  (hash trong project_info.json `meta.pdf_hash`).
+- **Xuất kết quả (người dùng hay yêu cầu):** HTML theo bố cục project_info.md + file `nghi_ngo.json` cùng thư mục (mâu thuẫn
+  kèm số trang + nguyên văn, giá trị chỉ Gemini đọc, thiếu trường bắt buộc). Mục training: KHÔNG hỏi xác nhận, chỉ ghi chú
+  trang nào ghi gì (có thể thiết kế nhầm).
+
+## Hạng mục = BẢNG THỐNG KÊ HẠNG MỤC CÔNG TRÌNH (yêu cầu người dùng 2026-10-13)
+- Cột kết quả = đúng các dòng của bảng thống kê (KÝ HIỆU | HẠNG MỤC | KÍCH THƯỚC | CHIỀU CAO | DIỆN TÍCH), thường ở tổng mặt
+  bằng / mặt bằng định vị. Thông số PCCC lấy từ bảng/ghi chú trên mặt bằng TỪNG hạng mục rồi gán vào đúng tên trong bảng.
+- Khu vực bên trong 1 hạng mục (phòng, "công năng phụ trợ", "văn phòng phụ trợ", khu chứa hàng) = ghi nhớ (`meta.khu_vuc`,
+  mục riêng trong HTML) nhưng KHÔNG thành cột. Code: prompt `bang_thong_ke`/`khu_vuc`, `project_info._limit_to_table`.
+- Gemini có thể lệch dòng trong bảng (Liên Minh: TRẠM ĐIỆN cao "-" bị gán 4,2 m của TRẠM BƠM) -> ghi nghi_ngo.json.
+- Bảng HTML: cột đầu tiêu đề "Hạng mục" (không phải "Trường").
 
 ## Bẫy đã gặp (đọc trước khi kết luận)
 - **Chữ rác kiểu `3+Ҫ1&+81*`** = font Arial Identity-H thiếu ToUnicode (bản vẽ ICIC). Tool đã tự sửa trong `vector_text`;
@@ -64,5 +74,10 @@ python -m pccc_checker info "<pdf>" --project ... --gemini-info always --info-pa
 ## Ví dụ đã làm
 `BẢN VẼ TD LUẬT PHÚ TRƯỜNG.pdf` (178 trang): 8 nhà xưởng cho thuê 2 tầng (01: 900 m²/tầng; 02,03,04,08: 2000; 05,06,07: 2400),
 bậc IV, F5.1, hạng C, S0; nhà văn phòng F4.3 cao PCCC 5,97 m (tr.6); thuyết minh chữa cháy tr.127. Chiều cao PCCC xưởng chưa có trong text.
+`19. BVPCCC .signed….pdf` (FUMEI, 203 trang SCAN, A3): bảng "QUY MÔ PCCC" chữ đỏ nhỏ tr.12 (5 nhà: NX1 C/19,8 m/II/S0/3 tầng/
+12.856 m²/189.823,2 m³; NX2 C/28 m/II/S0/3 tầng/5.201,5 m²/131.198,22 m³), danh sách hạng mục tr.4, chiều cao PCCC 9,15 m tr.10.
+Gửi PDF đọc sai bảng chữ nhỏ (đã đối chiếu tay bằng ảnh phóng to) -> ghi nghi_ngo.json. `BVTK TD LIÊN MINH.pdf` (72 trang có text, 114 MB, trên Drive): nhà kho + xưởng cơ khí,
+bảng thống kê tr.3–4: xưởng cơ khí 54×26 cao 9 m 1404 m², nhà kho 1188 m², nhà bảo vệ 20, trạm điện 24,6 (cao "-"),
+trạm bơm 25 (4,2 m), bể nước PCCC 116,96 (1,95 m); kho F5.2 hạng C, xưởng F5.1 hạng D, bậc IV, S0, cao PCCC 7 m (tr.3–4).
 `114.TD.30.01.2024 BV KT BW ĐỒNG AN.pdf` (42 trang A0): bảng hạng mục ở tr.7, ghi chú PCCC kho 1A tr.10–13, kho 1B tr.22–25,
 nhà phụ trợ tr.40. Đã xác nhận: kho bậc II, F5.2, hạng C, cao PCCC 16,75 m, S0; phụ trợ bậc III hạng E -> `data/input/bw_dong_an.project.yaml`.

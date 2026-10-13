@@ -108,6 +108,19 @@ def cmd_info(a, settings) -> Path:
     pdf = Path(a.pdf)
     out = _out_dir(pdf, a.out)
     pages = _pages(a.info_pages) if getattr(a, "info_pages", None) else None
+    gp = getattr(a, "gemini_pages", None)
+    if gp == "smart":                       # lọc trước bằng lớp chữ (0 token); vector vẫn đọc mọi trang
+        from .pdf.classify import smart_gemini_pages
+        from .pdf.render import page_count
+        smart, why = smart_gemini_pages(pdf)
+        print(f"[info] lọc trang Gemini: {why}: {smart}", file=sys.stderr)
+        a.gemini_pages = ",".join(map(str, smart))
+        if pages is None:
+            pages = list(range(1, page_count(pdf) + 1))
+    w = settings["gemini"].setdefault("web", {})
+    for k in ("upload", "chunk_pages", "tabs", "thinking"):
+        if getattr(a, k, None):
+            w[k] = getattr(a, k)
     info = read_project_info(pdf, settings, a.gemini_info, Path(a.project) if a.project else None,
                              cache_dir=PROJECT_ROOT / "data" / "cache",
                              pages=pages if isinstance(pages, list) else None,
@@ -226,9 +239,28 @@ def cmd_gemini_login(a, settings):
     from .extractors.gemini_web import GeminiWeb
     web = GeminiWeb(**{**backend_kwargs(dict(settings["gemini"], backend="web"))["web"], "headless": False})
     print("Đăng nhập Google trong cửa sổ Chrome vừa mở (chờ tối đa 10 phút)...")
-    ok = web.login()
+    ok = web.login(manual=True)
     web.close()
-    print("Đã đăng nhập Gemini web, cookie lưu trong profile." if ok else "Chưa đăng nhập được — chạy lại lệnh.")
+    if ok:                  # đăng nhập tay thay cookie .env: bỏ cookie cũ để lần chạy sau không ghi đè lên phiên mới
+        env = PROJECT_ROOT / ".env"
+        if env.exists():
+            keep = [ln for ln in env.read_text(encoding="utf-8").splitlines()
+                    if not ln.startswith(("GEMINI_COOKIES=", "GEMINI_1PSID=", "GEMINI_1PSIDTS="))]
+            env.write_text("\n".join(keep) + "\n", encoding="utf-8")
+    print("Đã đăng nhập Gemini web, phiên lưu trong profile Chrome của tool (bỏ cookie cũ trong .env)." if ok
+          else "Chưa đăng nhập được (cửa sổ bị đóng hoặc quá 10 phút) — chạy lại lệnh.")
+
+
+def cmd_gemini_cookie(a, settings):
+    """Nạp cookie JSON (Cookie-Editor, xuất từ cửa sổ ẩn danh) vào .env một lần, xoá file gốc, kiểm tra đăng nhập."""
+    import os
+    from .extractors.gemini_web import import_cookie_file
+    n = import_cookie_file(Path(a.file), PROJECT_ROOT / ".env")
+    os.environ.pop("GEMINI_COOKIES", None)              # load_settings() dùng setdefault -> phải bỏ giá trị cũ
+    if not a.keep:
+        Path(a.file).unlink()
+    print(f"Đã nạp {n} cookie vào .env" + ("" if a.keep else ", đã xoá file gốc"))
+    cmd_gemini_status(a, load_settings(Path(a.settings) if a.settings else None))
 
 
 def cmd_gemini_status(a, settings):
@@ -267,7 +299,13 @@ def main(argv: list[str] | None = None) -> None:
         sp.add_argument("--gemini-info", choices=["auto", "always", "never"], default="auto",
                         help="auto: Gemini chỉ đọc trang không có text / bảng regex không tách được")
         sp.add_argument("--info-pages", help="chỉ đọc các trang này cho bước info, vd 1,5,43")
-        sp.add_argument("--gemini-pages", help="thêm: Gemini đọc các trang này (ngoài trang tự chọn), vd 4,15")
+        sp.add_argument("--gemini-pages", help="thêm: Gemini đọc các trang này, vd 4,15 | 1-N cả hồ sơ | smart: lọc "
+                                               "trước bằng lớp chữ (>= 80%% trang đọc được), không thì cả hồ sơ")
+        sp.add_argument("--upload", choices=["pdf", "png"],
+                        help="Gemini web: gửi 1 file PDF | ảnh PNG 2x2 nét mỗi trang (mặc định theo settings)")
+        sp.add_argument("--chunk-pages", type=int, help="Gemini web: > số trang này -> chia chunk, mỗi chunk 1 tab")
+        sp.add_argument("--tabs", type=int, help="Gemini web: số tab song song khi chia chunk")
+        sp.add_argument("--thinking", help="Gemini web: mức suy luận trong menu (Thấp | Trung bình | Cao)")
 
     sp = sub.add_parser("info"); sp.add_argument("pdf"); sp.add_argument("--out"); common_info(sp)
     sp = sub.add_parser("extract"); common_extract(sp)
@@ -287,12 +325,18 @@ def main(argv: list[str] | None = None) -> None:
     sp = sub.add_parser("pages"); sp.add_argument("pdf")
     sub.add_parser("gemini-login", help="mở Chrome để đăng nhập Gemini web (backend: web)")
     sub.add_parser("gemini-status", help="kiểm tra đã đăng nhập Gemini web chưa (exit 1 nếu chưa)")
+    sp = sub.add_parser("gemini-cookie", help="nạp cookie JSON (Cookie-Editor) vào .env một lần, xoá file gốc")
+    sp.add_argument("file"); sp.add_argument("--keep", action="store_true", help="không xoá file JSON gốc")
 
     a = p.parse_args(argv)
     settings = load_settings(Path(a.settings) if a.settings else None)
-    {"info": cmd_info, "extract": cmd_extract, "check": cmd_check, "annotate": cmd_annotate, "dxf": cmd_dxf,
-     "run": cmd_run, "rules": cmd_rules, "pages": cmd_pages, "gemini-login": cmd_gemini_login,
-     "gemini-status": cmd_gemini_status}[a.cmd](a, settings)
+    try:
+        {"info": cmd_info, "extract": cmd_extract, "check": cmd_check, "annotate": cmd_annotate, "dxf": cmd_dxf,
+         "run": cmd_run, "rules": cmd_rules, "pages": cmd_pages, "gemini-login": cmd_gemini_login,
+         "gemini-status": cmd_gemini_status, "gemini-cookie": cmd_gemini_cookie}[a.cmd](a, settings)
+    except PermissionError as e:                        # chưa đăng nhập Gemini web: dừng ngay, không đọc từng trang
+        print(f"⚠ {e}", file=sys.stderr)
+        sys.exit(2)
 
 
 if __name__ == "__main__":

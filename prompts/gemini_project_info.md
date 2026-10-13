@@ -19,6 +19,18 @@ Quy tắc bắt buộc:
 - Bảng tham chiếu quy chuẩn (ví dụ bảng giới hạn chịu lửa theo Bảng 4, "YÊU CẦU THIẾT KẾ: BẬC II") KHÔNG phải
   thông tin công trình, trừ khi ghi rõ là của công trình này.
 
+BẢNG THỐNG KÊ HẠNG MỤC CÔNG TRÌNH (rất quan trọng — thường ở tổng mặt bằng / mặt bằng định vị; tiêu đề kiểu "BẢNG THỐNG
+KÊ HẠNG MỤC CÔNG TRÌNH", "BẢNG THỐNG KÊ CÁC HẠNG MỤC", cột KÝ HIỆU | HẠNG MỤC | KÍCH THƯỚC | CHIỀU CAO | DIỆN TÍCH):
+- Nếu trang có bảng này: chép ĐỦ MỌI DÒNG vào "bang_thong_ke" (không bỏ dòng nào, kể cả bể nước, trạm bơm, trạm điện).
+  Bảng có thêm cột PCCC (bảng QUY MÔ: chiều cao PCCC, khối tích, bậc chịu lửa, hạng, S0, nhóm nhà, số tầng...) -> chép MỌI
+  cột vào dòng đó, dùng đúng key của các trường bên dưới (vd "chieu_cao_pccc", "khoi_tich", "bac_chiu_lua").
+- Đây là danh sách hạng mục chuẩn: trong "fields", `hang_muc` phải ghi ĐÚNG tên như trên bảng (vd ghi chú trên mặt bằng
+  "NHÀ XƯỞNG" của hạng mục "NHÀ XƯỞNG CƠ KHÍ" -> hang_muc = "NHÀ XƯỞNG CƠ KHÍ").
+- Bảng thông số/ghi chú PCCC trên mặt bằng của từng hạng mục (bậc chịu lửa, hạng, S0, diện tích...) -> điền vào "fields"
+  với hang_muc là hạng mục của mặt bằng đó.
+KHU VỰC BÊN TRONG một hạng mục (phòng, khu văn phòng/công năng phụ trợ, khu sản xuất, kho trong xưởng...) KHÔNG phải
+hạng mục: KHÔNG dùng làm `hang_muc` trong "fields"; chép vào "khu_vuc" kèm hạng mục chứa nó ("thuoc").
+
 Các trường (key -> ý nghĩa):
 - ten_cong_trinh: tên công trình / dự án
 - dien_tich_khu_dat: diện tích khu đất của dự án (m2), vd "Tổng diện tích khu đất ...: 1433.4m2"
@@ -40,5 +52,10 @@ Trả về DUY NHẤT JSON:
 {
   "fields": {
     "<key>": [ {"value": "...", "unit": "m|m2|m3|null", "text": "nguyên văn", "hang_muc": "tên hạng mục hoặc null"} ]
-  }
+  },
+  "bang_thong_ke": [ {"ky_hieu": "1", "hang_muc": "NHÀ XƯỞNG CƠ KHÍ", "kich_thuoc": "54 x 26", "chieu_cao": "9",
+                      "dien_tich": "1404", "text": "nguyên văn dòng"} ],
+  "khu_vuc": [ {"ten": "CÔNG NĂNG PHỤ TRỢ (PHÒNG HỌP, PHÒNG KẾ TOÁN)", "thuoc": "NHÀ XƯỞNG CƠ KHÍ", "dien_tich": "83",
+                "text": "nguyên văn"} ]
 }
+Trang không có bảng thống kê / khu vực -> bỏ "bang_thong_ke" / "khu_vuc".

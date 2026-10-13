@@ -39,6 +39,8 @@ def backend_kwargs(g: dict[str, Any]) -> dict[str, Any]:
     if g.get("backend") != "web":
         return {"model": g["model"], "fallback_models": g.get("fallback_models")}
     w = dict(g.get("web") or {})
+    for k in ("upload", "chunk_pages", "tabs"):         # (thinking: GeminiWeb nhận thẳng)  # cách gửi trang — người gọi (info_gemini) đọc thẳng từ settings
+        w.pop(k, None)
     return {"model": w.pop("model", "Pro"), "fallback_models": w.pop("fallback_models", ["Flash"]), "web": w}
 
 
@@ -151,8 +153,10 @@ class GeminiExtractor(Extractor):
                     + self.prompt)
             try:
                 data = self._call(_subset_pdf(pdf, part), [], text, "ban_ve.pdf", "application/pdf")
+            except PermissionError:          # chưa đăng nhập: đọc từng ô ảnh cũng lỗi -> dừng ngay
+                raise
             except Exception as e:
-                log(f"[gemini-web] lỗi đọc PDF ({str(e)[:120]}) -> đọc từng ô ảnh")
+                log(f"[gemini-web] lỗi đọc PDF ({str(e)[:120]}) — bỏ qua các trang này (không gửi ảnh)")
                 continue
             got = data.get("pages") or []
             for k, pd in enumerate(got):
@@ -173,6 +177,10 @@ class GeminiExtractor(Extractor):
                 return self._to_page(pdf, page_no, raw_tiles)
 
         all_text = vector_text(pdf, page_no)
+        if getattr(self, "web", None):            # người dùng: Gemini web CHỈ nhận file PDF (prefetch), KHÔNG gửi ảnh -> chỉ text vector
+            from ..models import PageExtraction
+            return PageExtraction(page=page_no, width=page_size(pdf, page_no)[0], height=page_size(pdf, page_no)[1],
+                                  notes=["Gemini chưa đọc được trang này qua file PDF (không gửi ảnh)"])
         raw_tiles = []
         for tile in render_tiles(pdf, page_no, self.dpi, self.grid, max_px=self.max_px):
             x0, y0, x1, y1 = tile.clip

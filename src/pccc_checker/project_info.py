@@ -975,6 +975,7 @@ def fill_so_tang_nha(fields: Dict[str, FieldValue]) -> None:
 
 def merge(hits: List[Dict[str, Any]], spec: Dict[str, Any], hang_muc_chinh: Optional[str] = None) -> ProjectInfo:
     info = ProjectInfo()
+    hits = _limit_to_table(hits, info)
     valid = []
     for h in hits:
         v, warn = _validate(h["key"], h["value"], spec)
@@ -1034,6 +1035,44 @@ def merge(hits: List[Dict[str, Any]], spec: Dict[str, Any], hang_muc_chinh: Opti
     for fs in [info.project_info, *info.hang_muc.values()]:
         fill_so_tang_nha(fs)
     return info
+
+
+def _limit_to_table(hits: List[Dict[str, Any]], info: ProjectInfo) -> List[Dict[str, Any]]:
+    """Có BẢNG THỐNG KÊ HẠNG MỤC -> chỉ hạng mục trong bảng thành cột (tên chuẩn theo bảng). Tên khác ('NHÀ XƯỞNG' trên mặt
+    bằng của 'NHÀ XƯỞNG CƠ KHÍ') khớp 1 hạng mục trong bảng -> đổi sang tên bảng; không khớp -> khu vực bên trong /
+    tên lạ: bỏ khỏi bảng hạng mục, ghi cảnh báo (người dùng: ghi nhớ nhưng không thống kê)."""
+    by_page: Dict[int, Dict[str, str]] = {}
+    for h in hits:
+        if h["key"] == "_bang_thong_ke":
+            by_page.setdefault(h["page"], {}).setdefault(_hm_key(h["value"]), h["value"])
+    # bảng thống kê thật có >= 2 hạng mục; 1 dòng ("NHÀ KHO B" trên bảng diện tích tầng của chính nó) không tính
+    table = list(dict.fromkeys(n for names in by_page.values() if len(names) >= 2 for n in names.values()))
+    hits = [h for h in hits if h["key"] != "_bang_thong_ke"]
+    if not table:
+        # Gemini chép bảng quy mô thành các trường theo hạng mục -> trang có nhiều hạng mục nhất (>= 3) là bảng chuẩn
+        hm_page: Dict[int, Dict[str, str]] = {}
+        for h in hits:
+            if h.get("hang_muc") and h.get("method") == "gemini":
+                hm_page.setdefault(h["page"], {}).setdefault(_hm_key(h["hang_muc"]), h["hang_muc"])
+        best = max(hm_page.values(), key=len, default={})
+        table = list(best.values()) if len(best) >= 3 else []
+    if not table:
+        return hits
+    out, dropped = [], {}
+    for h in hits:
+        hm = h.get("hang_muc")
+        if hm:
+            exact = [t for t in table if _hm_key(t) == _hm_key(hm)]
+            near = exact or [t for t in table if _same(hm, t, text=True)]
+            if len(near) != 1:
+                dropped.setdefault(hm, []).append(h)
+                continue
+            h = dict(h, hang_muc=near[0])
+        out.append(h)
+    for hm, hs in dropped.items():
+        info.warnings.append(f"'{hm}' không có trong bảng thống kê hạng mục ({', '.join(table)}) — coi là khu vực bên trong "
+                             f"1 hạng mục, không thống kê: " + "; ".join(f"{h['key']}={h['value']} (tr.{h['page']})" for h in hs))
+    return out
 
 
 def _flat(d: Dict[str, Any]) -> Dict[str, Any]:
@@ -1295,7 +1334,7 @@ def info_summary(info: ProjectInfo, spec: Dict[str, Any]) -> str:
            f"- File: `{m.get('pdf', '')}` · đọc {len(m.get('pages') or [])} trang · chi tiết căn cứ: `project_info_chi_tiet.md`",
            "", "Ký hiệu: ⚠ = các trang ghi khác nhau (cần chọn) · * = chỉ Gemini đọc được (cần kiểm) · "
            "✔ = đã xác nhận trong project.yaml · — = bản vẽ không ghi", ""]
-    head = ["Trường"] + [f"**{n}**" + (" (chính)" if n == info.hang_muc_chinh and len(cols) > 1 else "") for n in cols]
+    head = ["Hạng mục"] + [f"**{n}**" + (" (chính)" if n == info.hang_muc_chinh and len(cols) > 1 else "") for n in cols]
     out += ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
     notes: List[str] = []
     gem_by: Dict[str, List[str]] = {}
@@ -1398,7 +1437,8 @@ def verify_gemini(hits: List[Dict[str, Any]], page_texts: Dict[int, str]) -> Lis
     keep = []
     for h in hits:
         blob = page_texts.get(h["page"], "")
-        if h["method"] != "gemini" or len(blob) < 50:
+        # tên hạng mục trong bảng thống kê: là chữ, lớp chữ PDF hay lỗi font -> không đối chiếu được, merge() tự kiểm
+        if h["method"] != "gemini" or len(blob) < 50 or h["key"] == "_bang_thong_ke":
             keep.append(h)
             continue
         toks = _value_tokens(h["key"], h["value"])
@@ -1432,7 +1472,8 @@ def read_project_info(pdf: Path, settings: Dict[str, Any], gemini: str = "auto",
     from .pdf.classify import info_pages
     from .pdf.render import vector_text
     spec = load_spec()
-    targets = info_pages(pdf) if not pages else [(p, "chỉ định") for p in pages]
+    targets = info_pages(pdf, (settings.get("info") or {}).get("max_scan_pages", 20)) if not pages \
+        else [(p, "chỉ định") for p in pages]
     extra = [p for p in gemini_pages or [] if p not in {q for q, _ in targets}]
     targets = sorted(targets + [(p, "chỉ định") for p in extra])
     log(f"[info] đọc {len(targets)} trang: {', '.join(f'{p}({k})' for p, k in targets)}")
@@ -1474,7 +1515,12 @@ def read_project_info(pdf: Path, settings: Dict[str, Any], gemini: str = "auto",
         try:
             from .extractors.info_gemini import PROMPT_FILE, make_info_reader
             reader = make_info_reader(settings, cache_dir)
-            reader.prefetch(pdf, need_gemini, log=log)          # 1 file PDF cho mọi trang, tải 1 lần
+            ok = reader.prefetch(pdf, need_gemini, log=log)     # 1 file PDF cho mọi trang, tải 1 lần
+            todo = [p for p in need_gemini if not ((c := reader._cache(pdf, p)) and c.exists())]
+            if not ok and len(todo) > 5:                        # đọc từng trang ~30 s/trang: quá chậm -> báo, không chạy
+                warnings.append(f"Gemini không đọc được file PDF {len(todo)} trang {todo} — bỏ qua, không đọc từng trang")
+                log(f"[info] ⚠ {warnings[-1]}")
+                need_gemini = [p for p in need_gemini if p not in todo]     # trang đã có cache vẫn dùng
             for p in need_gemini:
                 try:
                     gh = reader.read_page(pdf, p)
@@ -1484,7 +1530,8 @@ def read_project_info(pdf: Path, settings: Dict[str, Any], gemini: str = "auto",
                 except Exception as e:      # quota / mạng: vẫn giữ kết quả vector
                     warnings.append(f"Gemini không đọc được trang {p}: {str(e)[:120]}")
                     log(f"[info] ⚠ Gemini trang {p}: {str(e)[:120]}")
-            meta.update(prompt=PROMPT_FILE, prompt_hash=reader.prompt_hash, model=sorted(reader.models_used))
+            meta.update(prompt=PROMPT_FILE, prompt_hash=reader.prompt_hash, model=sorted(reader.models_used),
+                        khu_vuc=reader.khu_vuc)
         except RuntimeError as e:          # thiếu API key
             warnings.append(f"Không gọi Gemini: {e}")
             log(f"[info] ⚠ {e}")

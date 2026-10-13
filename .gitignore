@@ -17,5 +17,6 @@ docs/regulations/*
 
 # Profile Chrome đăng nhập Gemini (chứa cookie) + cookie xuất tay + log
 data/chrome_gemini/
+data/chrome_*/
 data/*cookies*.json
 data/*.txt
