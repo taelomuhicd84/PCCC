@@ -33,7 +33,7 @@ python -m pccc_checker gemini-cookie "<file.json>"   # nạp cookie 1 lần -> .
   Kể cả dự phòng: trang nào đọc qua PDF lỗi thì gửi lại PDF (chunk nhỏ hơn) hoặc bỏ qua + cảnh báo; code đã chặn đường gửi
   ảnh (`info_gemini.read_page`, `gemini_extractor.extract_page` với backend web). Không đề xuất `--upload png` / tile ảnh.
 - Chrome chạy ẨN NỀN (`headless: true`, người dùng yêu cầu — không hiện cửa sổ). Bị Google chặn thì báo người dùng, đổi false.
-- Gửi **file PDF** (tool gộp trang thành 1 PDF), model **Pro**, mức suy luận `thinking: Thấp` (nhanh, đủ để đọc bảng/ghi chú).
+- Gửi **file PDF** (tool gộp trang thành 1 PDF), model **Pro**, mức suy luận `thinking: Trung bình` (người dùng chọn 13/10/2026; trước là Thấp).
 - Ít trang (≤ `chunk_pages` = 8): **1 cuộc trò chuyện** cho cả lượt; tin nhắn sau nghỉ ngẫu nhiên 5–15 s.
 - Nhiều trang: chia chunk 8 trang, mỗi chunk 1 tab = 1 cuộc trò chuyện, **TỐI ĐA 10 tab cùng lúc** (`MAX_TABS`, code khoá —
   15 tab đã bị Google đăng xuất giữa chừng). Mở tab **giãn cách 8–20 s**; trong tab mỗi thao tác (vào trang, chọn model, tải
@@ -48,7 +48,7 @@ python -m pccc_checker gemini-cookie "<file.json>"   # nạp cookie 1 lần -> .
 | Việc | Selector |
 |---|---|
 | Ô nhập | `rich-textarea [contenteditable='true']` |
-| Menu model | `[data-test-id='bard-mode-menu-button']` -> mục `3.1 Pro` / `3.8 Flash` (chữ dính mô tả) + mức `Thấp/Trung bình/Cao` |
+| Menu model | `[data-test-id='bard-mode-menu-button']` -> mục `3.1 Pro` / `3.8 Flash` (chữ dính mô tả) + mức `Thấp/Trung bình/Cao` (từ 13/10/2026 nằm trong menu con "Cấp độ tư duy" — mục ẩn vẫn có trong DOM, phải mở menu con rồi mới click) |
 | Tải file | nút aria "tải lên" -> `[data-test-id='local-images-files-uploader-button']` |
 | Gửi / Dừng | aria "Gửi tin nhắn" / "Dừng" |
 | Xoá chat | aria "Mở trình đơn thao tác đối với cuộc trò chuyện." -> `[data-test-id='delete-button']` -> nút "Xoá" trong `.cdk-overlay-pane` (chữ "Xoá" dấu trên a) |

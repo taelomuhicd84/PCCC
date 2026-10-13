@@ -29,7 +29,7 @@ python -m pccc_checker info "<pdf>" --project ... --gemini-info always --info-pa
 
 ## Gemini — GỌI SKILL `gemini-web` TRƯỚC (đăng nhập, cookie, quy tắc gửi, selector, thời gian đo)
 - Bước đầu: skill `gemini-web` (`gemini-status`; cookie chết -> `gemini-cookie`). Mọi quy tắc Playwright nằm ở đó:
-  **CHỈ GỬI FILE PDF, KHÔNG BAO GIỜ GỬI HÌNH**; Pro "Thấp" / 1 cuộc trò chuyện; nhiều trang -> chunk 8 trang, TỐI ĐA 10 tab,
+  **CHỈ GỬI FILE PDF, KHÔNG BAO GIỜ GỬI HÌNH**; Pro "Trung bình" / 1 cuộc trò chuyện; nhiều trang -> chunk 8 trang, TỐI ĐA 10 tab,
   giãn cách như người thật;
   có kết quả -> lưu tạm `data/cache/raw/` rồi xoá cuộc trò chuyện.
 - Lệnh chuẩn: `info "<pdf>" --gemini-pages smart` — tự lọc trang gửi Gemini (giữ trang không có chữ + trang có từ khoá

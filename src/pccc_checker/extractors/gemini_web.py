@@ -303,11 +303,17 @@ class GeminiWeb:
         """Chọn mức suy luận ('Thấp' nhanh hơn — đọc bảng/ghi chú là nhận dạng chữ). Không có mục -> bỏ qua."""
         btn.click()
         item = pg.locator("[role=menuitem]").filter(has_text=re.compile(rf"^\s*{re.escape(self.thinking)}", re.I)).first
-        if item.count():
+        sub = pg.locator("[role=menuitem]").filter(has_text=re.compile(r"^\s*(Cấp độ tư duy|Thinking)", re.I)).first
+        if item.count() and not item.is_visible() and sub.count():   # từ 13/10/2026 mức tư duy nằm trong menu con
+            sub.click()
+            pg.wait_for_timeout(800)
+        if item.count() and item.is_visible():
             item.click()
             pg.wait_for_timeout(500)
-        if pg.locator("[role=menuitem]").count():
-            pg.keyboard.press("Escape")
+        for _ in range(2):                                 # đóng menu con + menu chính nếu còn mở
+            if pg.locator("[role=menuitem]:visible").count():
+                pg.keyboard.press("Escape")
+                pg.wait_for_timeout(300)
 
     @staticmethod
     def _poll(pg, before: int, st: list) -> str | None:
