@@ -50,6 +50,9 @@ bộ mục lớn; bảng > 50 m chèn "Gian lánh nạn" làm mục 8 nên số 
    lệnh `danh-gia`): sau Cổng 1, KẾT LUẬN từ dữ liệu đã đọc (khác `info` chỉ chép chữ) loại hình, nhóm F, nhà hỗn hợp, và
    từng chuyên đề + mẫu hệ thống thuộc diện (đọc phần 1 "đối tượng trang bị" của mẫu). `rule_keys.file` chỉ gồm mục
    `ap_dung: true`; `ung_vien` = mọi file có thể, `khong_ap_dung`, `cho_danh_gia`. Chưa đánh giá → không chuyên đề nào chạy.
+   **Có đối tượng thì gọi chuyên đề** (`chuyen_de.DAU_HIEU`, `rule_keys.doi_tuong`): dấu hiệu trong tên hạng mục / công năng /
+   khu vực (`project_info.meta.khu_vuc`) / tên bản vẽ → chuyên đề vào ứng viên của hạng mục đó (kèm mẫu hệ thống) dù bảng
+   không có mục, khung đánh giá điền sẵn `true` + căn cứ. Đầu tiên: phòng bơm → `tram-bom` + B36. Thêm đối tượng = 1 dòng.
 10. **Skill chuyên đề rút gọn**: khung 6 bước chung ở `skills/chuyen-de/_khung.md` (đọc 1 lần); mỗi skill 4–5 dòng
    (cần gì · so số · phán đoán · trang/mẫu). 65k → 12k ký tự cho 23 skill.
 

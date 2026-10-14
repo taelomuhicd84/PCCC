@@ -9,7 +9,7 @@ import json
 from pathlib import Path
 
 from ..config import PROJECT_ROOT
-from .chuyen_de import MUC
+from .chuyen_de import MUC, dau_hieu, plain
 from .danh_gia import cho_hm, loc
 from .loai_hinh import HE_THONG, LOAI, chon
 
@@ -53,7 +53,7 @@ def _val(h: dict, k: str):
     return (c[0], "ban_ve") if c and c[0] is not None else (None, None)
 
 
-def keys_for(h: dict, overrides: list[dict], dgh: dict | None = None) -> dict:
+def keys_for(h: dict, overrides: list[dict], dgh: dict | None = None, dt: dict | None = None) -> dict:
     """`dgh` = mục của hạng mục trong danh_gia_cong_nang.json (None = chưa đánh giá -> không chuyên đề nào áp dụng)."""
     ov = {o["truong"]: o for o in overrides if o.get("hm") in (h["id"], h["ten"][0])}
     if dgh and dgh.get("loai_hinh") and "loai_hinh" not in ov:   # loại hình do bước đánh giá công năng kết luận
@@ -100,6 +100,9 @@ def keys_for(h: dict, overrides: list[dict], dgh: dict | None = None) -> dict:
     # file mẫu `NN-<chuyên đề>[.phần].md` -> chuyên đề theo tên file (B45 tách bình / cơ giới / phá dỡ);
     # mẫu `luon` (B47 cấp khí trung tâm, không bảng công trình nào dẫn tới) nạp cả khi bảng không có mục đó
     co_bang = bool(files)
+    dt = dt or {}
+    for cd in dt:  # có đối tượng (phòng bơm…) -> chuyên đề là ứng viên dù bảng của hạng mục không có mục đó
+        files.setdefault(cd, [])
     for mau, (_, _, _, _, luon) in HE_THONG.items():
         d = PROJECT_ROOT / CHECKLISTS / "he-thong" / mau
         for p in sorted(d.glob("*.md")) if d.is_dir() else []:
@@ -115,11 +118,44 @@ def keys_for(h: dict, overrides: list[dict], dgh: dict | None = None) -> dict:
     if cho:
         ghi_chu.append(f"{len(cho)} chuyên đề chờ đánh giá công năng (skill danh-gia-cong-nang) -> chưa áp dụng")
     return {"hm": h["id"], "ten": h["ten"][0], "loai_hinh": loai, "bo": bo, "mau": mau, "khoa": k, "nguon": nguon,
-            "thieu": thieu, "file": ap, "ung_vien": files, "khong_ap_dung": khong, "cho_danh_gia": cho,
+            "thieu": thieu, "file": ap, "ung_vien": files, "doi_tuong": dt, "khong_ap_dung": khong, "cho_danh_gia": cho,
             "ghi_chu": ghi_chu}
 
 
-def build_rule_keys(facts: dict, ho_so: str, overrides_path: Path | None = None, danh_gia: dict | None = None) -> dict:
+def _cung_hm(a: str, b: str) -> bool:
+    a, b = plain(a or ""), plain(b or "")
+    return bool(a and b) and (a == b or a in b or b in a)
+
+
+def doi_tuong(facts: dict, khu_vuc: list[dict] | None = None, danh_muc: list[dict] | None = None) -> dict[str, dict]:
+    """{HM: {chuyên đề: [căn cứ]}} theo DAU_HIEU. Khu vực trong hạng mục -> chính hạng mục đó. Tên bản vẽ -> hạng mục
+    riêng của đối tượng (vd hạng mục Phòng bơm) nếu có, không thì hạng mục ghi ở khung tên trang đó."""
+    hms = facts["hang_muc"]
+    out: dict[str, dict] = {h["id"]: {} for h in hms}
+
+    def add(hm, cd, cc):
+        out[hm].setdefault(cd, []).append(cc)
+    for h in hms:
+        cn = h.get("cong_nang") or [None]
+        for cd in dau_hieu(f"{h['ten'][0]} {(cn[0] if isinstance(cn, list) else cn) or ''}"):
+            add(h["id"], cd, f"hạng mục: {h['ten'][0]}")
+    for k in khu_vuc or []:
+        for cd in dau_hieu(k.get("ten", "")):
+            for h in hms:
+                if _cung_hm(k.get("thuoc", ""), h["ten"][0]):
+                    add(h["id"], cd, f"khu vực trong hạng mục: {k['ten']} (tr.{k.get('page')})")
+    for d in danh_muc or []:
+        for cd in dau_hieu(d.get("ten_ban_ve") or ""):
+            rieng = [h["id"] for h in hms if cd in dau_hieu(h["ten"][0])]
+            dich = rieng or [h["id"] for h in hms if _cung_hm(d.get("hang_muc") or "", h["ten"][0])]
+            for hm in dich:
+                add(hm, cd, f"bản vẽ: {d['ten_ban_ve']} (tr.{d['trang']})")
+    return out
+
+
+def build_rule_keys(facts: dict, ho_so: str, overrides_path: Path | None = None, danh_gia: dict | None = None,
+                    khu_vuc: list[dict] | None = None, danh_muc: list[dict] | None = None) -> dict:
     ov = load_overrides(ho_so, overrides_path)
+    dt = doi_tuong(facts, khu_vuc, danh_muc)
     return {"schema": "rule_keys/2", "luon_nap": LUON_NAP,
-            "hang_muc": [keys_for(h, ov, cho_hm(danh_gia, h["id"])) for h in facts["hang_muc"]]}
+            "hang_muc": [keys_for(h, ov, cho_hm(danh_gia, h["id"]), dt[h["id"]]) for h in facts["hang_muc"]]}

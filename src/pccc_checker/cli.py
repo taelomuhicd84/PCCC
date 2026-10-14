@@ -448,6 +448,13 @@ def cmd_facts(a, settings) -> Path:
     return out / "project_facts.json"
 
 
+def _nguon_doi_tuong(out: Path) -> dict:
+    """Khu vực trong hạng mục (project_info meta.khu_vuc) + danh mục bản vẽ -> dò dấu hiệu đối tượng (phòng bơm…)."""
+    pi, dm = out / "project_info.json", out / "danh_muc_ban_ve.json"
+    kv = json.loads(pi.read_text(encoding="utf-8")).get("meta", {}).get("khu_vuc") if pi.exists() else None
+    return {"khu_vuc": kv or [], "danh_muc": json.loads(dm.read_text(encoding="utf-8")) if dm.exists() else []}
+
+
 def cmd_danh_gia(a, settings) -> Path:
     """Khung danh_gia_cong_nang.json (skill danh-gia-cong-nang điền); chạy lại giữ quyết định đã điền."""
     from .pipeline import danh_gia
@@ -455,12 +462,15 @@ def cmd_danh_gia(a, settings) -> Path:
     out = _out_of(a.target)
     facts = json.loads((out / "project_facts.json").read_text(encoding="utf-8"))
     cu = danh_gia.doc(out)
-    dg = danh_gia.khung(build_rule_keys(facts, out.name, danh_gia=cu), cu)
+    dg = danh_gia.khung(build_rule_keys(facts, out.name, danh_gia=cu, **_nguon_doi_tuong(out)), cu)
     _write_json(out / danh_gia.TEN_FILE, dg)
     for h in dg["hang_muc"]:
         n = sum(v["ap_dung"] is None for v in [*h["chuyen_de"].values(), *h["he_thong"].values()])
         print(f"{h['hm']} {h['ten']}: đề xuất {h['de_xuat']['loai_hinh']} ({h['de_xuat']['mau']}) · "
               f"{len(h['chuyen_de'])} chuyên đề + {len(h['he_thong'])} mẫu hệ thống · {n} ô chưa đánh giá")
+        for k, v in [*h["chuyen_de"].items(), *h["he_thong"].items()]:
+            if v.get("nguon") == "dau_hieu":
+                print(f"   ✓ {k}: {v['ly_do'][:120]}")
     print(f"danh_gia_cong_nang: {out / danh_gia.TEN_FILE}")
     return out / danh_gia.TEN_FILE
 
@@ -470,7 +480,7 @@ def cmd_keys(a, settings) -> Path:
     from .pipeline.rule_keys import build_rule_keys
     out = _out_of(a.target)
     facts = json.loads((out / "project_facts.json").read_text(encoding="utf-8"))
-    rk = build_rule_keys(facts, out.name, danh_gia=danh_gia.doc(out))
+    rk = build_rule_keys(facts, out.name, danh_gia=danh_gia.doc(out), **_nguon_doi_tuong(out))
     if (out / "danh_muc_ban_ve.json").exists():          # skill chuyên đề chỉ đọc đúng các trang của mình
         from .pipeline.sheets import pages_for
         dm = _danh_muc(out)

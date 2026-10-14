@@ -273,3 +273,39 @@ def test_cong_ap_dung_theo_danh_gia_cong_nang():
     assert {"bao-chay", "an-toan-cong-nghe"} <= set(h2["khong_ap_dung"])
     # chạy lại khung giữ quyết định đã điền
     assert danh_gia.khung({"hang_muc": [h2]}, dg)["hang_muc"][0]["chuyen_de"]["thoat-nan"]["ap_dung"] is True
+
+
+def _facts_3hm():
+    info = _info(**{n: {"chieu_cao_pccc": fv(c, "user", "confirmed"), "nhom_nha": fv(g, "user", "confirmed")}
+                    for n, c, g in (("PHÒNG BƠM PCCC", 3, None), ("NHÀ KHO", 9, "F5.2"), ("NHÀ XƯỞNG", 9, "F5.1"))})
+    return facts.build_facts(info)
+
+
+def test_doi_tuong_phong_bom_hang_muc_rieng():
+    # TH1: 3 hạng mục Phòng bơm PCCC, Nhà kho, Nhà xưởng -> chỉ hạng mục phòng bơm gọi tram-bom (+ B36)
+    from pccc_checker.pipeline import danh_gia
+    fx = _facts_3hm()
+    dm = [{"trang": 12, "ten_ban_ve": "MẶT BẰNG BỐ TRÍ MÁY BƠM", "hang_muc": "NHÀ XƯỞNG"}]
+    rk = rule_keys.build_rule_keys(fx, "x", PROJECT_ROOT / "none.json", danh_muc=dm)
+    by = {h["ten"]: h for h in rk["hang_muc"]}
+    pb = by["PHÒNG BƠM PCCC"]
+    assert pb["loai_hinh"] == "tram-bom" and any("/B36/" in p for p in pb["ung_vien"]["tram-bom"])
+    assert any("tr.12" in c for c in pb["doi_tuong"]["tram-bom"])        # bản vẽ máy bơm -> hạng mục phòng bơm
+    assert "tram-bom" not in by["NHÀ XƯỞNG"]["ung_vien"] and "tram-bom" not in by["NHÀ KHO"]["ung_vien"]
+    (d,) = [x for x in danh_gia.khung(rk)["hang_muc"] if x["ten"] == "PHÒNG BƠM PCCC"]
+    assert d["he_thong"]["B36"]["ap_dung"] is True and d["he_thong"]["B36"]["nguon"] == "dau_hieu"
+
+
+def test_doi_tuong_phong_bom_trong_hang_muc():
+    # TH2: phòng bơm là 1 phòng trong nhà xưởng (bảng B17 không có mục trạm bơm) -> nhà xưởng vẫn gọi tram-bom + B36
+    from pccc_checker.pipeline import danh_gia
+    info = _info(**{"NHÀ XƯỞNG": {"chieu_cao_pccc": fv(9, "user", "confirmed"), "nhom_nha": fv("F5.1", "user", "confirmed")}})
+    fx = facts.build_facts(info)
+    kv = [{"ten": "PHÒNG BƠM CHỮA CHÁY", "thuoc": "NHÀ XƯỞNG", "page": 5}]
+    rk = rule_keys.build_rule_keys(fx, "x", PROJECT_ROOT / "none.json", khu_vuc=kv)
+    (h,) = rk["hang_muc"]
+    assert h["loai_hinh"] == "nha-xuong" and any("/B36/" in p for p in h["ung_vien"]["tram-bom"])
+    assert h["doi_tuong"]["tram-bom"] == ["khu vực trong hạng mục: PHÒNG BƠM CHỮA CHÁY (tr.5)"]
+    dg = danh_gia.khung(rk)
+    (h2,) = rule_keys.build_rule_keys(fx, "x", PROJECT_ROOT / "none.json", danh_gia=dg, khu_vuc=kv)["hang_muc"]
+    assert "tram-bom" in h2["file"] and set(h2["file"]) == {"tram-bom"}   # chỉ chuyên đề có đối tượng tự áp dụng

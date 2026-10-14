@@ -32,7 +32,11 @@ python -m pccc_checker keys data/output/<hồ sơ>       # sau khi điền: rule
 4. **Mẫu hệ thống** (`he_thong.<Bxx>`): đọc file `doc_truoc` (phần 1 = đối tượng / yêu cầu trang bị) → so với số liệu
    (khối tích, số tầng, nhóm F, dt, hạng nổ) → `true` / `false`, `ly_do` ghi ID dòng + giá trị so. Nhiều mẫu cùng chuyên đề
    (B37–B44 chữa cháy): chỉ `true` mẫu của hệ thống thuộc diện / có trên bản vẽ (sprinkler → B39, khí FM200 → B41…).
-5. **Không đủ dữ liệu → để `null`** + `ly_do: "thiếu <trường>, xem trang …"` (vẫn KHÔNG áp dụng). Không đoán.
+5. **Có đối tượng thì gọi chuyên đề** (người dùng 14/10/2026): `danh-gia` tự dò `DAU_HIEU` (`pipeline/chuyen_de.py`) trong tên
+   hạng mục, công năng, khu vực trong hạng mục, tên bản vẽ → điền sẵn `ap_dung: true`, `nguon: dau_hieu` + căn cứ. Vd phòng bơm:
+   hạng mục riêng HOẶC 1 phòng trong nhà kho/xưởng → `tram-bom` + B36 dù bảng của hạng mục không có mục trạm bơm. Bản vẽ có
+   tên đối tượng gán cho hạng mục riêng của đối tượng (nếu có). Chỉ sửa thành `false` khi có lý do rõ (ghi `ly_do`).
+6. **Không đủ dữ liệu → để `null`** + `ly_do: "thiếu <trường>, xem trang …"` (vẫn KHÔNG áp dụng). Không đoán.
 
 ## Báo kết quả (ngắn)
 Bảng mỗi hạng mục: loại hình / mẫu bảng · nhóm F · chuyên đề áp dụng | không áp dụng | chờ (thiếu gì). Người dùng sửa →

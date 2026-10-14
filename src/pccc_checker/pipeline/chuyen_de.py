@@ -102,6 +102,22 @@ _NHAN = [(s, re.compile(BY_SLUG[s][4])) for s in dict.fromkeys(_THU_TU_NHAN)]
 _TU_KHOA = [(m[1], re.compile(m[5])) for m in MUC]
 
 
+# DẤU HIỆU ĐỐI TƯỢNG (người dùng 14/10/2026: "có phòng bơm thì phải gọi skill phòng bơm" — dù là hạng mục riêng hay một
+# phòng trong hạng mục khác). Dò trên chữ HOA CÓ DẤU của: tên hạng mục, công năng, khu vực trong hạng mục, tên bản vẽ.
+# Thấy -> chuyên đề vào ứng viên của hạng mục đó (kèm mẫu hệ thống) + khung đánh giá điền sẵn ap_dung = true, ghi căn cứ.
+# Thêm đối tượng khác = thêm 1 dòng.
+DAU_HIEU = {
+    "tram-bom": r"PHÒNG BƠM|TRẠM BƠM|NHÀ BƠM|MÁY BƠM|BƠM (PCCC|CHỮA CHÁY|CẤP NƯỚC CHỮA CHÁY)",
+}
+_DAU_HIEU = {k: re.compile(v) for k, v in DAU_HIEU.items()}
+
+
+def dau_hieu(text: str) -> list[str]:
+    """Chuyên đề có dấu hiệu đối tượng trong text."""
+    u = re.sub(r"\s+", " ", unicodedata.normalize("NFC", (text or "").upper()))
+    return [cd for cd, rx in _DAU_HIEU.items() if rx.search(u)]
+
+
 def plain(s: str) -> str:
     """Chữ hoa, bỏ dấu, gộp khoảng trắng — so khớp tên mục / tên bản vẽ."""
     s = unicodedata.normalize("NFD", s.upper().replace("Đ", "D"))

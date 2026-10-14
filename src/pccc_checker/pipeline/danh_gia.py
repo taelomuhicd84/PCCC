@@ -26,14 +26,20 @@ def khung(rk: dict, cu: dict | None = None) -> dict:
     out = []
     for h in rk["hang_muc"]:
         o = old.get(h["hm"], {})
+        dt = h.get("doi_tuong") or {}
         cds, hts = {}, {}
+
+        def moi(cd):  # có đối tượng (chuyen_de.DAU_HIEU) -> điền sẵn true + căn cứ; đánh giá được sửa thành false
+            if cd in dt:
+                return {"ap_dung": True, "ly_do": "có đối tượng: " + "; ".join(dt[cd][:3]), "nguon": "dau_hieu"}
+            return {"ap_dung": None, "ly_do": ""}
         for cd, fs in h["ung_vien"].items():
             if any(_mau_of(f) is None for f in fs):  # chuyên đề có file của bảng công trình
-                cds[cd] = o.get("chuyen_de", {}).get(cd) or {"ap_dung": None, "ly_do": ""}
+                cds[cd] = o.get("chuyen_de", {}).get(cd) or moi(cd)
             for f in fs:
                 m = _mau_of(f)
                 if m and m not in hts:
-                    hts[m] = o.get("he_thong", {}).get(m) or {"chuyen_de": cd, "ap_dung": None, "ly_do": "",
+                    hts[m] = o.get("he_thong", {}).get(m) or {"chuyen_de": cd, **moi(cd),
                                                               "doc_truoc": f}  # phần 1 = đối tượng trang bị
         out.append({
             "hm": h["hm"], "ten": h["ten"],
