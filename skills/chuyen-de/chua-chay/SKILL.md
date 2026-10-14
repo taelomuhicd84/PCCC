@@ -1,23 +1,5 @@
-# chua-chay — mục 13 bảng đối chiếu: Hệ thống chữa cháy
-Tiểu mục: đối tượng trang bị chữa cháy tự động, họng nước chữa cháy trong nhà, cấp nước chữa cháy ngoài nhà, bể nước (trạm bơm / phòng bơm → skill `tram-bom`); nhà nhiều công năng.
-Bảng tra: `rule_keys.json → file["chua-chay"]` (vd `rules/checklists/<loại hình>/<bộ>/13-chua-chay*.md`; mục dài có nhiều phần `.1`, `.2`…).
-
-1. Khi nào dùng: mọi hạng mục (mỗi hệ thống 1 nhóm dòng; hệ thống không thuộc diện → NA). Loại hình chưa có bộ bảng (`rule_keys.file` không có `chua-chay`) → không chạy, ghi 1 dòng XM.
-2. Cần từ JSON (`project_facts.json` / `extraction.json`): nhom_nha, cao_pccc_m, so_tang_noi, khoi_tich_m3, dt_san_tong_m2; thuyết minh/bản vẽ hệ thống: lưu lượng, số họng, dung tích bể.
-   - Thiếu trường → dòng XM kèm tên trường thiếu + trang nên đọc bổ sung (chỉ trang của mục: `rule_keys.trang_theo_chuyen_de["chua-chay"]` hoặc `trang <thư mục> --cd chua-chay`).
-   - Chỉ dùng ô độ tin cậy H/M; ô L → kết luận tối đa XM.
-3. Nạp bảng: ĐÚNG file trong `rule_keys.json` cho hạng mục đang xét, nhiều phần thì từng phần một lượt
-   (+ `rules/qcvn06/00-dinh-nghia.md` khi cần định nghĩa). Không mở lại bản vẽ, không nạp file mục khác.
-4. Cách kiểm — cột "Quy định" là căn cứ DUY NHẤT (ngưỡng lấy từ bảng, không từ trí nhớ; dẫn tới bảng số chưa có → XM ghi tên bảng):
-   - Script / so số: thuộc diện trang bị theo ngưỡng; lưu lượng/dung tích bể theo khối tích — so số trong cột Quy định.
-   - Cần phán đoán: hệ thống có trên bản vẽ hay chỉ thuyết minh; nhà ≥ 2 công năng chọn yêu cầu theo công năng nào — chỉ xem ảnh cắt vùng (≤ 3 ảnh, lệnh `crops`), không xem cả trang.
-   Mẫu ĐÃ CÓ trong `rule_keys.file["chua-chay"]`: `he-thong/B37` (cấp nước ngoài nhà), `he-thong/B38` (họng nước trong nhà) — đối chiếu từng dòng,
-   mục 1 mỗi mẫu = đối tượng trang bị (không thuộc diện → mẫu đó NA). Trạm bơm B36 → skill `tram-bom`.
-   Cũng đã có B39 (tự động nước, bọt: sprinkler, drencher), B40 (bọt cố định), B41 (khí hóa lỏng), B42 (khí nén), B43 (CO2), B44 (sol-khí).
-   Có tới 8 mẫu → đọc phần đầu (yêu cầu trang bị) của từng mẫu trước, chỉ đối chiếu tiếp mẫu của hệ thống thực có trên bản vẽ / thuộc diện.
-5. Đầu ra: mỗi dòng bảng tra có nội dung kiểm (bỏ dòng chỉ là tiêu đề tiểu mục) = 1 dòng `findings.jsonl`:
-   `{"hm","tang","cd":"chua-chay","rule":"<ID dòng, vd KS2-CC-001>","yc","ht","tt":"D|KD|XM|NA","ly_do","truc","trang","bbox","conf","evid","dieu_khoan"}`
-   - KD phải có trang + bbox (0–1) + evid (chữ nguyên văn trên bản vẽ) + điều khoản; thiếu → tự hạ XM.
-   - Không áp dụng (điều kiện kèm không thoả) → NA, ghi lý do.
-   Ghi xong chạy `python -m pccc_checker findings --check <findings.jsonl>`.
-6. Lỗi hay gặp: `memory/lessons.md` mục `chua-chay` (nếu có) và mục `chung`.
+# chua-chay — Hệ thống chữa cháy  (làm theo `skills/chuyen-de/_khung.md`; ID dòng `<mã bảng>-CC-NNN`)
+Cần: nhóm, cao PCCC, số tầng, khối tích, dt sàn; lưu lượng, số họng, bể, hệ thống tự động (loại chất).
+Số (script): thuộc diện; lưu lượng / dung tích bể theo khối tích.
+Xét (ảnh cắt): hệ thống trên bản vẽ hay thuyết minh; nhà ≥ 2 công năng theo công năng nào.
+Mẫu B37 ngoài nhà, B38 họng nước, B39 sprinkler/drencher, B40 bọt, B41 khí hóa lỏng, B42 khí nén, B43 CO2, B44 sol-khí — chỉ mẫu đã đánh giá áp dụng.

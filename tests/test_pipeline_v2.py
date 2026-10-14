@@ -117,15 +117,15 @@ def test_rule_keys_khach_san_k2(tmp_path):
     assert (h["loai_hinh"], h["bo"], h["thieu"]) == ("khach-san", "k2", [])
     # 1 mục bảng = 1 chuyên đề; B7.2 có 17 mục (không có gian lánh nạn); mục dài tách phần .1 .2 …
     # 17 mục của B7.2 + an-toan-cong-nghe do mẫu B47 (cấp khí đốt trung tâm) luôn nạp
-    assert len(h["file"]) == 18 and "gian-lanh-nan" not in h["file"]
-    assert all("/he-thong/B47/" in p for p in h["file"]["an-toan-cong-nghe"])
+    assert len(h["ung_vien"]) == 18 and "gian-lanh-nan" not in h["ung_vien"]
+    assert all("/he-thong/B47/" in p for p in h["ung_vien"]["an-toan-cong-nghe"])
     # mẫu hệ thống nạp kèm: B35 vào báo cháy, B34 vào chống tụ khói, B37 + B38 vào chữa cháy
-    assert h["file"]["bao-chay"][0] == "rules/checklists/khach-san/k2/12-bao-chay.md"
-    assert any("/he-thong/B35/" in p for p in h["file"]["bao-chay"])
-    assert any("/he-thong/B34/" in p for p in h["file"]["chong-tu-khoi"])
-    assert {"B37", "B38"} <= {p.split("/")[3] for p in h["file"]["chua-chay"] if "/he-thong/" in p}
-    assert all(".".join(p.split("/")[-1].split(".")[:-2]) == "07-thoat-nan" for p in h["file"]["thoat-nan"])
-    assert all((PROJECT_ROOT / p).exists() for fs in h["file"].values() for p in fs)
+    assert h["ung_vien"]["bao-chay"][0] == "rules/checklists/khach-san/k2/12-bao-chay.md"
+    assert any("/he-thong/B35/" in p for p in h["ung_vien"]["bao-chay"])
+    assert any("/he-thong/B34/" in p for p in h["ung_vien"]["chong-tu-khoi"])
+    assert {"B37", "B38"} <= {p.split("/")[3] for p in h["ung_vien"]["chua-chay"] if "/he-thong/" in p}
+    assert all(".".join(p.split("/")[-1].split(".")[:-2]) == "07-thoat-nan" for p in h["ung_vien"]["thoat-nan"])
+    assert all((PROJECT_ROOT / p).exists() for fs in h["ung_vien"].values() for p in fs)
 
 
 def test_rule_keys_override_va_loai_chua_co(tmp_path):
@@ -136,7 +136,7 @@ def test_rule_keys_override_va_loai_chua_co(tmp_path):
     (h,) = rule_keys.build_rule_keys(_facts_ks(), "x", ov)["hang_muc"]
     assert (h["loai_hinh"], h["bo"], h["mau"]) == ("hon-hop", "k2", "B5.2")
     assert h["nguon"]["nhom_nha"] == h["nguon"]["loai_hinh"] == "override"
-    assert h["thieu"] == ["hang_no"] and h["file"]["quy-mo"] == ["rules/checklists/hon-hop/k2/01-quy-mo.md"]
+    assert h["thieu"] == ["hang_no"] and h["ung_vien"]["quy-mo"] == ["rules/checklists/hon-hop/k2/01-quy-mo.md"]
 
 
 @pytest.mark.parametrize("ten,cn,nhom,loai", [
@@ -230,8 +230,8 @@ def test_bo_bang_khach_san_du_muc():
 def test_hang_muc_phong_bom_nap_mau_b36(tmp_path):
     info = _info(**{"PHÒNG BƠM PCCC": {"chieu_cao_pccc": fv(3, "user", "confirmed")}})
     (h,) = rule_keys.build_rule_keys(facts.build_facts(info), "x", tmp_path / "none.json")["hang_muc"]
-    assert h["loai_hinh"] == "tram-bom" and h["file"]["tram-bom"]
-    assert all("/he-thong/B36/" in p for p in h["file"]["tram-bom"])
+    assert h["loai_hinh"] == "tram-bom" and h["ung_vien"]["tram-bom"]
+    assert all("/he-thong/B36/" in p for p in h["ung_vien"]["tram-bom"])
 
 
 def test_ten_file_md_khong_trung_giua_cac_mau():
@@ -247,6 +247,29 @@ def test_mau_he_thong_nap_dung_chuyen_de():
     assert (d / "B45" / "20-co-gioi.md").exists() and (d / "B45" / "16-pha-do-bao-ho.md").exists()
     assert (d / "B50" / "09-thang-may-chua-chay.md").exists()
     (h,) = rule_keys.build_rule_keys(_facts_ks(), "x", PROJECT_ROOT / "none.json")["hang_muc"]
-    tm = h["file"]["thang-may-chua-chay"]
+    tm = h["ung_vien"]["thang-may-chua-chay"]
     assert tm[0].endswith("k2/09-thang-may-chua-chay.md") and any("/he-thong/B50/" in p for p in tm)
-    assert any("/he-thong/B47/" in p for p in h["file"]["an-toan-cong-nghe"])   # B47 luôn nạp
+    assert any("/he-thong/B47/" in p for p in h["ung_vien"]["an-toan-cong-nghe"])   # B47 luôn nạp
+
+
+def test_cong_ap_dung_theo_danh_gia_cong_nang():
+    from pccc_checker.pipeline import danh_gia
+    fx = _facts_ks()
+    (h,) = rule_keys.build_rule_keys(fx, "x", PROJECT_ROOT / "none.json")["hang_muc"]
+    # chưa đánh giá công năng -> KHÔNG chuyên đề nào áp dụng (người dùng 14/10/2026)
+    assert h["file"] == {} and set(h["cho_danh_gia"]) == set(h["ung_vien"])
+    dg = danh_gia.khung({"hang_muc": [h]})
+    (d,) = dg["hang_muc"]
+    assert "thoat-nan" in d["chuyen_de"] and {"B35", "B39", "B47"} <= set(d["he_thong"])
+    assert d["he_thong"]["B35"]["doc_truoc"].endswith("B35/12-bao-chay.1.md")
+    d["chuyen_de"]["thoat-nan"]["ap_dung"] = True
+    d["chuyen_de"]["chua-chay"]["ap_dung"] = True
+    d["he_thong"]["B39"]["ap_dung"] = True          # có sprinkler; B41 (khí) không điền -> không nạp
+    d["chuyen_de"]["bao-chay"]["ap_dung"] = False
+    d["he_thong"]["B47"]["ap_dung"] = False         # không có cấp khí trung tâm
+    (h2,) = rule_keys.build_rule_keys(fx, "x", PROJECT_ROOT / "none.json", danh_gia=dg)["hang_muc"]
+    assert set(h2["file"]) == {"thoat-nan", "chua-chay"}
+    assert any("/B39/" in p for p in h2["file"]["chua-chay"]) and not any("/B41/" in p for p in h2["file"]["chua-chay"])
+    assert {"bao-chay", "an-toan-cong-nghe"} <= set(h2["khong_ap_dung"])
+    # chạy lại khung giữ quyết định đã điền
+    assert danh_gia.khung({"hang_muc": [h2]}, dg)["hang_muc"][0]["chuyen_de"]["thoat-nan"]["ap_dung"] is True

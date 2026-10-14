@@ -5,7 +5,8 @@ description: Đối chiếu hạng mục × chuyên đề với bảng tra .md (
 
 # Đối chiếu theo chuyên đề (skill 04)
 
-Điều kiện: đã qua Cổng 1 (`cong-claude`), có `project_facts.json` và `rule_keys.json` (`keys`).
+Điều kiện: đã qua Cổng 1 (`cong-claude`) và đánh giá công năng (`danh-gia-cong-nang`), có `rule_keys.json` (`keys`).
+Chỉ chạy chuyên đề có trong `rule_keys.file` (đã áp dụng); khung chung: `skills/chuyen-de/_khung.md` (đọc 1 lần).
 Nguyên tắc: không mở lại bản vẽ; mỗi lượt chỉ nạp `rules/_index.md` + 1 khung chuyên đề + file bảng tra của nó.
 
 ```powershell
@@ -25,8 +26,7 @@ python -m pccc_checker findings --check data/output/<hồ sơ>/findings.jsonl   
    Trang cần đọc của chuyên đề: `rule_keys.trang_theo_chuyen_de[<chuyên đề>]` (từ danh mục bản vẽ `danh_muc_ban_ve.json`,
    lệnh `trang <thư mục> --cd <chuyên đề>`) — chỉ xem ảnh cắt / gửi Gemini đúng các trang này, không cả hồ sơ.
    Thứ tự: `quy-mo` (mục 1) LUÔN trước — nó chốt bộ bảng và khóa tra; sau đó theo số NN (= thứ tự bảng Word đầu ra).
-   Mẫu hệ thống B34–B50 đã nạp sẵn trong `rule_keys.file[<chuyên đề>]` (đường dẫn `he-thong/B3x/`): với mỗi mẫu đọc phần 1
-   (đối tượng / yêu cầu trang bị) trước — không thuộc diện → cả mẫu NA, không nạp các phần sau (tiết kiệm token).
+   Mẫu hệ thống trong `rule_keys.file` là mẫu đã được đánh giá thuộc diện — đối chiếu đủ các phần.
    Nhiều hạng mục / chuyên đề độc lập → có thể giao subagent song song, mỗi subagent 1 cặp (HM, chuyên đề),
    chỉ trả về số dòng D/KD/XM/NA + đường dẫn file.
 3. Cột "Quy định" của bảng là căn cứ duy nhất. Dòng dẫn tới bảng số chưa chuẩn hoá (Bảng 1–5, E.1, G.9, H.2…, xem

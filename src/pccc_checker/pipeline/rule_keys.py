@@ -10,6 +10,7 @@ from pathlib import Path
 
 from ..config import PROJECT_ROOT
 from .chuyen_de import MUC
+from .danh_gia import cho_hm, loc
 from .loai_hinh import HE_THONG, LOAI, chon
 
 CHECKLISTS = "rules/checklists"
@@ -52,8 +53,11 @@ def _val(h: dict, k: str):
     return (c[0], "ban_ve") if c and c[0] is not None else (None, None)
 
 
-def keys_for(h: dict, overrides: list[dict]) -> dict:
+def keys_for(h: dict, overrides: list[dict], dgh: dict | None = None) -> dict:
+    """`dgh` = mục của hạng mục trong danh_gia_cong_nang.json (None = chưa đánh giá -> không chuyên đề nào áp dụng)."""
     ov = {o["truong"]: o for o in overrides if o.get("hm") in (h["id"], h["ten"][0])}
+    if dgh and dgh.get("loai_hinh") and "loai_hinh" not in ov:   # loại hình do bước đánh giá công năng kết luận
+        ov["loai_hinh"] = {"gia_tri": dgh["loai_hinh"]}
     k, nguon = {}, {}
     for f in CAN + ["hang_no", "so_tang_noi", "so_tang_ham"]:
         if f in ov:
@@ -106,10 +110,16 @@ def keys_for(h: dict, overrides: list[dict]) -> dict:
     if any(nguon.get(f) == "tinh" for f in can):
         ghi_chu.append("có khóa lấy theo công năng (tinh), chưa có chữ trên bản vẽ -> Cổng 1 phải xác nhận")
     mau = next((m for m, b, _ in LOAI[loai][2] if b == bo), None) if loai in LOAI else None
+    # CỔNG ÁP DỤNG: chỉ chuyên đề / mẫu hệ thống mà đánh giá công năng ghi ap_dung = true mới vào `file`
+    ap, khong, cho = loc(files, dgh)
+    if cho:
+        ghi_chu.append(f"{len(cho)} chuyên đề chờ đánh giá công năng (skill danh-gia-cong-nang) -> chưa áp dụng")
     return {"hm": h["id"], "ten": h["ten"][0], "loai_hinh": loai, "bo": bo, "mau": mau, "khoa": k, "nguon": nguon,
-            "thieu": thieu, "file": files, "ghi_chu": ghi_chu}
+            "thieu": thieu, "file": ap, "ung_vien": files, "khong_ap_dung": khong, "cho_danh_gia": cho,
+            "ghi_chu": ghi_chu}
 
 
-def build_rule_keys(facts: dict, ho_so: str, overrides_path: Path | None = None) -> dict:
+def build_rule_keys(facts: dict, ho_so: str, overrides_path: Path | None = None, danh_gia: dict | None = None) -> dict:
     ov = load_overrides(ho_so, overrides_path)
-    return {"schema": "rule_keys/1", "luon_nap": LUON_NAP, "hang_muc": [keys_for(h, ov) for h in facts["hang_muc"]]}
+    return {"schema": "rule_keys/2", "luon_nap": LUON_NAP,
+            "hang_muc": [keys_for(h, ov, cho_hm(danh_gia, h["id"])) for h in facts["hang_muc"]]}

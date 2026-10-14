@@ -6,7 +6,7 @@ ghi chú vị trí sai trực tiếp lên PDF. Người dùng là kỹ sư/ngư�
 ## Kiến trúc — pipeline 8 bước · 2 cổng Claude (chi tiết: docs/ARCHITECTURE.md)
 
 ```
-intake ─► info ─► facts ─► [CỔNG 1] ─► keys ─► chuyên đề + luật YAML ─► findings ─► [CỔNG 2] ─► annotate / Word
+intake ─► info ─► facts ─► [CỔNG 1] ─► danh-gia (đánh giá công năng = cổng áp dụng) ─► keys ─► chuyên đề + luật YAML ─► findings ─► [CỔNG 2] ─► annotate / Word
 page_index  project_info  project_facts  verdict   rule_keys   skills/chuyen-de, check   findings.jsonl
 ```
 5 nguyên tắc: (1) đọc bản vẽ một lần, mọi bước sau dùng JSON có bằng chứng; (2) tra theo khóa — chỉ nạp file bảng tra
@@ -53,7 +53,7 @@ python scripts/make_sample_pdf.py data/input/sample.pdf
 ```
 
 Slash command: `/check-pccc <pdf>` (pipeline đầy đủ, 2 cổng), `/add-rule`, `/verify-rules`.
-Skill: `info-building` (bước 1–3), `gemini-web`, `cong-claude` (2 cổng), `doi-chieu` (bước 5), `qcvn06-pccc`.
+Skill: `info-building` (bước 1–3, chỉ chép thông tin), `danh-gia-cong-nang` (kết luận công năng + chuyên đề / hệ thống thuộc diện), `gemini-web`, `cong-claude` (2 cổng), `doi-chieu` (bước 5), `qcvn06-pccc`.
 
 ## Quy ước khi phát triển
 

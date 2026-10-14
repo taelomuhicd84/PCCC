@@ -46,6 +46,13 @@ bộ mục lớn; bảng > 50 m chèn "Gian lánh nạn" làm mục 8 nên số 
    F1.1 = nhà trẻ hoặc bệnh viện, F3.1 = chợ hoặc TTTM → không chọn). Nhiều công năng → ghi chú "cân nhắc B5.x hỗn hợp",
    không tự đổi. Hạng mục phòng/trạm bơm → skill `tram-bom`. ID dòng có tiền tố loại: `KS2-TN-012`, `BV-TN-003`.
 
+9. **Đánh giá công năng = CỔNG ÁP DỤNG** (người dùng 14/10/2026, skill `danh-gia-cong-nang`, `pipeline/danh_gia.py`,
+   lệnh `danh-gia`): sau Cổng 1, KẾT LUẬN từ dữ liệu đã đọc (khác `info` chỉ chép chữ) loại hình, nhóm F, nhà hỗn hợp, và
+   từng chuyên đề + mẫu hệ thống thuộc diện (đọc phần 1 "đối tượng trang bị" của mẫu). `rule_keys.file` chỉ gồm mục
+   `ap_dung: true`; `ung_vien` = mọi file có thể, `khong_ap_dung`, `cho_danh_gia`. Chưa đánh giá → không chuyên đề nào chạy.
+10. **Skill chuyên đề rút gọn**: khung 6 bước chung ở `skills/chuyen-de/_khung.md` (đọc 1 lần); mỗi skill 4–5 dòng
+   (cần gì · so số · phán đoán · trang/mẫu). 65k → 12k ký tự cho 23 skill.
+
 | NN | Skill | NN | Skill | NN | Skill |
 |---|---|---|---|---|---|
 | 01 | quy-mo | 07 | thoat-nan (3 phần) | 13 | chua-chay (B36–B44) |

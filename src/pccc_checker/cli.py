@@ -448,11 +448,29 @@ def cmd_facts(a, settings) -> Path:
     return out / "project_facts.json"
 
 
-def cmd_keys(a, settings) -> Path:
+def cmd_danh_gia(a, settings) -> Path:
+    """Khung danh_gia_cong_nang.json (skill danh-gia-cong-nang điền); chạy lại giữ quyết định đã điền."""
+    from .pipeline import danh_gia
     from .pipeline.rule_keys import build_rule_keys
     out = _out_of(a.target)
     facts = json.loads((out / "project_facts.json").read_text(encoding="utf-8"))
-    rk = build_rule_keys(facts, out.name)
+    cu = danh_gia.doc(out)
+    dg = danh_gia.khung(build_rule_keys(facts, out.name, danh_gia=cu), cu)
+    _write_json(out / danh_gia.TEN_FILE, dg)
+    for h in dg["hang_muc"]:
+        n = sum(v["ap_dung"] is None for v in [*h["chuyen_de"].values(), *h["he_thong"].values()])
+        print(f"{h['hm']} {h['ten']}: đề xuất {h['de_xuat']['loai_hinh']} ({h['de_xuat']['mau']}) · "
+              f"{len(h['chuyen_de'])} chuyên đề + {len(h['he_thong'])} mẫu hệ thống · {n} ô chưa đánh giá")
+    print(f"danh_gia_cong_nang: {out / danh_gia.TEN_FILE}")
+    return out / danh_gia.TEN_FILE
+
+
+def cmd_keys(a, settings) -> Path:
+    from .pipeline import danh_gia
+    from .pipeline.rule_keys import build_rule_keys
+    out = _out_of(a.target)
+    facts = json.loads((out / "project_facts.json").read_text(encoding="utf-8"))
+    rk = build_rule_keys(facts, out.name, danh_gia=danh_gia.doc(out))
     if (out / "danh_muc_ban_ve.json").exists():          # skill chuyên đề chỉ đọc đúng các trang của mình
         from .pipeline.sheets import pages_for
         dm = _danh_muc(out)
@@ -616,7 +634,9 @@ def main(argv: list[str] | None = None) -> None:
     sp.add_argument("pdf"); sp.add_argument("--out")
     sp = sub.add_parser("facts", help="project_info.json -> project_facts.json + cong1.md (Cổng 1)")
     sp.add_argument("target", help="thư mục kết quả hoặc project_info.json"); sp.add_argument("--pdf")
-    sp = sub.add_parser("keys", help="project_facts.json -> rule_keys.json (bộ bảng tra từng hạng mục)")
+    sp = sub.add_parser("danh-gia", help="khung danh_gia_cong_nang.json: cổng áp dụng chuyên đề (skill danh-gia-cong-nang điền)")
+    sp.add_argument("target")
+    sp = sub.add_parser("keys", help="project_facts.json (+ danh_gia_cong_nang.json) -> rule_keys.json")
     sp.add_argument("target")
     sp = sub.add_parser("findings", help="findings.json -> findings.jsonl (D/KD/XM/NA) + chặn KD thiếu bằng chứng")
     sp.add_argument("target", nargs="?", help="thư mục kết quả"); sp.add_argument("--check", help="chỉ kiểm 1 file .jsonl")
@@ -632,7 +652,7 @@ def main(argv: list[str] | None = None) -> None:
     try:
         {"info": cmd_info, "extract": cmd_extract, "check": cmd_check, "annotate": cmd_annotate, "dxf": cmd_dxf,
          "run": cmd_run, "rules": cmd_rules, "pages": cmd_pages, "crops": cmd_crops, "gemini-login": cmd_gemini_login,
-         "intake": cmd_intake, "hm-pages": cmd_hm_pages, "trang": cmd_trang, "va-cham": cmd_va_cham, "facts": cmd_facts, "keys": cmd_keys, "findings": cmd_findings,
+         "intake": cmd_intake, "hm-pages": cmd_hm_pages, "trang": cmd_trang, "va-cham": cmd_va_cham, "facts": cmd_facts, "keys": cmd_keys, "danh-gia": cmd_danh_gia, "findings": cmd_findings,
          "gemini-status": cmd_gemini_status, "gemini-cookie": cmd_gemini_cookie}[a.cmd](a, settings)
     except PermissionError as e:                        # chưa đăng nhập Gemini web: dừng ngay, không đọc từng trang
         print(f"⚠ {e}", file=sys.stderr)
