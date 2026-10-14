@@ -1,0 +1,18 @@
+---
+chuyen_de: quy-mo
+muc: 1 - Xác định chiều cao PCCC, số tầng, nhóm nhà, hạng nguy hiểm cháy nổ, cấp nguy hiểm cháy  (so thu tu muc trong bang goc B11)
+phan: 1/1  tieu muc: 
+ap_dung: loai_hinh=cho (Chợ) ; moi chieu cao
+nguon: bang doi chieu mau B11 (Chợ); QCVN 06:2022/BXD + Sua doi 1:2023 va cac TCVN ghi o cot Dieu khoan
+so_dong: 8
+---
+| ID | TT | Nội dung đối chiếu | Lưu ý khi đối chiếu | Quy định | Điều khoản |
+|---|---|---|---|---|---|
+| CHO-QM-001 | 1 | Xác định chiều cao an toàn PCCC, số tầng, nhóm nhà, hạng nguy hiểm cháy nổ các hạng mục công trình để áp dụng các quy định về PCCC |  |  |  |
+| CHO-QM-002 | - | Đối tượng thuộc diện thẩm duyệt, phân cấp thẩm duyệt | - Nêu các thông tin chính của công trình để xác định đối tượng thuộc diện thẩm duyệt (khối tích, số cháu)<br>- Nêu các thông tin cần thiết của dự án, công trình… hoặc phương tiện giao thông cơ giới để xác định phân cấp thẩm duyệt | + Phụ lục V Nghị định số 136/2020/NĐ-CP<br>+ Nghị định số 40/2020/NĐ-CP ngày 06/4/2020: Nghị định quy định chi tiết thi hành một số điều của luật đầu tư công…<br>+ Phân cấp thẩm duyệt của dự án, công trình, phương tiện giao thông cơ giới | Phụ lục V,<br>Khoản 12, Điều 13<br>Nghị định số 136/2020/NĐ-CP<br>Nghị định số 40/2020/NĐ-CP |
+| CHO-QM-003 | - | Số tầng và tầng hầm | Lưu ý xét số tầng của các nhà quy định tại bảng H.2 đến H.4<br>Xác định số tầng trên mặt đất, số tầng hầm, tầng nửa/bán hầm của cả công trình | * Số tầng của tòa nhà bao gồm toàn bộ các tầng trên mặt đất (kể cả tầng kỹ thuật, tầng tum) và tầng bán/nửa hầm, không bao gồm tầng áp mái.<br>CHÚ THÍCH: Tầng tum không tính vào số tầng nhà của công trình khi chỉ có chức năng sử dụng để bao che lồng cầu thang bộ/giếng thang máy và che chắn các thiết bị kỹ thuật của công trình (nếu có), có diện tích mái tum không vượt quá 30 % diện tích sàn mái.<br>Đối với nhà nhóm F1 đến F4, tầng lửng không tính vào số tầng nhà của công trình khi được sử dụng làm khu kỹ thuật và có diện tích sàn xây dựng không vượt quá 10 % diện tích sàn ngay bên dưới và không vượt quá 300 m2 (chỉ được 01 tầng lửng không tính vào số tầng nhà) | Đ 1.4.50<br>QCVN 06:2022 và sửa đổi 1<br>Đ 1.4.14<br>QCVN 04:2021 |
+| CHO-QM-004 | - | Phân hạng chợ |  |  | Bảng 1<br>TCVN 9211:2012 |
+| CHO-QM-005 | - | Phân loại chợ |  | Theo kiến trúc xây dựng :<br>a) Chợ kiên cố là chợ cố định được thiết kế và xây dựng với bậc chịu lửa I và II;<br>b) Chợ bán kiên cố là chợ cố định mà nhà, quầy hàng và các công trình khác trong chợ được thiết kế và xây dựng với bậc chịu lửa III.<br>c) Chợ tạm là chợ không ổn định mà lều, quán trong chợ được xây dựng với bậc chịu lửa IV, V<br>Theo quy mô, số lượng hộ kinh doanh :<br>a) Chợ loại l là chợ có trên 500 hộ buôn bán có đăng kí kinh doanh hoặc có tổng diện tích gian hàng trên 2000m2;<br>b) Chợ loại 2 là chợ có từ 300 đến 500 hộ buôn bán có đăng kí kinh doanh hoặc có tổng diện tích gian hàng từ 1200m2 đến 2000m2;<br>c) Chợ loại 3 là chợ có dưới 300 hộ buôn bán có đăng kí kinh doanh hoặc có tổng diện tích gian hàng dưới 1200m2. | Đ 4.1, Đ 4.2<br>TCVN 6161:1996 |
+| CHO-QM-006 | - | Nhóm nhà dựa theo tính nguy hiểm cháy | Lưu ý: Thống kê nhóm nhà của các hạng mục công trình | Nhóm F3:<br>Nhà của các cơ sở thương mại, kinh doanh và dịch vụ dân cư.<br>Các gian phòng của các cơ sở này được đặc trưng bởi số lượng khách lớn hơn so với nhân viên phục vụ. | Bảng 6<br>QCVN<br>06:2022/BXD |
+| CHO-QM-007 | - | Hạng nguy hiểm cháy, nổ của các hạng mục công trình |  |  | Phụ lục C<br>QCVN<br>06:2022/BXD |
+| CHO-QM-008 | - | Cấp nguy hiểm cháy kết cấu của nhà, công trình và khoang cháy |  | Bảng 5 | Bảng 5 QCVN 06:2022/BXD |

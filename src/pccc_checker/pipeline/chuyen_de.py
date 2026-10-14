@@ -34,7 +34,7 @@ MUC = [
      r"NGAN CHAY",
      r"NGAN\s*CHAY|KHOANG\s*CHAY|CHI\s*TIET\s*CUA|VAT\s*LIEU|HOAN\s*THIEN|HANH\s*LANG|GIEN?G\s*KY\s*THUAT|HOP\s*KY\s*THUAT"),
     ("07", "thoat-nan", "TN", "Lối, đường thoát nạn",
-     r"^(LOI, DUONG |GIAI PHAP )?THOAT NAN",
+     r"THOAT NAN",
      r"THOAT\s*NAN|CHI\s*TIET\s*CUA|CAU\s*THANG|THANG\s*(BO|SAT|THEP|THOAT)|BUONG\s*THANG|\bB?TB\s*\d|CUA\s*(DI|THOAT)|THONG\s*KE\s*CUA|"
      r"MAT\s*BANG\s*(TANG|LAU|TRET|HAM)|STAIR|DOOR|EXIT\s*PLAN|ESCAPE"),
     ("08", "gian-lanh-nan", "GLN", "Gian lánh nạn",
@@ -59,7 +59,7 @@ MUC = [
      r"CAP DIEN|HE THONG DIEN|NGUON DIEN",
      r"CAP\s*DIEN|DIEN\s*(PCCC|DONG\s*LUC)|NGUYEN\s*LY\s*DIEN|MAY\s*PHAT"),
     ("15", "chieu-sang-su-co", "CS", "Đèn chiếu sáng sự cố, chỉ dẫn thoát nạn, loa thông báo",
-     r"CHIEU SANG SU CO",
+     r"CHIEU SANG SU CO|LOA THONG BAO",
      r"CHIEU\s*SANG|SU\s*CO|EXIT|CHI\s*DAN|LOA"),
     ("16", "pha-do-bao-ho", "PD", "Dụng cụ phá dỡ thông thường, phương tiện bảo hộ chống khói",
      r"PHA DO|MAT NA",
@@ -74,11 +74,18 @@ MUC = [
     ("19", "tram-bom", "TBOM", "Trạm bơm cấp nước chữa cháy (mẫu B36)",
      r"TRAM BOM",
      r"(PHONG|TRAM|NHA)\s*BOM|MAY\s*BOM|BOM\s*(PCCC|CHUA\s*CHAY)|PUMP"),
+    # mục chỉ có ở một số bảng: B17/B18 (nhà sản xuất, kho), B14/B15 (rạp chiếu phim, karaoke)
+    ("20", "co-gioi", "CG", "Trang bị phương tiện chữa cháy cơ giới",
+     r"CO GIOI",
+     r"CO\s*GIOI|XE\s*CHUA\s*CHAY\s*(CO\s*GIOI|CHUYEN\s*DUNG)"),
+    ("21", "bien-quang-cao", "QC", "Biển quảng cáo",
+     r"QUANG CAO",
+     r"QUANG\s*CAO|BIEN\s*HIEU"),
 ]
 SLUGS = [m[1] for m in MUC]
 BY_SLUG = {m[1]: m for m in MUC}
 # tên mục nào chứa tên mục khác ("đèn chiếu sáng sự cố và chỉ dẫn THOÁT NẠN", "THANG MÁY CHỮA CHÁY") -> xét trước
-_THU_TU_NHAN = ["chieu-sang-su-co", "thang-may-chua-chay", "binh-chua-chay", "bao-chay", "gian-lanh-nan",
+_THU_TU_NHAN = ["co-gioi", "chieu-sang-su-co", "thang-may-chua-chay", "binh-chua-chay", "bao-chay", "gian-lanh-nan",
                 "pha-do-bao-ho", "cap-dien"] + SLUGS
 _NHAN = [(s, re.compile(BY_SLUG[s][4])) for s in dict.fromkeys(_THU_TU_NHAN)]
 _TU_KHOA = [(m[1], re.compile(m[5])) for m in MUC]

@@ -1,0 +1,14 @@
+---
+chuyen_de: bo-tri-cong-nang
+muc: 5 - Bố trí công năng  (so thu tu muc trong bang goc B18)
+phan: 1/1  tieu muc: 
+ap_dung: loai_hinh=kho (Nhà kho) ; moi chieu cao
+nguon: bang doi chieu mau B18 (Nhà kho); QCVN 06:2022/BXD + Sua doi 1:2023 va cac TCVN ghi o cot Dieu khoan
+so_dong: 4
+---
+| ID | TT | Nội dung đối chiếu | Lưu ý khi đối chiếu | Quy định | Điều khoản |
+|---|---|---|---|---|---|
+| KHO-CN-001 | 5 | Bố trí công năng |  |  |  |
+| KHO-CN-002 | - | Các công năng khác nhau bố trí trong nhà kho | Lưu ý: Bản vẽ thiết kế phải thể hiện mặt bằng, chiều cao bố trí dây chuyền công nghệ, giá kệ hàng trong công trình, hạng mục công trình để xác định các yêu cầu thiết kế về PCCC | Cho phép bố trí tầng có công năng làm kho hoặc phòng điều hành bên trong nhà sản xuất, cũng như tầng có công năng sản xuất và điều hành bên trong nhà kho nếu bảo đảm được các yêu cầu về khoảng cách phòng cháy chống cháy quy định tại Phụ lục E và các quy định liên quan của quy chuẩn này.<br>Trong các kho trung chuyển (kho ngoại quan) một tầng có bậc chịu lửa I hoặc II và cấp nguy hiểm cháy kết cấu S0, nếu có các hành lang để thoát nạn được bao bởi các vách ngăn cháy loại 1 và có áp suất không khí dương khi xảy ra cháy thì chiều dài đoạn hành lang đó không phải tính vào độ dài của đường thoát nạn. | A.1.3.2<br>QCVN 06:2022/BXD |
+| KHO-CN-003 | - | Bố trí gian phòng hạng A, B trong tầng hầm | Quy định này chỉ áp dụng với gian phòng có hạng A và B là gian phòng thuộc nhóm nguy hiểm cháy nhóm F5 được phân nhóm dựa trên tính nguy hiểm cháy theo công năng tại Bảng 6.<br>Lưu ý: Việc phân hạng nguy hiểm cháy và cháy nổ chỉ áp dụng cho các nhà, gian phòng có công năng sản xuất, kho và trong các nhà, gian phòng có công năng khác được nêu tại Điều 2.5.5.2 | Trong các tầng hầm và tầng nửa hầm, không cho phép bố trí các gian phòng có hạng A và B, trừ các trường hợp được quy định riêng | Điều 4.8<br>QCVN 06:2022/BXD |
+| KHO-CN-004 | - | Kho có cất giữ hàng trên giá cao tầng (giá đỡ có chiều cao để hàng > 5,5 m) | Kho cất giữ hàng có hạng nguy hiểm cháy và cháy nổ C trên giá đỡ có chiều cao để hàng trên 5,5 m phải được bố trí trong nhà 1 tầng có bậc chịu lửa I đến IV và cấp nguy hiểm cháy kết cấu của nhà S0 (không cho phép bố trí trong tầng 1 của nhà nhiều tầng); Khi bố trí trong nhà kho nhiều tầng thì chiều cao giá đỡ để hàng phải thấp hơn 5,5 m. | Kho cất giữ hàng có hạng nguy hiểm cháy và cháy nổ C trên giá đỡ cao tầng phải được bố trí trong nhà 1 tầng có bậc chịu lửa I đến IV và cấp nguy hiểm cháy kết cấu của nhà S0. Trường hợp bố trí trong nhà nhiều tầng thì các giá đỡ cao tầng phải được bảo vệ bởi hệ thống chữa cháy tự động theo các tài liệu chuẩn được phép áp dụng, và phải bảo đảm tất cả người trong nhà có thể thoát nạn an toàn ra ngoài trong mọi trường hợp cháy.”. | A.1.3.10<br>QCVN 06:2022/BXD |

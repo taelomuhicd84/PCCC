@@ -1,0 +1,102 @@
+"""Danh mục LOẠI HÌNH công trình = bộ bảng đối chiếu thẩm duyệt (mẫu B4.x … B18). Nơi DUY NHẤT khai báo:
+mẫu Word -> thư mục `rules/checklists/<loại>/<bộ>/`, dải chiều cao PCCC của từng bộ, mã ID dòng, nhóm F, từ khoá công năng.
+Dùng bởi scripts/checklists/split_rules.py (tách bảng) và pipeline/rule_keys.py (chọn bảng cho từng hạng mục).
+
+Chọn bảng cho hạng mục (người dùng 14/10/2026: "lấy thông tin công năng từ khâu lấy thông tin"):
+  1. memory/overrides.json `loai_hinh` (người dùng chốt) ;
+  2. từ khoá trong TÊN hạng mục ; 3. từ khoá trong CÔNG NĂNG (nhiều loại khác nhau -> xét nhà hỗn hợp, ghi chú) ;
+  4. nhóm F — chỉ khi nhóm đó ứng với đúng 1 bảng (F1.1 = nhà trẻ HOẶC bệnh viện, F3.1 = chợ HOẶC TTTM -> không chọn).
+Từ khoá so trên chữ HOA CÓ DẤU ("CHỢ" ≠ "CHỖ").
+"""
+from __future__ import annotations
+
+import re
+import unicodedata
+
+# loại: (mã ID, tên, [(mẫu, bộ, cao PCCC tối đa m | None = mọi chiều cao)], nhóm F chỉ ứng loại này, từ khoá công năng)
+LOAI = {
+    "chung-cu": ("CC", "Nhà chung cư", [("B4.1", "k1", 28), ("B4.2", "k2", 75), ("B4.3", "k3", 150)],
+                 ["F1.3"], r"CHUNG CƯ|CĂN HỘ"),
+    "hon-hop": ("HH", "Nhà hỗn hợp", [("B5.1", "k1", 28), ("B5.2", "k2", 50), ("B5.3", "k3", 150)],
+                [], r"HỖN HỢP|ĐA NĂNG"),
+    "van-phong": ("VP", "Nhà văn phòng", [("B6.1", "k1", 28), ("B6.2", "k2", 50), ("B6.3", "k3", 150)],
+                  ["F4.3"], r"VĂN PHÒNG|TRỤ SỞ|NHÀ LÀM VIỆC|OFFICE"),
+    "khach-san": ("KS", "Khách sạn", [("B7.1", "k1", 28), ("B7.2", "k2", 50), ("B7.3", "k3", 150)],
+                  ["F1.2"], r"KHÁCH SẠN|NHÀ NGHỈ|NHÀ KHÁCH|HOTEL|MOTEL|RESORT"),
+    "nha-tre": ("NT", "Nhà trẻ, trường mẫu giáo, mầm non", [("B8", "chung", None)],
+                [], r"NHÀ TRẺ|MẪU GIÁO|MẦM NON"),
+    "truong-hoc": ("TH", "Trường tiểu học, THCS, THPT, phổ thông", [("B9", "chung", None)],
+                   ["F4.1"], r"TIỂU HỌC|TRUNG HỌC|THCS|THPT|PHỔ THÔNG|TRƯỜNG HỌC"),
+    "benh-vien": ("BV", "Bệnh viện", [("B10", "chung", None)],
+                  [], r"BỆNH VIỆN|TRUNG TÂM Y TẾ"),
+    "cho": ("CHO", "Chợ", [("B11", "chung", None)],
+            [], r"\bCHỢ\b"),
+    "tttm": ("TM", "Trung tâm thương mại", [("B12", "chung", None)],
+             [], r"TRUNG TÂM THƯƠNG MẠI|\bTTTM\b|SIÊU THỊ"),
+    "the-thao": ("TT", "Công trình thể thao (sân vận động, nhà thi đấu…)", [("B13", "chung", None)],
+                 [], r"SÂN VẬN ĐỘNG|NHÀ THI ĐẤU|THỂ THAO|KHÁN ĐÀI"),
+    "rap-chieu-phim": ("RAP", "Rạp chiếu phim", [("B14", "chung", None)],
+                       [], r"RẠP CHIẾU|CHIẾU PHIM|CINEMA"),
+    "karaoke": ("KR", "Karaoke, vũ trường", [("B15", "chung", None)],
+                [], r"KARAOKE|VŨ TRƯỜNG|HỘP ĐÊM|\bBAR\b|\bPUB\b|DISCO"),
+    "gara": ("GR", "Gara ô tô", [("B16", "chung", None)],
+             [], r"GARA|GA RA|GARAGE|NHÀ ĐỂ XE|ĐẬU XE|ĐỖ XE Ô TÔ"),
+    "nha-xuong": ("SX", "Nhà sản xuất", [("B17", "chung", None)],
+                  ["F5.1"], r"NHÀ XƯỞNG|XƯỞNG|SẢN XUẤT"),
+    "kho": ("KHO", "Nhà kho", [("B18", "chung", None)],
+            ["F5.2"], r"NHÀ KHO|\bKHO\b"),
+}
+# hạng mục không dùng bảng công trình mà skill hệ thống riêng (người dùng 14/10/2026)
+RIENG = {"tram-bom": r"PHÒNG BƠM|TRẠM BƠM|NHÀ BƠM"}
+
+MAU = {mau: (loai, bo, cao) for loai, (_, _, bos, _, _) in LOAI.items() for mau, bo, cao in bos}
+_KW = {k: re.compile(v[4]) for k, v in LOAI.items()}
+_RIENG = {k: re.compile(v) for k, v in RIENG.items()}
+
+
+def ma_id(loai: str, bo: str) -> str:
+    """Tiền tố ID dòng, duy nhất giữa các loại: KS2-TN-012 (khách sạn bộ k2), BV-TN-003 (bệnh viện 1 bộ)."""
+    return LOAI[loai][0] + (bo[1:] if bo.startswith("k") else "")
+
+
+def file_md(mau: str) -> str:
+    """Tên file .md do docx_to_md.py tạo: B7.2 -> b72."""
+    return "b" + mau[1:].replace(".", "")
+
+
+def _up(t: str) -> str:
+    return re.sub(r"\s+", " ", unicodedata.normalize("NFC", (t or "").upper()))
+
+
+def theo_tu_khoa(text: str) -> list[str]:
+    u = _up(text)
+    return [k for k, rx in _KW.items() if rx.search(u)]
+
+
+def chon(ten: str, cong_nang: str, nhom: str | None, override: str | None = None) -> tuple[str | None, str, list[str]]:
+    """-> (loại | None, căn cứ, ghi chú). Không chắc -> None + ghi chú các bảng ứng viên (không đoán)."""
+    if override:
+        return override, "override", []
+    for k, rx in _RIENG.items():
+        if rx.search(_up(ten)):
+            return k, "ten", [f"hạng mục dùng skill riêng `{k}`, không dùng bảng công trình"]
+    ghi = []
+    by_ten = theo_tu_khoa(ten)
+    by_cn = [k for k in theo_tu_khoa(cong_nang) if k not in by_ten]
+    if len(by_ten) == 1:
+        if by_cn:
+            ghi.append("công năng còn có: " + ", ".join(LOAI[k][1] for k in by_cn)
+                       + " -> cân nhắc bảng nhà hỗn hợp (B5.x); chốt bằng overrides `loai_hinh`")
+        return by_ten[0], "ten", ghi
+    cands = by_ten or by_cn
+    if len(cands) == 1:
+        return cands[0], "cong_nang", ghi
+    nhoms = sorted({g.strip() for g in re.split(r"[;,/]", nhom or "") if g.strip()})
+    if len(cands) > 1 or len({g[:4] for g in nhoms}) > 1:
+        ung = cands or nhoms
+        return None, "", [f"nhiều công năng ({', '.join(ung)}) -> có thể là nhà hỗn hợp (B5.x) hoặc 1 bảng chính; "
+                          "người dùng chốt bằng overrides `loai_hinh`"]
+    by_f = [k for k, v in LOAI.items() if nhoms and nhoms[0] in v[3]]
+    if len(by_f) == 1:
+        return by_f[0], "nhom_nha", ["chọn bảng theo nhóm F (tên/công năng không có từ khoá) -> Cổng 1 xác nhận"]
+    return None, "", [f"không xác định được bảng đối chiếu từ tên/công năng/nhóm {nhom or '—'}"]

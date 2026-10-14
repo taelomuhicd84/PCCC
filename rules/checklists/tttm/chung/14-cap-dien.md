@@ -1,0 +1,16 @@
+---
+chuyen_de: cap-dien
+muc: 14 - Giải pháp cấp điện cho hệ thống PCCC  (so thu tu muc trong bang goc B12)
+phan: 1/1  tieu muc: 
+ap_dung: loai_hinh=tttm (Trung tâm thương mại) ; moi chieu cao
+nguon: bang doi chieu mau B12 (Trung tâm thương mại); QCVN 06:2022/BXD + Sua doi 1:2023 va cac TCVN ghi o cot Dieu khoan
+so_dong: 6
+---
+| ID | TT | Nội dung đối chiếu | Lưu ý khi đối chiếu | Quy định | Điều khoản |
+|---|---|---|---|---|---|
+| TM-DIEN-001 | 14 | Hệ thống điện cho PCCC | Thực hiện theo bảng đối chiếu B48 |  |  |
+| TM-DIEN-002 | - | Yêu cầu trang bị nguồn điện cho PCCC | Thực hiện theo bảng đối chiếu số B48<br>Lưu ý: Các thiết bị điện của hệ thống bảo vệ chống cháy của nhà phải được cấp điện ưu tiên từ hai nguồn độc lập (một nguồn điện lưới và một nguồn máy phát điện dự phòng).<br>Đối với các thiết bị điện có nguồn dự phòng riêng (ví dụ bơm diezen, tủ chống cháy có ắc quy dự phòng) thì chỉ cần một nguồn điện lưới, nhưng nguồn dự phòng riêng này phải đảm bảo hoạt động bình thường khi có cháy | - Phải có hệ thống điện riêng để duy trì hoạt động các bộ phận thiết yếu cho dịch vụ an toàn (về PCCC) làm việc ở mọi thời điểm, mọi điều kiện. | Đ 11.1<br>TCVN 7447:1:2010 |
+| TM-DIEN-003 | - | Nguồn điện cấp cho hệ thống PCCC gồm: |  | Nguồn điện cấp cho hệ thống PCCC gồm:<br>CHÚ THÍCH 2: Chiếu sáng dùng cho sơ tán khẩn cấp; Hệ thống báo cháy; hệ thống lắp đặt dùng cho bơm cứu hỏa; thang máy cứu hỏa; thiết bị hút khói và nhiệt, | Đ 35.1<br>TCVN 7447:1:2010 |
+| TM-DIEN-004 | - | Nguồn điện cấp cho quạt tăng áp, hút khói |  | Nguồn điện cấp cho thông gió sự cố, chống khói cần được xếp vào cấp 1 (02 nguồn điện không phụ thuộc và có nguồn dự phòng tại chỗ) | Điều 9.1<br>TCVN 5687:2010 |
+| TM-DIEN-005 | - | Nguồn điện cho máy bơm chữa cháy | Được phép áp dụng khi bơm cấp riêng cho hệ thống cấp nước chữa cháy ngoài nhà và họng nước trong nhà ; Trường hợp khi có hệ thống chữa cháy tự động sprinkler bắt buộc phải có bơm dự phòng theo quy định của TCVN 7336:2021. | Các máy bơm chữa cháy phải được kết nối với hai nguồn điện riêng biệt từ nguồn điện lưới, nguồn điện từ máy phát điện hoặc sử dụng máy bơm động cơ đốt trong. Cho phép không trang bị máy bơm dự phòng hoặc nguồn điện dự phòng khi cấp nước cho nhà sản xuất, nhà kho có bậc chịu lửa I, II hạng nguy hiểm cháy, nổ hạng D, E và lưu lượng cấp nước chữa cháy ngoài nhà yêu cầu nhỏ hơn 20 L/s | 5.3.1<br>QCVN<br>06:2022/BXD |
+| TM-DIEN-006 | - | Yêu cầu với trung tâm thương mại |  | * Tủ điện chính của chợ và trung tâm thương mại, tủ điện chính mạng sinh hoạt, bảng điện nhóm phải lắp đặt ngoài khu vực kinh doanh. Trong điều kiện không đặt được ngoài khu vực kinh doanh thì cho phép lắp đặt ở phía cuối của gian kinh doanh hoặc gian kinh doanh cuối cùng của khu vực kinh doanh. Bảng điện phải lắp đặt trong hộp bằng vật liệu không cháy và ghi kí hiệu ở cánh cửa hộp.<br>* Máy cắt, cầu dao của hệ thống điện cho kho, buồng, phòng khác, phải đặt phía ngoài chúng và mắc trên tường không cháy hoặc trong hộp treo trên cột.<br>* Trong kho và nơi bảo quản hàng, không cho phép lắp đặt ổ cắm điện.<br>* Không được đặt chung trong một ống, một hộp hay một máng, các mạng điện sinh hoạt, bảo vệ sự cố, điện báo về chữa cháy tự động. | Điều 9.7, Điều 9.8, Điều 9.9, Điều 9.13<br>TCVN 6161 |

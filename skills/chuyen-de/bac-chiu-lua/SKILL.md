@@ -1,6 +1,6 @@
 # bac-chiu-lua — mục 2 bảng đối chiếu: Bậc chịu lửa
 Tiểu mục: giới hạn chịu lửa từng cấu kiện theo bậc (Bảng 2, Bảng 4, A.1, Phụ lục H; cấu kiện bọc chống cháy cần thuyết minh tính toán).
-Bảng tra: `rule_keys.json → file["bac-chiu-lua"]` (vd `rules/checklists/khach-san/k2/02-bac-chiu-lua*.md`; mục dài có nhiều phần `.1`, `.2`…).
+Bảng tra: `rule_keys.json → file["bac-chiu-lua"]` (vd `rules/checklists/<loại hình>/<bộ>/02-bac-chiu-lua*.md`; mục dài có nhiều phần `.1`, `.2`…).
 
 1. Khi nào dùng: mọi hạng mục. Loại hình chưa có bộ bảng (`rule_keys.file` không có `bac-chiu-lua`) → không chạy, ghi 1 dòng XM.
 2. Cần từ JSON (`project_facts.json` / `extraction.json`): bac_chiu_lua{ban_ve,tinh}, cap_s, so_tang_noi, cao_pccc_m; bảng cấu kiện / GHCL (R, REI, EI) của cột, dầm, sàn, tường buồng thang, bản thang, tường ngoài không chịu lực (thường là bảng ảnh hoặc thuyết minh).
@@ -12,7 +12,7 @@ Bảng tra: `rule_keys.json → file["bac-chiu-lua"]` (vd `rules/checklists/khac
    - Script / so số: GHCL ghi trên bản vẽ ≥ GHCL yêu cầu của bậc (khi bảng tra/Bảng 4 có số).
    - Cần phán đoán: vật liệu thực tế (thép không bọc, tôn) có đạt GHCL ghi không; bậc chịu lửa có phù hợp số tầng/chiều cao (Phụ lục H) — chỉ xem ảnh cắt vùng (≤ 3 ảnh, lệnh `crops`), không xem cả trang.
 5. Đầu ra: mỗi dòng bảng tra có nội dung kiểm (bỏ dòng chỉ là tiêu đề tiểu mục) = 1 dòng `findings.jsonl`:
-   `{"hm","tang","cd":"bac-chiu-lua","rule":"<ID dòng, vd K2-BCL-001>","yc","ht","tt":"D|KD|XM|NA","ly_do","truc","trang","bbox","conf","evid","dieu_khoan"}`
+   `{"hm","tang","cd":"bac-chiu-lua","rule":"<ID dòng, vd KS2-BCL-001>","yc","ht","tt":"D|KD|XM|NA","ly_do","truc","trang","bbox","conf","evid","dieu_khoan"}`
    - KD phải có trang + bbox (0–1) + evid (chữ nguyên văn trên bản vẽ) + điều khoản; thiếu → tự hạ XM.
    - Không áp dụng (điều kiện kèm không thoả) → NA, ghi lý do.
    Ghi xong chạy `python -m pccc_checker findings --check <findings.jsonl>`.

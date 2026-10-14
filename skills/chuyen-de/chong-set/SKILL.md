@@ -1,6 +1,6 @@
 # chong-set — mục 17 bảng đối chiếu: Phương án chống sét
 Tiểu mục: phương án chống sét cho công trình.
-Bảng tra: `rule_keys.json → file["chong-set"]` (vd `rules/checklists/khach-san/k2/17-chong-set*.md`; mục dài có nhiều phần `.1`, `.2`…).
+Bảng tra: `rule_keys.json → file["chong-set"]` (vd `rules/checklists/<loại hình>/<bộ>/17-chong-set*.md`; mục dài có nhiều phần `.1`, `.2`…).
 
 1. Khi nào dùng: mọi hạng mục. Loại hình chưa có bộ bảng (`rule_keys.file` không có `chong-set`) → không chạy, ghi 1 dòng XM.
 2. Cần từ JSON (`project_facts.json` / `extraction.json`): bản vẽ/thuyết minh chống sét: kim thu sét, dây dẫn, tiếp địa.
@@ -13,7 +13,7 @@ Bảng tra: `rule_keys.json → file["chong-set"]` (vd `rules/checklists/khach-s
    - Cần phán đoán: phương án có trong hồ sơ hay không — chỉ xem ảnh cắt vùng (≤ 3 ảnh, lệnh `crops`), không xem cả trang.
    Dòng ghi "Thực hiện theo bảng đối chiếu B49" → XM "chưa có mẫu B49" cho tới khi mẫu được chuẩn hoá.
 5. Đầu ra: mỗi dòng bảng tra có nội dung kiểm (bỏ dòng chỉ là tiêu đề tiểu mục) = 1 dòng `findings.jsonl`:
-   `{"hm","tang","cd":"chong-set","rule":"<ID dòng, vd K2-SET-001>","yc","ht","tt":"D|KD|XM|NA","ly_do","truc","trang","bbox","conf","evid","dieu_khoan"}`
+   `{"hm","tang","cd":"chong-set","rule":"<ID dòng, vd KS2-SET-001>","yc","ht","tt":"D|KD|XM|NA","ly_do","truc","trang","bbox","conf","evid","dieu_khoan"}`
    - KD phải có trang + bbox (0–1) + evid (chữ nguyên văn trên bản vẽ) + điều khoản; thiếu → tự hạ XM.
    - Không áp dụng (điều kiện kèm không thoả) → NA, ghi lý do.
    Ghi xong chạy `python -m pccc_checker findings --check <findings.jsonl>`.

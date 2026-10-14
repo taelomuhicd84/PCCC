@@ -1,6 +1,6 @@
 # thoat-nan — mục 7 bảng đối chiếu: Lối, đường thoát nạn
 Tiểu mục: 7.1 lối thoát nạn (yêu cầu chung tầng hầm/tầng 1/tầng trên; số lối ra gian phòng, từng tầng, từ nhà; bố trí phân tán; cửa thoát nạn — kiểu, chiều mở; chiều cao, chiều rộng lối ra; tầng kỹ thuật; khoảng cách tới lối ra gần nhất); 7.2 đường thoát nạn (đường không được coi là thoát nạn, chiều rộng, chiều cao, giật cấp); 7.3 cầu thang và buồng thang (bản thang, độ dốc, mặt bậc, chiều cao bậc, chiếu thang, khe hở, chiếu sáng; chủng loại thang loại 2, 3, L1, L2, N1–N3; lối lên mái).
-Bảng tra: `rule_keys.json → file["thoat-nan"]` (vd `rules/checklists/khach-san/k2/07-thoat-nan*.md`; mục dài có nhiều phần `.1`, `.2`…).
+Bảng tra: `rule_keys.json → file["thoat-nan"]` (vd `rules/checklists/<loại hình>/<bộ>/07-thoat-nan*.md`; mục dài có nhiều phần `.1`, `.2`…).
 
 Trang: mặt bằng tầng + chi tiết buồng thang / thang bộ (BTB1, TB3…) — chi tiết thang là nguồn chính của 7.3.
 
@@ -14,7 +14,7 @@ Trang: mặt bằng tầng + chi tiết buồng thang / thang bộ (BTB1, TB3…
    - Script / so số: luật YAML engine đã kiểm phần cửa/lối ra (lấy qua `findings`, không kiểm lại); còn lại: số lối ra theo số người, chiều rộng/cao thông thủy, kích thước bậc, khoảng cách tới lối ra — so số trong cột Quy định.
    - Cần phán đoán: lối ra có thật là lối ra thoát nạn (qua sảnh thang máy, cửa cuốn/quay → không tính); loại buồng thang có đúng yêu cầu theo chiều cao; chiều mở cửa; hai lối ra có phân tán — chỉ xem ảnh cắt vùng (≤ 3 ảnh, lệnh `crops`), không xem cả trang.
 5. Đầu ra: mỗi dòng bảng tra có nội dung kiểm (bỏ dòng chỉ là tiêu đề tiểu mục) = 1 dòng `findings.jsonl`:
-   `{"hm","tang","cd":"thoat-nan","rule":"<ID dòng, vd K2-TN-001>","yc","ht","tt":"D|KD|XM|NA","ly_do","truc","trang","bbox","conf","evid","dieu_khoan"}`
+   `{"hm","tang","cd":"thoat-nan","rule":"<ID dòng, vd KS2-TN-001>","yc","ht","tt":"D|KD|XM|NA","ly_do","truc","trang","bbox","conf","evid","dieu_khoan"}`
    - KD phải có trang + bbox (0–1) + evid (chữ nguyên văn trên bản vẽ) + điều khoản; thiếu → tự hạ XM.
    - Không áp dụng (điều kiện kèm không thoả) → NA, ghi lý do.
    Ghi xong chạy `python -m pccc_checker findings --check <findings.jsonl>`.

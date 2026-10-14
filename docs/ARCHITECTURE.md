@@ -25,7 +25,7 @@ bộ mục lớn; bảng > 50 m chèn "Gian lánh nạn" làm mục 8 nên số 
    `docx_to_md.py` + `split_rules.py` cho bộ mới + 1 dòng `BO` + `LOAI_HINH`; skill không đổi.
 4. **Thứ tự chạy = thứ tự bảng Word đầu ra.** Mục 1 `quy-mo` chạy đầu và dùng kết quả Cổng 1 (nó chốt bộ bảng, khóa tra;
    nhà nhiều công năng → XM "xét nhà hỗn hợp", không tự đổi bộ). Các mục sau độc lập → song song theo hạng mục × mục.
-5. **ID dòng `K2-TN-012` → `src_map.json` → dòng R### của bảng Word gốc**: bước Word chỉ điền 2 cột cuối theo ID,
+5. **ID dòng `KS2-TN-012` → `src_map.json` → dòng R### của bảng Word gốc**: bước Word chỉ điền 2 cột cuối theo ID,
    không gõ lại bảng; PDF ghi chú dùng cùng ID.
 6. Mục chỉ ghi "Thực hiện theo mẫu B34/B35/B36–B44/B45/B46/B48/B49/B50" → XM tới khi mẫu hệ thống đó được chuẩn hoá
    thành bộ bảng riêng (cùng quy trình docx → md). Thứ tự nên làm: B50, B34, B35, B45 (hồ sơ khách sạn nào cũng có).
@@ -35,6 +35,12 @@ bộ mục lớn; bảng > 50 m chèn "Gian lánh nạn" làm mục 8 nên số 
    chỉ ngăn cháy phương ngang (`ngan-chay.ngang`); chi tiết buồng thang / thang bộ (BTB, TB) → `thoat-nan`; chi tiết thang
    máy chữa cháy → `thang-may-chua-chay`; trang của hạng mục phòng/trạm bơm PCCC → chỉ skill riêng `tram-bom` (NN 19,
    mẫu B36). `trang --cd ngan-chay` lấy cả hai tiểu mục; `--cd ngan-chay.dung` chỉ phương đứng.
+
+8. **Bảng đối chiếu chọn theo CÔNG NĂNG** (người dùng 14/10/2026), khai báo duy nhất `pipeline/loai_hinh.py`: 15 loại
+   hình = 23 mẫu B4.1–B18 trong `rules/checklists/<loại>/<bộ>/` (k1/k2/k3 theo chiều cao, `chung` khi 1 bảng). Thứ tự:
+   overrides `loai_hinh` → từ khoá tên hạng mục → từ khoá công năng (bước info) → nhóm F (chỉ khi F ứng đúng 1 bảng:
+   F1.1 = nhà trẻ hoặc bệnh viện, F3.1 = chợ hoặc TTTM → không chọn). Nhiều công năng → ghi chú "cân nhắc B5.x hỗn hợp",
+   không tự đổi. Hạng mục phòng/trạm bơm → skill `tram-bom`. ID dòng có tiền tố loại: `KS2-TN-012`, `BV-TN-003`.
 
 | NN | Skill | NN | Skill | NN | Skill |
 |---|---|---|---|---|---|
@@ -110,7 +116,7 @@ Cổng 1 trả "Đọc lại" → chỉ quay về bước 2 cho đúng trang/tr�
 - `axes.json`, `layer_map.json` (ánh xạ layer theo nội dung, Claude xác nhận 1 lần ở Cổng 1): ⏳ chưa làm.
 
 ## Bảng tra .md
-Mỗi file có front matter `chuyen_de / muc / phan / ap_dung / nguon / so_dong`, mỗi dòng 1 ID bền vững (vd `K2-TN-012`), cột Quy
+Mỗi file có front matter `chuyen_de / muc / phan / ap_dung / nguon / so_dong`, mỗi dòng 1 ID bền vững (vd `KS2-TN-012`), cột Quy
 định nguyên văn. Dựng lại từ Word: `scripts/checklists/docx_to_md.py` → `split_rules.py`. Chọn bộ khách sạn theo
 chiều cao PCCC: k1 ≤ 28 m, k2 ≤ 50 m, k3 ≤ 150 m. Thêm loại hình = thư mục mới + 1 dòng `rules/_index.md` +
 `LOAI_HINH` + `BO` trong `pipeline/rule_keys.py`; skill chuyên đề không phải sửa.

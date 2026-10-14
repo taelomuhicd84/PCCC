@@ -1,0 +1,24 @@
+[B18] muc so 1 'Đối tượng trang bị' khong phai muc lon -> giu trong 'chieu-sang-su-co'
+[B18] muc so 2 'Quy định chung' khong phai muc lon -> giu trong 'chieu-sang-su-co'
+[B18] kho/chung/01-quy-mo.md                   rows=  7 chars=  9989
+[B18] kho/chung/02-bac-chiu-lua.md             rows=  1 chars=  8794
+[B18] kho/chung/03-khoang-cach.md              rows=  5 chars=  3334
+[B18] kho/chung/04-giao-thong-xe-chua-chay.md  rows= 26 chars= 11429
+[B18] kho/chung/05-bo-tri-cong-nang.md         rows=  4 chars=  3519
+[B18] kho/chung/06-ngan-chay.1.md              rows= 12 chars= 14923
+[B18] kho/chung/06-ngan-chay.2.md              rows= 13 chars= 15005
+[B18] kho/chung/06-ngan-chay.3.md              rows= 15 chars=  8174
+[B18] kho/chung/07-thoat-nan.1.md              rows= 16 chars= 16311
+[B18] kho/chung/07-thoat-nan.2.md              rows= 12 chars= 11373
+[B18] kho/chung/07-thoat-nan.3.md              rows= 23 chars= 17118
+[B18] kho/chung/09-thang-may-chua-chay.md      rows=  3 chars=  1484
+[B18] kho/chung/10-chong-tu-khoi.md            rows= 12 chars=  9815
+[B18] kho/chung/11-binh-chua-chay.md           rows=  4 chars=  1716
+[B18] kho/chung/12-bao-chay.md                 rows=  6 chars=  3362
+[B18] kho/chung/13-chua-chay.md                rows= 14 chars= 10623
+[B18] kho/chung/15-chieu-sang-su-co.md         rows=  9 chars=  3005
+[B18] kho/chung/16-pha-do-bao-ho.md            rows=  5 chars=  1930
+[B18] kho/chung/17-chong-set.md                rows=  1 chars=   530
+[B18] kho/chung/18-lien-lac.md                 rows=  4 chars=  1442
+[B18] kho/chung/20-co-gioi.md                  rows=  4 chars=  1978
+[B18] TONG 196 / 196 dong nguon ; 17 muc: quy-mo, bac-chiu-lua, khoang-cach, giao-thong-xe-chua-chay, bo-tri-cong-nang, ngan-chay, thoat-nan, thang-may-chua-chay, chong-tu-khoi, binh-chua-chay, bao-chay, chua-chay, chieu-sang-su-co, co-gioi, pha-do-bao-ho, chong-set, lien-lac

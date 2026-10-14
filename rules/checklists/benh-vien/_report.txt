@@ -1,0 +1,20 @@
+[B10] benh-vien/chung/01-quy-mo.md                   rows=  5 chars=  5867
+[B10] benh-vien/chung/02-bac-chiu-lua.md             rows=  3 chars=  5534
+[B10] benh-vien/chung/03-khoang-cach.md              rows=  3 chars=  4367
+[B10] benh-vien/chung/04-giao-thong-xe-chua-chay.md  rows= 23 chars=  9204
+[B10] benh-vien/chung/05-bo-tri-cong-nang.md         rows=  8 chars=  9421
+[B10] benh-vien/chung/06-ngan-chay.1.md              rows= 16 chars= 14354
+[B10] benh-vien/chung/06-ngan-chay.2.md              rows= 13 chars=  8311
+[B10] benh-vien/chung/07-thoat-nan.1.md              rows= 32 chars= 24663
+[B10] benh-vien/chung/07-thoat-nan.2.md              rows=  5 chars=  4048
+[B10] benh-vien/chung/07-thoat-nan.3.md              rows= 24 chars= 17902
+[B10] benh-vien/chung/10-chong-tu-khoi.md            rows= 10 chars=  8431
+[B10] benh-vien/chung/11-binh-chua-chay.md           rows=  6 chars=  3416
+[B10] benh-vien/chung/12-bao-chay.md                 rows=  8 chars=  4984
+[B10] benh-vien/chung/13-chua-chay.md                rows= 27 chars= 11046
+[B10] benh-vien/chung/14-cap-dien.md                 rows=  2 chars=  1247
+[B10] benh-vien/chung/15-chieu-sang-su-co.md         rows=  8 chars=  2181
+[B10] benh-vien/chung/16-pha-do-bao-ho.md            rows=  3 chars=  1559
+[B10] benh-vien/chung/17-chong-set.md                rows=  1 chars=   551
+[B10] benh-vien/chung/18-lien-lac.md                 rows=  2 chars=  1314
+[B10] TONG 199 / 199 dong nguon ; 16 muc: quy-mo, bac-chiu-lua, khoang-cach, giao-thong-xe-chua-chay, bo-tri-cong-nang, ngan-chay, thoat-nan, chong-tu-khoi, binh-chua-chay, bao-chay, chua-chay, cap-dien, chieu-sang-su-co, pha-do-bao-ho, chong-set, lien-lac

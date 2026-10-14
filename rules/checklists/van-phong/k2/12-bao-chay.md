@@ -1,0 +1,18 @@
+---
+chuyen_de: bao-chay
+muc: 11 - Hệ thống báo cháy  (so thu tu muc trong bang goc B6.2)
+phan: 1/1  tieu muc: 11.1, 11.2
+ap_dung: loai_hinh=van-phong (Nhà văn phòng) ; chieu_cao_pccc <= 50 m
+nguon: bang doi chieu mau B6.2 (Nhà văn phòng); QCVN 06:2022/BXD + Sua doi 1:2023 va cac TCVN ghi o cot Dieu khoan
+so_dong: 8
+---
+| ID | TT | Nội dung đối chiếu | Lưu ý khi đối chiếu | Quy định | Điều khoản |
+|---|---|---|---|---|---|
+| VP2-BAO-001 | 11 | Hệ thống báo cháy | Thực hiện theo đối chiếu mẫu B35 gửi kèm, có một số lưu ý như sau |  |  |
+| VP2-BAO-002 | 11.1 | Đối tượng trang bị |  | Danh mục nhà; hạng mục/khu vực; gian phòng và thiết bị phải trang bị hệ thống báo cháy tự động, thiết bị báo cháy cục bộ được quy định tại Phụ lục A.<br>Hệ thống hoặc thiết bị báo cháy tự động trang bị cho nhà phải được kết nối với hệ thống quản lý cơ sở dữ liệu về phòng cháy, chữa cháy và truyền tin báo sự cố của cơ quan Cảnh sát phòng cháy chữa cháy theo quy định [9], [10]. | Điều 5.2.1 TCVN 3890:2023<br>Điều 4.9 TCVN 3890:2023 |
+| VP2-BAO-003 | - | Đối với nhà |  | Danh mục nhà phải trang bị hệ thống báo cháy tự động, thiết bị báo cháy cục bộ theo quy định tại Bảng A.1<br>Nhà hỗn hợp phải trang bị hệ thống báo cháy tự động khi:<br>Cao từ 3 tầng trở lên hoặc khối tích từ 1 500 m3 trở lên | Điều 5.2.1TCVN 3890:2023<br>Bảng A.1 TCVN 3890:2023 |
+| VP2-BAO-004 | - | Đối với hạng mục/khu vực | Lưu ý  việc xem xét trang bị hệ thống báo cháy tự động cho khoảng không gian phía trên trần giả hoặc dưới sàn nâng của các khu vực trong các gian phòng, nhà thuộc diện trang bị hệ thống báo cháy tự động theo mục 6 Bảng A.2<br>- Khoảng không gian phía trên trần giả hoặc dưới sàn nâng trong các gian phòng, nhà thuộc diện trang bị hệ thống chữa cháy tự động được trang bị phương tiện PCCC như sau:<br>+ Khoảng không gian phía trên trần giả hoặc dưới sàn nâng trong các gian phòng, nhà chỉ thuộc diện trang bị hệ thống chữa cháy tự động hoặc báo cháy tự động thì chỉ trang bị hệ thống chữa cháy tự động hoặc báo cháy tự động tương ứng; trường hợp gian phòng, nhà thuộc diện phải trang bị cả 02 hệ thống thì khoảng không gian phía trên trần giả hoặc dưới sàn nâng cũng phải trang bị cả 02 hệ thống nêu trên;<br>+ Các khu vực phải xem xét trang bị gồm hành lang thoát nạn, hội trường, tiền sảnh; gian phòng có từ 50 người trở lên; gian phòng có tính nguy hiểm cháy theo công năng nhóm F1.1, F4.1, kinh doanh dịch vụ karaoke, vũ trường, quán bar, hộp đêm. Cho phép chỉ bố trí đầu phun chữa cháy, đầu báo cháy tại vị trí các đường ống kỹ thuật, đường máng cáp tại không gian phía trên trần treo, dưới sàn nâng;<br>+ Hạng mục cáp đặt tại không gian phía trên trần treo và dưới sàn nâng không phải trang bị hệ thống báo cháy tự động, chữa cháy tự động gồm: cáp được luồn trong ống hoặc được bọc bằng vật liệu không cháy hoặc có tính cháy Ch1; cáp đơn (dây dẫn) để cấp nguồn cho các hệ thống chiếu sáng và hệ thống cáp thông tin. | Danh mục hạng mục/khu vực phải trang bị hệ thống báo cháy tự động, thiết bị báo cháy cục bộ  theo quy định tại Bảng A.2 |  |
+| VP2-BAO-005 | - | Đối với gian phòng |  | Danh mục gian phòng phải trang bị hệ thống báo cháy tự động, thiết bị báo cháy cục bộ theo quy định tại Bảng A.3. |  |
+| VP2-BAO-006 | 11.2 | Yêu cầu chung |  |  |  |
+| VP2-BAO-007 | - | Khu vực bảo vệ |  |  |  |
+| VP2-BAO-008 |  |  |  | Trong nhà và công trình quy định tại Phụ lục A phải trang bị hệ thống chữa cháy tự động và/hoặc hệ thống báo cháy tự động cho toàn bộ nhà và công trình, trừ các khu vực sau:<br>- Các phòng sản xuất với quy trình ướt, hồ bơi, phòng tắm, phòng rửa, phòng vệ sinh;<br>- Gian phòng hạng nguy hiểm cháy D;<br>- Hành lang bên;<br>- Thang bộ;<br>- Khoang đệm ngăn cháy có tăng áp;<br>- Khu vực không có nguy hiểm về cháy. | Điều 4.12 TCVN 3890:2023 |

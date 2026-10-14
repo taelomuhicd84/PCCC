@@ -1,6 +1,6 @@
 # giao-thong-xe-chua-chay — mục 4 bảng đối chiếu: Đường giao thông, bãi đỗ xe chữa cháy, lối vào từ trên cao
 Tiểu mục: 4.1 đường cho xe chữa cháy (chiều rộng, chiều cao thông thủy); 4.2 bãi đỗ (yêu cầu, chiều rộng, chiều dài theo chu vi và diện tích sàn, có/không sprinkler); 4.2.2 lối vào từ trên cao (vị trí, đặc điểm, kích thước, số lượng); 4.3 độ dốc, khoảng không, tải trọng, đường cụt, bãi quay xe, đoạn tránh xe.
-Bảng tra: `rule_keys.json → file["giao-thong-xe-chua-chay"]` (vd `rules/checklists/khach-san/k2/04-giao-thong-xe-chua-chay*.md`; mục dài có nhiều phần `.1`, `.2`…).
+Bảng tra: `rule_keys.json → file["giao-thong-xe-chua-chay"]` (vd `rules/checklists/<loại hình>/<bộ>/04-giao-thong-xe-chua-chay*.md`; mục dài có nhiều phần `.1`, `.2`…).
 
 Trang: đường, bãi đỗ ← tổng mặt bằng / chi tiết bãi đỗ; lối vào từ trên cao (4.2.2) ← MẶT ĐỨNG + MẶT CẮT (luôn được gán, tuỳ người thiết kế đặt ở đâu).
 
@@ -14,7 +14,7 @@ Trang: đường, bãi đỗ ← tổng mặt bằng / chi tiết bãi đỗ; l�
    - Script / so số: bề rộng đường/bãi, chiều dài bãi đỗ theo bảng chu vi, số lối vào từ trên cao theo chiều dài bãi, kích thước lỗ cửa — so với số trong cột Quy định.
    - Cần phán đoán: vật cản (cây, cổng, mái che) trên đường/bãi; khoảng không giữa bãi và lối vào; đường cụt, bãi quay xe; lỗ cửa có bị lam/kính cố định che — chỉ xem ảnh cắt vùng (≤ 3 ảnh, lệnh `crops`), không xem cả trang.
 5. Đầu ra: mỗi dòng bảng tra có nội dung kiểm (bỏ dòng chỉ là tiêu đề tiểu mục) = 1 dòng `findings.jsonl`:
-   `{"hm","tang","cd":"giao-thong-xe-chua-chay","rule":"<ID dòng, vd K2-GT-001>","yc","ht","tt":"D|KD|XM|NA","ly_do","truc","trang","bbox","conf","evid","dieu_khoan"}`
+   `{"hm","tang","cd":"giao-thong-xe-chua-chay","rule":"<ID dòng, vd KS2-GT-001>","yc","ht","tt":"D|KD|XM|NA","ly_do","truc","trang","bbox","conf","evid","dieu_khoan"}`
    - KD phải có trang + bbox (0–1) + evid (chữ nguyên văn trên bản vẽ) + điều khoản; thiếu → tự hạ XM.
    - Không áp dụng (điều kiện kèm không thoả) → NA, ghi lý do.
    Ghi xong chạy `python -m pccc_checker findings --check <findings.jsonl>`.

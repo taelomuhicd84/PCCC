@@ -10,23 +10,23 @@ from pathlib import Path
 
 from ..config import PROJECT_ROOT
 from .chuyen_de import MUC
+from .loai_hinh import LOAI, chon
 
 CHECKLISTS = "rules/checklists"
 LUON_NAP = ["rules/_index.md", "rules/qcvn06/00-dinh-nghia.md"]
 
 # chuyên đề = mục lớn của bảng đối chiếu (pipeline/chuyen_de.py) -> tên file gốc trong thư mục bộ bảng
 CHUYEN_DE = {slug: f"{nn}-{slug}" for nn, slug, *_ in MUC}
-LOAI_HINH = {"F1.2": "khach-san", "F4.3": "van-phong", "F5.1": "nha-xuong", "F5.2": "kho"}
-# loại hình đã có bộ bảng tra .md -> dải chiều cao PCCC (Đ 1.4.9) của từng bộ, theo tên mẫu bảng đối chiếu
-# (B7.1/7.2/7.3 khách sạn 28/50/150 m; khi thêm B4.x chung cư: 28/75/150, B5.x hỗn hợp, B6.x văn phòng: 28/50/150)
-# thêm loại hình = thư mục rules/checklists/<loại>/ + 1 dòng ở đây + LOAI_HINH + rules/_index.md
-BO = {"khach-san": [(28, "k1"), (50, "k2"), (150, "k3")]}
+# loại hình -> bộ bảng: khai báo ở pipeline/loai_hinh.py (mẫu B4.x…B18, dải chiều cao, từ khoá công năng)
+BO = {loai: [(cao, bo) for _, bo, cao in v[2]] for loai, v in LOAI.items()}
 CO_BANG = set(BO)
 CAN = ["nhom_nha", "cao_pccc_m", "bac_chiu_lua", "cap_s"]
 
 
 def bo_bang(loai: str, cao_pccc: float | None) -> str | None:
-    """Bộ bảng theo chiều cao PCCC; vượt dải cao nhất -> "ngoai-pham-vi"; thiếu chiều cao -> None."""
+    """Bộ bảng theo chiều cao PCCC (Đ 1.4.9); loại 1 bộ -> bộ đó; vượt dải cao nhất -> "ngoai-pham-vi"; thiếu cao -> None."""
+    if BO[loai][0][0] is None:
+        return BO[loai][0][1]
     if cao_pccc is None:
         return None
     return next((bo for tran, bo in BO[loai] if cao_pccc <= tran), "ngoai-pham-vi")
@@ -61,14 +61,20 @@ def keys_for(h: dict, overrides: list[dict]) -> dict:
         else:
             k[f], nguon[f] = _val(h, f)
     nhom = str(k["nhom_nha"]).split(";")[0].strip() if k["nhom_nha"] else None
-    loai = LOAI_HINH.get(nhom or "", "chua-co")
+    # bảng đối chiếu theo CÔNG NĂNG đọc ở bước info (tên hạng mục, công năng), nhóm F chỉ là dự phòng
+    cn = h.get("cong_nang") or [None]
+    loai, can_cu, ghi_chu = chon(h["ten"][0] or "", (cn[0] if isinstance(cn, list) else cn) or "",
+                                 str(k["nhom_nha"]) if k["nhom_nha"] else None,
+                                 ov.get("loai_hinh", {}).get("gia_tri"))
+    loai = loai or "chua-xac-dinh"
+    nguon["loai_hinh"] = can_cu or None
     try:
         cao = float(k["cao_pccc_m"]) if k["cao_pccc_m"] is not None else None
     except ValueError:
         cao = None
     can = CAN + (["hang_no"] if nhom and nhom.startswith("F5") else [])
     thieu = [f for f in can if k.get(f) is None]
-    bo, files, ghi_chu = None, {}, []
+    bo, files = None, {}
     if loai in CO_BANG:
         bo = bo_bang(loai, cao)
         if bo is None:
@@ -82,11 +88,12 @@ def keys_for(h: dict, overrides: list[dict]) -> dict:
                           for p in sorted(d.glob(f"{n}*.md")) if p.stem == n or p.stem.startswith(n + ".")]
                      for cd, n in CHUYEN_DE.items()}
             files = {cd: fs for cd, fs in files.items() if fs}
-    else:
-        ghi_chu.append(f"loại hình '{loai}' chưa có bộ bảng tra .md -> mọi chuyên đề XM; chỉ chạy luật YAML")
+    elif loai == "chua-xac-dinh":
+        ghi_chu.append("chưa chọn được bảng đối chiếu -> mọi chuyên đề XM; chỉ chạy luật YAML")
     if any(nguon.get(f) == "tinh" for f in can):
         ghi_chu.append("có khóa lấy theo công năng (tinh), chưa có chữ trên bản vẽ -> Cổng 1 phải xác nhận")
-    return {"hm": h["id"], "ten": h["ten"][0], "loai_hinh": loai, "bo": bo, "khoa": k, "nguon": nguon,
+    mau = next((m for m, b, _ in LOAI[loai][2] if b == bo), None) if loai in LOAI else None
+    return {"hm": h["id"], "ten": h["ten"][0], "loai_hinh": loai, "bo": bo, "mau": mau, "khoa": k, "nguon": nguon,
             "thieu": thieu, "file": files, "ghi_chu": ghi_chu}
 
 

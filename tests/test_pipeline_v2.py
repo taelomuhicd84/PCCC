@@ -124,15 +124,37 @@ def test_rule_keys_khach_san_k2(tmp_path):
 
 def test_rule_keys_override_va_loai_chua_co(tmp_path):
     ov = tmp_path / "ov.json"
-    ov.write_text('{"x": [{"hm": "HM01", "truong": "nhom_nha", "gia_tri": "F5.1"}]}', encoding="utf-8")
+    # người dùng chốt nhà hỗn hợp + nhóm F5.1: bảng theo overrides `loai_hinh`, F5 bắt buộc hạng nổ
+    ov.write_text('{"x": [{"hm": "HM01", "truong": "nhom_nha", "gia_tri": "F5.1"},'
+                  ' {"hm": "HM01", "truong": "loai_hinh", "gia_tri": "hon-hop"}]}', encoding="utf-8")
     (h,) = rule_keys.build_rule_keys(_facts_ks(), "x", ov)["hang_muc"]
-    assert h["loai_hinh"] == "nha-xuong" and h["nguon"]["nhom_nha"] == "override"
-    assert h["thieu"] == ["hang_no"] and not h["file"]
+    assert (h["loai_hinh"], h["bo"], h["mau"]) == ("hon-hop", "k2", "B5.2")
+    assert h["nguon"]["nhom_nha"] == h["nguon"]["loai_hinh"] == "override"
+    assert h["thieu"] == ["hang_no"] and h["file"]["quy-mo"] == ["rules/checklists/hon-hop/k2/01-quy-mo.md"]
+
+
+@pytest.mark.parametrize("ten,cn,nhom,loai", [
+    ("KHÁCH SẠN", "Tầng hầm: đậu xe ô tô; Tầng 3-7: nhà nghỉ", "F1.2", "khach-san"),   # tên thắng công năng phụ
+    ("Khối nhà chính", "Bệnh viện đa khoa 200 giường", "F1.1", "benh-vien"),             # F1.1 cần công năng
+    ("Khối A", "Trường mầm non", "F1.1", "nha-tre"),
+    ("Khối B", "Chợ dân sinh", "F3.1", "cho"),
+    ("Khối C", "Khu chỗ đỗ xe", "F3.1", None),                                           # "CHỖ" ≠ "CHỢ"; F3.1 không duy nhất
+    ("Nhà 1", "", "F4.3", "van-phong"),                                                   # chỉ còn nhóm F duy nhất
+    ("Nhà 2", "", "F1.1", None),                                                          # F1.1 = nhà trẻ hoặc bệnh viện
+    ("Nhà 3", "", "F1.2; F3.2", None),                                                    # nhiều nhóm -> hỗn hợp?, người chốt
+    ("Phòng bơm và bể nước ngầm PCCC 140m3", "Phòng bơm PCCC", None, "tram-bom"),
+])
+def test_chon_bang_theo_cong_nang(ten, cn, nhom, loai):
+    from pccc_checker.pipeline.loai_hinh import chon
+    got, _, ghi = chon(ten, cn, nhom)
+    assert got == loai, ghi
+    if loai is None:
+        assert ghi
 
 
 def test_consistency_ha_kd_thieu_bang_chung():
-    rules = {"K2-TN-012"}
-    ok = {"rule": "K2-TN-012", "tt": "KD", "trang": 5, "bbox": [0.1, 0.1, 0.2, 0.2], "evid": "1 lối ra"}
+    rules = {"KS2-TN-012"}
+    ok = {"rule": "KS2-TN-012", "tt": "KD", "trang": 5, "bbox": [0.1, 0.1, 0.2, 0.2], "evid": "1 lối ra"}
     rows, log = consistency.validate([
         ok, dict(ok, bbox=None), dict(ok, rule="REVIEW-X"), dict(ok, tt="Đạt"), dict(ok, tt="XM", evid=None),
     ], rules)
@@ -143,7 +165,7 @@ def test_consistency_ha_kd_thieu_bang_chung():
 
 def test_known_rules_gom_checklist_va_yaml():
     ids = consistency.known_rules()
-    assert {"K2-TN-012", "K3-TN-001", "EXIT-DOOR-WIDTH"} <= ids
+    assert {"KS2-TN-012", "KS3-TN-001", "EXIT-DOOR-WIDTH"} <= ids
 
 
 def test_from_engine_bo_dismissed_va_chuan_hoa_bbox():

@@ -1,9 +1,9 @@
-# Chỉ mục bảng đối chiếu (checklist) — nạp khi review hồ sơ khách sạn (F1.2)
+# Chỉ mục bảng đối chiếu (checklist) — 15 loại hình B4.x–B18 (bảng chọn loại hình: `rules/_index.md`)
 
 > Mục lục luôn nạp là `rules/_index.md`; file chọn tự động theo hạng mục nằm trong `rule_keys.json` (lệnh `keys`).
 > File này là bản chi tiết cho người soát.
 
-Bảng đối chiếu mẫu B7.1/7.2/7.3 chuẩn hoá thành .md, mỗi dòng 1 ID bền vững (vd `K2-TN-012`), cột Quy định chép nguyên văn
+23 bảng đối chiếu mẫu (B4.1–B18) chuẩn hoá thành .md trong `<loại hình>/<bộ>/`, mỗi dòng 1 ID bền vững (vd `KS2-TN-012`, `BV-TN-003`); `<loại hình>/src_map.json` ID → dòng Word gốc, `_report.txt` cảnh báo khi tách (vd B9 thiếu dòng tiêu đề mục 7), cột Quy định chép nguyên văn
 từ bảng Word (nguồn: thư mục 123, đã kiểm 208/206/257 dòng nguồn có đúng 1 lần). Đây là danh mục PHỦ ĐỦ để reviewer
 không bỏ sót chuyên đề; luật tự chạy bằng số vẫn nằm ở `rules/qcvn06_2022_sd01_2023.yaml`. Dựng lại khi bảng Word đổi:
 `scripts/checklists/docx_to_md.py` rồi `split_rules.py` (cần `pip install python-docx`).

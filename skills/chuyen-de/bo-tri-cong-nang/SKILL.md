@@ -1,6 +1,6 @@
 # bo-tri-cong-nang — mục 5 bảng đối chiếu: Bố trí công năng
 Tiểu mục: 5.1 công năng trong tầng hầm, nửa hầm; 5.2 tầng nổi (Bảng H.2); gara ô tô (QCVN 13); phòng trực điều khiển chống cháy (Đ 6.17).
-Bảng tra: `rule_keys.json → file["bo-tri-cong-nang"]` (vd `rules/checklists/khach-san/k2/05-bo-tri-cong-nang*.md`; mục dài có nhiều phần `.1`, `.2`…).
+Bảng tra: `rule_keys.json → file["bo-tri-cong-nang"]` (vd `rules/checklists/<loại hình>/<bộ>/05-bo-tri-cong-nang*.md`; mục dài có nhiều phần `.1`, `.2`…).
 
 1. Khi nào dùng: mọi hạng mục. Loại hình chưa có bộ bảng (`rule_keys.file` không có `bo-tri-cong-nang`) → không chạy, ghi 1 dòng XM.
 2. Cần từ JSON (`project_facts.json` / `extraction.json`): cong_nang từng tầng / khu vực (`meta.khu_vuc`), so_tang_ham, so_tang_noi, cao_pccc_m; vị trí phòng trực điều khiển chống cháy, gara.
@@ -12,7 +12,7 @@ Bảng tra: `rule_keys.json → file["bo-tri-cong-nang"]` (vd `rules/checklists/
    - Script / so số: số tầng nổi ≤ số tầng cho phép của Bảng H.2 (khi bảng có số); công năng cấm ở hầm có nằm ở hầm không (so tên phòng).
    - Cần phán đoán: công năng có được bố trí ở tầng đó không; có cần phòng trực điều khiển (theo số tầng, số tầng hầm, tập trung đông người) — chỉ xem ảnh cắt vùng (≤ 3 ảnh, lệnh `crops`), không xem cả trang.
 5. Đầu ra: mỗi dòng bảng tra có nội dung kiểm (bỏ dòng chỉ là tiêu đề tiểu mục) = 1 dòng `findings.jsonl`:
-   `{"hm","tang","cd":"bo-tri-cong-nang","rule":"<ID dòng, vd K2-CN-001>","yc","ht","tt":"D|KD|XM|NA","ly_do","truc","trang","bbox","conf","evid","dieu_khoan"}`
+   `{"hm","tang","cd":"bo-tri-cong-nang","rule":"<ID dòng, vd KS2-CN-001>","yc","ht","tt":"D|KD|XM|NA","ly_do","truc","trang","bbox","conf","evid","dieu_khoan"}`
    - KD phải có trang + bbox (0–1) + evid (chữ nguyên văn trên bản vẽ) + điều khoản; thiếu → tự hạ XM.
    - Không áp dụng (điều kiện kèm không thoả) → NA, ghi lý do.
    Ghi xong chạy `python -m pccc_checker findings --check <findings.jsonl>`.
