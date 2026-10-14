@@ -19,10 +19,13 @@ python -m pccc_checker findings --check data/output/<hồ sơ>/findings.jsonl   
 ## Thứ tự
 1. Đọc `rule_keys.json`. Hạng mục `thieu` khóa quyết định → mọi chuyên đề cần khóa đó ghi 1 dòng XM, không đoán.
    `loai_hinh` chưa có bảng (nhà xưởng, kho, văn phòng…) → chỉ dùng kết quả luật YAML; báo người dùng là chưa có bộ bảng.
-2. Với từng hạng mục × chuyên đề có file: mở `skills/chuyen-de/<chuyên đề>/SKILL.md`, làm theo khung 6 bước.
+2. Chuyên đề = MỤC LỚN của bảng đối chiếu (18 mục, `pipeline/chuyen_de.py`; bảng ≤ 50 m có 17 vì không có gian lánh nạn).
+   Với từng hạng mục × mục có file trong `rule_keys.file`: mở `skills/chuyen-de/<slug>/SKILL.md`, làm theo khung 6 bước;
+   mục nhiều phần (`07-thoat-nan.1.md`, `.2`, `.3`) → mỗi phần một lượt.
    Trang cần đọc của chuyên đề: `rule_keys.trang_theo_chuyen_de[<chuyên đề>]` (từ danh mục bản vẽ `danh_muc_ban_ve.json`,
    lệnh `trang <thư mục> --cd <chuyên đề>`) — chỉ xem ảnh cắt / gửi Gemini đúng các trang này, không cả hồ sơ.
-   Thứ tự ưu tiên (đi trọn chiều dọc trước): `quy-mo` → `thoat-nan` → các chuyên đề còn lại.
+   Thứ tự: `quy-mo` (mục 1) LUÔN trước — nó chốt bộ bảng và khóa tra; sau đó theo số NN (= thứ tự bảng Word đầu ra).
+   Mục chỉ dẫn "Thực hiện theo mẫu B34/B35/B36–B44/B45/B46/B48/B49/B50" → XM tới khi mẫu đó được chuẩn hoá.
    Nhiều hạng mục / chuyên đề độc lập → có thể giao subagent song song, mỗi subagent 1 cặp (HM, chuyên đề),
    chỉ trả về số dòng D/KD/XM/NA + đường dẫn file.
 3. Cột "Quy định" của bảng là căn cứ duy nhất. Dòng dẫn tới bảng số chưa chuẩn hoá (Bảng 1–5, E.1, G.9, H.2…, xem

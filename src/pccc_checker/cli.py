@@ -593,7 +593,7 @@ def main(argv: list[str] | None = None) -> None:
     sp = sub.add_parser("hm-pages", help="chia trang theo hạng mục -> hm_pages.json (check chạy riêng từng hạng mục)")
     sp.add_argument("target"); sp.add_argument("--pdf")
     sp = sub.add_parser("trang", help="danh mục bản vẽ: trang -> tên bản vẽ; --cd <chuyên đề> chỉ in trang của chuyên đề đó")
-    sp.add_argument("target"); sp.add_argument("--cd", help="vd thoat-nan, he-thong-rieng (skills/chuyen-de)")
+    sp.add_argument("target"); sp.add_argument("--cd", help="vd thoat-nan, bao-chay (skills/chuyen-de = mục bảng đối chiếu)")
     sp.add_argument("--pdf"); sp.add_argument("--html", action="store_true", help="chèn mục vào thong_tin_cong_trinh.html")
     sp.add_argument("--lam-lai", action="store_true", help="đọc lại khung tên (bỏ danh_muc_ban_ve.json cũ)")
     sp = sub.add_parser("va-cham", help="chỗ bản vẽ tự mâu thuẫn -> va_cham.json/.md (+ PDF ghi chú + Word 'Note phản hồi' với --annotate)")

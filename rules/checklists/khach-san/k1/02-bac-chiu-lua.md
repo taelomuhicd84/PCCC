@@ -1,5 +1,7 @@
 ---
 chuyen_de: bac-chiu-lua
+muc: 2 - Bậc chịu lửa  (so thu tu muc trong bang goc B7.1)
+phan: 1/1  tieu muc: 
 ap_dung: loai_hinh=khach-san ; chieu_cao_pccc <= 28 m
 nguon: bang doi chieu mau B7.1 (khach san <= 28 m); QCVN 06:2022/BXD + Sua doi 1:2023 va cac TCVN ghi o cot Dieu khoan
 so_dong: 1

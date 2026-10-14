@@ -36,7 +36,7 @@ Việc cần làm:
    Chỉ bổ sung khi chắc chắn; không suy đoán số liệu không có trong dữ liệu.
 2b. Hồ sơ **khách sạn (F1.2)**: đọc `rules/checklists/_index.md`, chọn bộ k1/k2/k3 theo chiều cao PCCC (lớn nhất nếu
    nhiều hạng mục), rồi CHỈ nạp file chuyên đề có liên quan (findings hiện có + chuyên đề extraction có dữ liệu) để
-   soát dòng mà luật YAML chưa bao phủ. Finding bổ sung từ checklist: `rule_id` = ID dòng (vd `K2-TNL-012`), `clause`
+   soát dòng mà luật YAML chưa bao phủ. Finding bổ sung từ checklist: `rule_id` = ID dòng (vd `K2-TN-012`), `clause`
    = cột Điều khoản. Dòng cần dữ liệu không có trong extraction → không tạo finding, chỉ liệt kê ở phần trả về.
 3. Ghi lại `findings.json` (JSON hợp lệ, UTF-8, giữ nguyên thứ tự các finding cũ).
 

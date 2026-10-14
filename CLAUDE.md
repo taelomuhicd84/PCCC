@@ -14,7 +14,8 @@ trong `rule_keys.json`; (3) việc có đáp số chắc chắn giao cho script;
 điều khoản) thì không kết luận KD; (5) chỉ tra từ bảng tra — không có thì XM, không lấy điều khoản từ trí nhớ.
 - Trạng thái kết luận: **D** đạt · **KD** không đạt (đỏ) · **XM** cần xác minh (nghiêng, cam) · **NA** không áp dụng.
 - Ô dữ liệu `[giá trị, trang, bbox 0–1, H|M|L]`; nhóm nhà/bậc/hạng nổ có `ban_ve` và `tinh` (lệch = phát hiện).
-- Cổng 1 / Cổng 2: skill `cong-claude`. Đối chiếu chuyên đề: skill `doi-chieu` + `skills/chuyen-de/<cd>/SKILL.md`.
+- Cổng 1 / Cổng 2: skill `cong-claude`. Đối chiếu: skill `doi-chieu` + `skills/chuyen-de/<slug>/SKILL.md` — **1 mục lớn của bảng
+  đối chiếu = 1 skill = 1 file bảng tra** (18 mục, nhận theo TÊN mục; khai báo duy nhất `pipeline/chuyen_de.py`).
 - `src/pccc_checker/pipeline/` — intake, facts, rule_keys, consistency, hm_pages, va_cham, sheets (danh mục bản vẽ). `extractors/` — Gemini web + vector.
   `rules/` — engine YAML; `rules/_index.md` + `rules/qcvn06/00-dinh-nghia.md` luôn nạp; `rules/checklists/` bảng .md.
 - Memory dự án (file, Gemini và Claude dùng chung): L0 `GEMINI.md`/`CLAUDE.md` · L1 `memory/glossary.md` ·
@@ -62,7 +63,8 @@ Skill: `info-building` (bước 1–3), `gemini-web`, `cong-claude` (2 cổng), 
 - Thêm loại phần tử bản vẽ: cập nhật `ELEMENT_TYPES` (models.py) + `prompts/gemini_extract.md` + layer DXF.
 - Thêm quy chuẩn khác (TCVN 3890, TCVN 5738...): tạo rule pack mới trong `rules/` và khai báo ở `config/settings.yaml`.
 - Thêm loại hình (nhà xưởng, kho…): `rules/checklists/<loại>/` + dòng trong `rules/_index.md` + `LOAI_HINH/CO_BANG`
-  (`pipeline/rule_keys.py`). Thêm chuyên đề: `skills/chuyen-de/<tên>/SKILL.md` (khung 6 bước, < 60 dòng) + `CHUYEN_DE`.
+  (`pipeline/rule_keys.py` `BO`). Bảng có mục lớn mới: thêm 1 dòng `MUC` (`pipeline/chuyen_de.py`) + `skills/chuyen-de/<slug>/SKILL.md`
+  (khung 6 bước, < 60 dòng); chạy lại `split_rules.py`.
 - Bảng tra .md chép nguyên văn quy chuẩn/bảng Word bằng script; không viết điều khoản theo trí nhớ.
 - Toạ độ `bbox` luôn là point PDF gốc trên-trái. Thuộc tính đo dài luôn **mét**.
 - **Không bao giờ** đặt `verified: true` cho luật nếu chưa đối chiếu nguyên văn (`docs/regulations/`, bản hợp nhất QCVN 06:2022 + SĐ1:2023).

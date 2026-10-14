@@ -10,6 +10,8 @@ from __future__ import annotations
 import re
 import unicodedata
 
+from .chuyen_de import cd_of_sheet
+
 LABEL_TEN = re.compile(r"^\W*(TÊN\s*BẢN\s*VẼ|TÊN\s*BV|DRAWING\s*(TITLE|NAME)|SHEET\s*TITLE|TITLE)\b\W*", re.I)
 LABEL_SO = re.compile(r"^\W*((KÍ|KÝ)\s*HIỆU(\s*(BẢN\s*VẼ|BV))?|SỐ\s*HIỆU(\s*BẢN\s*VẼ)?|BẢN\s*VẼ\s*SỐ|SỐ\s*BẢN\s*VẼ|"
                       r"DRAWING\s*(NO|NUMBER)|SHEET\s*(NO|NUMBER)|DWG\s*NO)\b\W*", re.I)
@@ -27,28 +29,6 @@ BO_MON = re.compile(r"^\W*(KIẾN\s*TRÚC|KẾT\s*CẤU|ARCHITECTURE|STRUCTURE|B
                     r"THIẾT\s*BỊ\s*PCCC|ĐIỆN|CẤP\s*THOÁT\s*NƯỚC|PCCC|CHÁY|TỔNG\s*THỂ|M&E|MEP)\W*$", re.I)
 TITLE_LINE = re.compile(r"^(MẶT\s*BẰNG|MẶT\s*ĐỨNG|MẶT\s*CẮT|CHI\s*TIẾT|BẢNG|THỐNG\s*KÊ|TỔNG\s*MẶT|BỐ\s*TRÍ|SƠ\s*ĐỒ|"
                         r"THUYẾT\s*MINH|GHI\s*CHÚ\s*PCCC|DANH\s*MỤC|PHỐI\s*CẢNH|KẾT\s*CẤU|BÌA)", re.I)
-
-# chuyên đề (skills/chuyen-de) theo từ khoá tên bản vẽ — so khớp sau khi bỏ dấu
-CD_KEYS = [
-    ("quy-mo", r"TONG\s*MAT\s*BANG|MAT\s*BANG\s*(TONG\s*THE|DINH\s*VI|VI\s*TRI)|QUY\s*MO|THONG\s*KE\s*(HANG\s*MUC|DIEN\s*TICH)|"
-               r"THUYET\s*MINH|BIA|DANH\s*MUC|GHI\s*CHU\s*PCCC|CO\s*CAU\s*SU\s*DUNG\s*DAT|MASTER\s*PLAN|SITE\s*PLAN"),
-    ("khoang-cach", r"TONG\s*MAT\s*BANG|MAT\s*BANG\s*(TONG\s*THE|DINH\s*VI)|KHOANG\s*CACH|MASTER\s*PLAN|SITE\s*PLAN"),
-    ("duong-bai-do-xe", r"GIAO\s*THONG|DUONG\s*(CHO\s*)?XE|BAI\s*DO\s*XE|TONG\s*MAT\s*BANG|MAT\s*BANG\s*TONG\s*THE"),
-    ("loi-vao-tren-cao", r"MAT\s*DUNG|LOI\s*VAO|CUA\s*SO\s*CUU\s*NAN|ELEVATION"),
-    ("bac-chiu-lua", r"BAC\s*CHIU\s*LUA|GIOI\s*HAN\s*CHIU\s*LUA|KET\s*CAU|MAT\s*CAT|GHI\s*CHU\s*PCCC|SECTION"),
-    ("bo-tri-cong-nang", r"MAT\s*BANG\s*(TANG|LAU|TRET|HAM|MAI|LUNG)|MAT\s*BANG\s*BO\s*TRI|FLOOR\s*PLAN|\bPLANS?\b(?!.*MASTER)"),
-    ("ngan-chay-ngang-doc", r"NGAN\s*CHAY|KHOANG\s*CHAY|MAT\s*CAT|MAT\s*BANG\s*(TANG|LAU|TRET|HAM)"),
-    ("ngan-chay-cong-nang", r"NGAN\s*CHAY|MAT\s*BANG\s*(TANG|LAU|TRET|HAM)"),
-    ("ngan-chay-hanh-lang-ong-vat-lieu", r"VAT\s*LIEU|HOAN\s*THIEN|HANH\s*LANG|GIEN?G\s*KY\s*THUAT|HOP\s*KY\s*THUAT"),
-    ("thoat-nan", r"THOAT\s*NAN|CAU\s*THANG|THANG\s*(BO|SAT|THEP|THOAT)|BUONG\s*THANG|CUA\s*(DI|THOAT)|THONG\s*KE\s*CUA|"
-                  r"MAT\s*BANG\s*(TANG|LAU|TRET|HAM)|STAIR|DOOR|EXIT\s*PLAN|ESCAPE"),
-    ("gian-lanh-nan", r"LANH\s*NAN"),
-    ("hut-khoi", r"HUT\s*KHOI|THOAT\s*KHOI|TANG\s*AP|THONG\s*GIO|KHOI"),
-    ("he-thong-rieng", r"BAO\s*CHAY|CHUA\s*CHAY|SPRINKLER|SPINKLER|BINH\s*CHUA|TRU\s*CHUA|HONG\s*CHUA|BOM|BE\s*NUOC|"
-                       r"CHIEU\s*SANG|SU\s*CO|EXIT|THANG\s*MAY|DIEN|NGUYEN\s*LY|PCCC"),
-]
-CD_RE = [(cd, re.compile(p)) for cd, p in CD_KEYS]
-
 
 def _plain(s: str) -> str:
     s = unicodedata.normalize("NFD", s.upper().replace("Đ", "D"))
@@ -228,7 +208,7 @@ def sheet_info(lines: list[dict], page=None, segs=None) -> dict:
 
 def chuyen_de(ten: str, loai: str = "") -> list[str]:
     p = _plain(ten)
-    out = [cd for cd, rx in CD_RE if rx.search(p)]
+    out = cd_of_sheet(p)
     if not out and loai in ("cover", "thuyet_minh_pccc", "bang_quy_mo"):
         out = ["quy-mo"]
     return out

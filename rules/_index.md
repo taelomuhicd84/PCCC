@@ -14,15 +14,16 @@ luon_nap → qcvn06/00-dinh-nghia.md (số tầng, chiều cao PCCC, khối tíc
 | cao_pccc > 150 m | — | ngoài phạm vi: dừng, báo người dùng |
 | loai_hinh=nha-xuong (F5.1) / kho (F5.2) / van-phong (F4.3) / khác | chưa có | mọi chuyên đề XM, chỉ chạy luật YAML |
 
-Thêm loại hình: thêm thư mục `checklists/<loại hình>/`, một dòng ở bảng trên và ở `LOAI_HINH`/`CO_BANG`
+Thêm loại hình: thêm thư mục `checklists/<loại hình>/`, một dòng ở bảng trên và ở `LOAI_HINH`/`BO`
 (`src/pccc_checker/pipeline/rule_keys.py`). Skill chuyên đề không phải sửa.
 
-## Chuyên đề → file (trong thư mục bộ đã chọn)
-Chi tiết + ghi chú dùng: `checklists/_index.md`. Khung skill: `skills/chuyen-de/<chuyên đề>/SKILL.md`.
-quy-mo → 01 · bac-chiu-lua → 02 · khoang-cach → 03 · duong-bai-do-xe → 04 · loi-vao-tren-cao → 05 ·
-bo-tri-cong-nang → 06 · ngan-chay-ngang-doc → 07, 10 · ngan-chay-cong-nang → 08 ·
-ngan-chay-hanh-lang-ong-vat-lieu → 09 · thoat-nan → 11, 12, 13 · gian-lanh-nan → 14 (k3) · hut-khoi → 16 ·
-he-thong-rieng → 15, 17, 18, 19, 20
+## Chuyên đề = mục lớn của bảng đối chiếu → file `NN-<slug>[.<phần>].md` (trong thư mục bộ đã chọn)
+1 mục bảng = 1 skill `skills/chuyen-de/<slug>/SKILL.md` = 1 file (mục dài tách phần .1 .2 …, nạp từng phần).
+Nhận mục theo TÊN (số thứ tự lệch giữa các bảng); khai báo duy nhất: `src/pccc_checker/pipeline/chuyen_de.py`.
+01 quy-mo · 02 bac-chiu-lua · 03 khoang-cach · 04 giao-thong-xe-chua-chay (gồm lối vào từ trên cao) ·
+05 bo-tri-cong-nang · 06 ngan-chay · 07 thoat-nan · 08 gian-lanh-nan (chỉ bảng > 50 m) · 09 thang-may-chua-chay ·
+10 chong-tu-khoi · 11 binh-chua-chay · 12 bao-chay · 13 chua-chay · 14 cap-dien · 15 chieu-sang-su-co ·
+16 pha-do-bao-ho · 17 chong-set · 18 lien-lac
 
 ## Luật chạy bằng số (0 token)
 `qcvn06_2022_sd01_2023.yaml` — rule engine (`check`). ID YAML cũng là "bảng tra" hợp lệ cho findings.jsonl.

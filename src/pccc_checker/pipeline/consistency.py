@@ -71,10 +71,11 @@ def write_jsonl(path: Path, rows: list[dict]) -> None:
 
 
 def cd_of(clause: str) -> str:
-    """Chuyên đề theo phần của QCVN 06: 2 phân loại, 3 thoát nạn, 4 ngăn cháy lan, 5 chữa cháy, 6 tiếp cận chữa cháy."""
+    """Chuyên đề (pipeline/chuyen_de.py) theo phần của QCVN 06: 2 phân loại, 3 thoát nạn, 4 ngăn cháy lan,
+    5 chữa cháy, 6 tiếp cận chữa cháy."""
     m = re.search(r"(?:khoản|Đ|điều|mục)?\s*(\d)\.\d", clause or "", re.I)
-    return {"2": "quy-mo", "3": "thoat-nan", "4": "ngan-chay-ngang-doc", "5": "he-thong-rieng",
-            "6": "duong-bai-do-xe"}.get(m.group(1) if m else "", "khac")
+    return {"2": "quy-mo", "3": "thoat-nan", "4": "ngan-chay", "5": "chua-chay",
+            "6": "giao-thong-xe-chua-chay"}.get(m.group(1) if m else "", "khac")
 
 
 def from_engine(findings: list[dict], extraction: dict | None, hm: str = "HM01",

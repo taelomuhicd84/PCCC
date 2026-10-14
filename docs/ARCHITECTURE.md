@@ -12,6 +12,33 @@ Bản vẽ chỉ bị đọc **một lần**: mọi bước sau làm việc trê
 4. **Không bằng chứng thì không kết luận.** KD phải có trang + bbox + nguyên văn + điều khoản; thiếu → tự hạ XM.
 5. **Chỉ tra từ file đối chiếu.** Không có trong bảng → XM, không lấy điều khoản từ trí nhớ mô hình.
 
+## Kiến trúc chốt 14/10/2026 — đầu ra là BẢNG ĐỐI CHIẾU, nên mọi thứ xếp theo mục của bảng
+Mọi bảng đối chiếu thẩm duyệt (B4.x chung cư, B5.x hỗn hợp, B6.x văn phòng, B7.x khách sạn, B8–B10…) dùng CÙNG một
+bộ mục lớn; bảng > 50 m chèn "Gian lánh nạn" làm mục 8 nên số thứ tự các mục sau lùi 1. Vì vậy:
+1. **1 mục lớn của bảng = 1 skill chuyên đề = 1 file bảng tra.** 18 mục (bảng ≤ 50 m có 17). Nhận mục theo TÊN, không
+   theo số. Khai báo một nơi: `src/pccc_checker/pipeline/chuyen_de.py` (`MUC`: NN cố định, slug, mã ID, tên, mẫu nhận
+   tên mục, từ khoá tên bản vẽ) — `split_rules.py`, `rule_keys`, `sheets` (danh mục bản vẽ), `consistency` cùng đọc.
+   Trước đây 13 skill gộp/tách khác bảng (he-thong-rieng gộp 5 mục, thoát nạn tách 3 file…) phải giữ 4 bảng ánh xạ.
+2. **Mục dài tách phần theo tiểu mục** (`07-thoat-nan.1.md` = 7.1, `.2` = 7.2, `.3` = 7.3), mỗi phần ≤ ~12k ký tự →
+   một lượt nạp vẫn 2–4k token, skill vẫn là một.
+3. **Chọn bộ bảng = loại hình × dải chiều cao PCCC** (`rule_keys.BO`; khách sạn 28/50/150 m). Thêm B4/B5/B6 = chạy
+   `docx_to_md.py` + `split_rules.py` cho bộ mới + 1 dòng `BO` + `LOAI_HINH`; skill không đổi.
+4. **Thứ tự chạy = thứ tự bảng Word đầu ra.** Mục 1 `quy-mo` chạy đầu và dùng kết quả Cổng 1 (nó chốt bộ bảng, khóa tra;
+   nhà nhiều công năng → XM "xét nhà hỗn hợp", không tự đổi bộ). Các mục sau độc lập → song song theo hạng mục × mục.
+5. **ID dòng `K2-TN-012` → `src_map.json` → dòng R### của bảng Word gốc**: bước Word chỉ điền 2 cột cuối theo ID,
+   không gõ lại bảng; PDF ghi chú dùng cùng ID.
+6. Mục chỉ ghi "Thực hiện theo mẫu B34/B35/B36–B44/B45/B46/B48/B49/B50" → XM tới khi mẫu hệ thống đó được chuẩn hoá
+   thành bộ bảng riêng (cùng quy trình docx → md). Thứ tự nên làm: B50, B34, B35, B45 (hồ sơ khách sạn nào cũng có).
+
+| NN | Skill | NN | Skill | NN | Skill |
+|---|---|---|---|---|---|
+| 01 | quy-mo | 07 | thoat-nan (3 phần) | 13 | chua-chay (B36–B44) |
+| 02 | bac-chiu-lua | 08 | gian-lanh-nan (> 50 m) | 14 | cap-dien (B48) |
+| 03 | khoang-cach | 09 | thang-may-chua-chay (B50) | 15 | chieu-sang-su-co (B46) |
+| 04 | giao-thong-xe-chua-chay | 10 | chong-tu-khoi (B34) | 16 | pha-do-bao-ho |
+| 05 | bo-tri-cong-nang | 11 | binh-chua-chay (B45) | 17 | chong-set (B49) |
+| 06 | ngan-chay (2–3 phần) | 12 | bao-chay (B35) | 18 | lien-lac |
+
 ## Phân vai
 | Việc | Gemini (web + cookie) | Claude |
 |---|---|---|
@@ -53,7 +80,7 @@ Cổng 1 trả "Đọc lại" → chỉ quay về bước 2 cho đúng trang/tr�
 |---|---|
 | `GEMINI.md`, `CLAUDE.md` | `GEMINI.md`, `CLAUDE.md` (L0) |
 | `skills/core/00–07` | lệnh CLI + `.claude/skills/{info-building, gemini-web, cong-claude, doi-chieu}` |
-| `skills/chuyen-de/*` | `skills/chuyen-de/<chuyên đề>/SKILL.md` (13 khung, < 60 dòng) |
+| `skills/chuyen-de/*` | `skills/chuyen-de/<slug>/SKILL.md` (18 khung = 18 mục bảng đối chiếu, < 60 dòng) |
 | `rules/_index.md`, `rules/qcvn06/00-dinh-nghia.md` | như tài liệu (luôn nạp) |
 | `rules/qcvn06/<loại hình>/` | `rules/checklists/khach-san/k1|k2|k3/` (B7.1/7.2/7.3) |
 | `rules/rules.json` + `compare.py` | `rules/qcvn06_2022_sd01_2023.yaml` + rule engine (`check`) |
@@ -77,10 +104,10 @@ Cổng 1 trả "Đọc lại" → chỉ quay về bước 2 cho đúng trang/tr�
 - `axes.json`, `layer_map.json` (ánh xạ layer theo nội dung, Claude xác nhận 1 lần ở Cổng 1): ⏳ chưa làm.
 
 ## Bảng tra .md
-Mỗi file có front matter `nguon / chuyen_de / ap_dung / so_dong`, mỗi dòng 1 ID bền vững (vd `K2-TNL-012`), cột Quy
+Mỗi file có front matter `chuyen_de / muc / phan / ap_dung / nguon / so_dong`, mỗi dòng 1 ID bền vững (vd `K2-TN-012`), cột Quy
 định nguyên văn. Dựng lại từ Word: `scripts/checklists/docx_to_md.py` → `split_rules.py`. Chọn bộ khách sạn theo
 chiều cao PCCC: k1 ≤ 28 m, k2 ≤ 50 m, k3 ≤ 150 m. Thêm loại hình = thư mục mới + 1 dòng `rules/_index.md` +
-`LOAI_HINH/CO_BANG` trong `pipeline/rule_keys.py`; skill chuyên đề không phải sửa.
+`LOAI_HINH` + `BO` trong `pipeline/rule_keys.py`; skill chuyên đề không phải sửa.
 
 ## Memory 4 tầng
 | Tầng | File | Nạp khi | Ai ghi |
@@ -109,7 +136,8 @@ vẽ khung lên ảnh cắt xem lại trước khi ghi.
 
 ## Lộ trình
 1. ✅ Xương sống đọc: intake, info, facts, Cổng 1, schema, consistency.
-2. ⏳ Một đường chạy trọn khách sạn: `quy-mo` + `thoat-nan` → findings → Word (cần bản vẽ khách sạn + template Word).
+2. ⏳ Một đường chạy trọn khách sạn (Hoàng Hùng, k2): `quy-mo` + `thoat-nan` → findings → Word. Template Word = file
+   B7.x gốc (thư mục "Bảng đối chiếu sửa đổi 1"), điền theo `src_map.json`.
 3. ⏳ Skill 02 trục/kích thước (`axes.json`: `truc_mat_bang` = lưới trục mặt bằng; `cao_do` = "trục đứng", cao độ theo
    mặt cắt/mặt đứng — người dùng xác nhận 14/10/2026), `layer_map.json` cho PDF xuất từ DWG.
 4. ⏳ Bộ bảng nhà xưởng / kho / văn phòng; bảng số QCVN (1–5, E.1, G.9, H.2…) và mẫu hệ thống B34–B50.
@@ -127,6 +155,6 @@ vẽ khung lên ảnh cắt xem lại trước khi ghi.
 |---|---|
 | Luật chạy bằng số | `rules/qcvn06_2022_sd01_2023.yaml` (hoặc `/add-rule`); check mới: `rules/checks.py` `@register` |
 | Loại hình mới | `rules/checklists/<loại>/` + `rules/_index.md` + `pipeline/rule_keys.py` |
-| Chuyên đề mới | `skills/chuyen-de/<tên>/SKILL.md` theo khung + `CHUYEN_DE` trong `rule_keys.py` |
+| Mục bảng mới | 1 dòng `MUC` trong `pipeline/chuyen_de.py` + `skills/chuyen-de/<slug>/SKILL.md` theo khung + chạy lại `split_rules.py` |
 | Extractor mới | `extractors/base.py::Extractor` |
 | Xuất định dạng mới | `src/pccc_checker/output/` + lệnh trong `cli.py` |

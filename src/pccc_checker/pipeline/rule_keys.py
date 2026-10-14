@@ -9,41 +9,31 @@ import json
 from pathlib import Path
 
 from ..config import PROJECT_ROOT
+from .chuyen_de import MUC
 
 CHECKLISTS = "rules/checklists"
 LUON_NAP = ["rules/_index.md", "rules/qcvn06/00-dinh-nghia.md"]
 
-# chuyên đề -> file trong thư mục bộ bảng (khớp bảng mục 2 của rules/checklists/_index.md)
-CHUYEN_DE = {
-    "quy-mo": ["01-thong-tin-quy-mo"],
-    "bac-chiu-lua": ["02-bac-chiu-lua"],
-    "khoang-cach": ["03-khoang-cach"],
-    "duong-bai-do-xe": ["04-duong-bai-do-xe"],
-    "loi-vao-tren-cao": ["05-loi-vao-tren-cao"],
-    "bo-tri-cong-nang": ["06-bo-tri-cong-nang"],
-    "ngan-chay-ngang-doc": ["07-ngan-chay-ngang-doc", "10-ngan-chay-tuong-cua-vach-gara"],
-    "ngan-chay-cong-nang": ["08-ngan-chay-cong-nang"],
-    "ngan-chay-hanh-lang-ong-vat-lieu": ["09-ngan-chay-hanh-lang-ong-vat-lieu"],
-    "thoat-nan": ["11-thoat-nan-loi-thoat", "12-thoat-nan-duong-thoat", "13-thoat-nan-cau-thang"],
-    "gian-lanh-nan": ["14-gian-lanh-nan"],
-    "hut-khoi": ["16-hut-khoi-tang-ap"],
-    "he-thong-rieng": ["15-thang-may-chua-chay", "17-binh-chua-chay", "18-bao-chay", "19-chua-chay",
-                       "20-dien-chieu-sang-su-co-khac"],
-}
+# chuyên đề = mục lớn của bảng đối chiếu (pipeline/chuyen_de.py) -> tên file gốc trong thư mục bộ bảng
+CHUYEN_DE = {slug: f"{nn}-{slug}" for nn, slug, *_ in MUC}
 LOAI_HINH = {"F1.2": "khach-san", "F4.3": "van-phong", "F5.1": "nha-xuong", "F5.2": "kho"}
-CO_BANG = {"khach-san"}          # loại hình đã có bộ bảng tra .md; thêm loại hình = thêm thư mục + dòng ở đây và _index.md
+# loại hình đã có bộ bảng tra .md -> dải chiều cao PCCC (Đ 1.4.9) của từng bộ, theo tên mẫu bảng đối chiếu
+# (B7.1/7.2/7.3 khách sạn 28/50/150 m; khi thêm B4.x chung cư: 28/75/150, B5.x hỗn hợp, B6.x văn phòng: 28/50/150)
+# thêm loại hình = thư mục rules/checklists/<loại>/ + 1 dòng ở đây + LOAI_HINH + rules/_index.md
+BO = {"khach-san": [(28, "k1"), (50, "k2"), (150, "k3")]}
+CO_BANG = set(BO)
 CAN = ["nhom_nha", "cao_pccc_m", "bac_chiu_lua", "cap_s"]
 
 
-def bo_khach_san(cao_pccc: float | None) -> str | None:
-    """Đ 1.4.9 — chọn bộ theo chiều cao PCCC: k1 ≤ 28 m, k2 ≤ 50 m, k3 ≤ 150 m, trên 150 m ngoài phạm vi."""
+def bo_bang(loai: str, cao_pccc: float | None) -> str | None:
+    """Bộ bảng theo chiều cao PCCC; vượt dải cao nhất -> "ngoai-pham-vi"; thiếu chiều cao -> None."""
     if cao_pccc is None:
         return None
-    if cao_pccc <= 28:
-        return "k1"
-    if cao_pccc <= 50:
-        return "k2"
-    return "k3" if cao_pccc <= 150 else "ngoai-pham-vi"
+    return next((bo for tran, bo in BO[loai] if cao_pccc <= tran), "ngoai-pham-vi")
+
+
+def bo_khach_san(cao_pccc: float | None) -> str | None:
+    return bo_bang("khach-san", cao_pccc)
 
 
 def load_overrides(ho_so: str, path: Path | None = None) -> list[dict]:
@@ -80,15 +70,17 @@ def keys_for(h: dict, overrides: list[dict]) -> dict:
     thieu = [f for f in can if k.get(f) is None]
     bo, files, ghi_chu = None, {}, []
     if loai in CO_BANG:
-        bo = bo_khach_san(cao)
+        bo = bo_bang(loai, cao)
         if bo is None:
             ghi_chu.append("thiếu chiều cao PCCC -> chưa chọn được bộ k1/k2/k3")
         elif bo == "ngoai-pham-vi":
             ghi_chu.append("chiều cao PCCC > 150 m: ngoài phạm vi bộ bảng — dừng, báo người dùng")
         else:
             d = PROJECT_ROOT / CHECKLISTS / loai / bo
-            files = {cd: [f"{CHECKLISTS}/{loai}/{bo}/{n}.md" for n in ns if (d / f"{n}.md").exists()]
-                     for cd, ns in CHUYEN_DE.items()}
+            # mục dài đã tách phần NN-slug.1.md, .2.md… (nạp từng phần một lượt); mục bộ không có (vd gian lánh nạn ở k1/k2) -> bỏ
+            files = {cd: [f"{CHECKLISTS}/{loai}/{bo}/{p.name}"
+                          for p in sorted(d.glob(f"{n}*.md")) if p.stem == n or p.stem.startswith(n + ".")]
+                     for cd, n in CHUYEN_DE.items()}
             files = {cd: fs for cd, fs in files.items() if fs}
     else:
         ghi_chu.append(f"loại hình '{loai}' chưa có bộ bảng tra .md -> mọi chuyên đề XM; chỉ chạy luật YAML")

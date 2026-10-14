@@ -115,7 +115,10 @@ def test_rule_keys_khach_san_k2(tmp_path):
     rk = rule_keys.build_rule_keys(_facts_ks(), "x", tmp_path / "none.json")
     (h,) = rk["hang_muc"]
     assert (h["loai_hinh"], h["bo"], h["thieu"]) == ("khach-san", "k2", [])
-    assert len(h["file"]["thoat-nan"]) == 3 and "gian-lanh-nan" not in h["file"]
+    # 1 mục bảng = 1 chuyên đề; B7.2 có 17 mục (không có gian lánh nạn); mục dài tách phần .1 .2 …
+    assert len(h["file"]) == 17 and "gian-lanh-nan" not in h["file"]
+    assert h["file"]["bao-chay"] == ["rules/checklists/khach-san/k2/12-bao-chay.md"]
+    assert all(".".join(p.split("/")[-1].split(".")[:-2]) == "07-thoat-nan" for p in h["file"]["thoat-nan"])
     assert all((PROJECT_ROOT / p).exists() for fs in h["file"].values() for p in fs)
 
 
@@ -128,8 +131,8 @@ def test_rule_keys_override_va_loai_chua_co(tmp_path):
 
 
 def test_consistency_ha_kd_thieu_bang_chung():
-    rules = {"K2-TNL-012"}
-    ok = {"rule": "K2-TNL-012", "tt": "KD", "trang": 5, "bbox": [0.1, 0.1, 0.2, 0.2], "evid": "1 lối ra"}
+    rules = {"K2-TN-012"}
+    ok = {"rule": "K2-TN-012", "tt": "KD", "trang": 5, "bbox": [0.1, 0.1, 0.2, 0.2], "evid": "1 lối ra"}
     rows, log = consistency.validate([
         ok, dict(ok, bbox=None), dict(ok, rule="REVIEW-X"), dict(ok, tt="Đạt"), dict(ok, tt="XM", evid=None),
     ], rules)
@@ -140,7 +143,7 @@ def test_consistency_ha_kd_thieu_bang_chung():
 
 def test_known_rules_gom_checklist_va_yaml():
     ids = consistency.known_rules()
-    assert {"K2-TNL-012", "K3-TNL-001", "EXIT-DOOR-WIDTH"} <= ids
+    assert {"K2-TN-012", "K3-TN-001", "EXIT-DOOR-WIDTH"} <= ids
 
 
 def test_from_engine_bo_dismissed_va_chuan_hoa_bbox():
@@ -160,3 +163,25 @@ def test_tai_lieu_va_khung_chuyen_de_ton_tai():
     for cd in rule_keys.CHUYEN_DE:
         s = PROJECT_ROOT / "skills" / "chuyen-de" / cd / "SKILL.md"
         assert s.exists() and len(s.read_text(encoding="utf-8").splitlines()) < 60, cd
+
+
+def test_chuyen_de_theo_ten_muc_bang_doi_chieu():
+    from pccc_checker.pipeline.chuyen_de import muc_of
+    # tên mục lớn thật trong các bảng B4–B18 (số thứ tự khác nhau giữa bảng, nhận theo tên)
+    assert muc_of("Xác định chiều cao an toàn PCCC, số tầng, nhóm nhà") == "quy-mo"
+    assert muc_of("Đường và bãi đỗ cho xe chữa cháy") == "giao-thong-xe-chua-chay"
+    assert muc_of("Giải pháp thoát nạn") == muc_of("Lối, đường thoát nạn") == "thoat-nan"
+    assert muc_of("Hệ thống đèn chiếu sáng sự cố và chỉ dẫn thoát nạn và hệ thống loa") == "chieu-sang-su-co"
+    assert muc_of("Thang máy chữa cháy") == "thang-may-chua-chay"
+    assert muc_of("Trang bị bình chữa cháy") == muc_of("Phương tiện chữa cháy ban đầu") == "binh-chua-chay"
+    assert muc_of("Hệ thống chữa cháy bằng nước") == "chua-chay"
+    assert muc_of("Hệ thống điện cho PCCC") == "cap-dien"
+    assert muc_of("Mặt nạ lọc độc và mặt nạ phòng độc cách ly.") == "pha-do-bao-ho"
+    assert muc_of("Nội dung lạ") is None
+
+
+def test_bo_bang_khach_san_du_muc():
+    d = PROJECT_ROOT / "rules" / "checklists" / "khach-san"
+    for bo, n in (("k1", 17), ("k2", 17), ("k3", 18)):
+        cds = {p.name.split(".")[0][3:] for p in (d / bo).glob("*.md")}
+        assert cds <= set(rule_keys.CHUYEN_DE) and len(cds) == n, bo

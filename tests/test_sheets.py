@@ -76,9 +76,10 @@ def test_o_ten_ban_ve_trong(tmp_path):
 
 
 @pytest.mark.parametrize("ten,cd", [
-    ("MẶT BẰNG THOÁT NẠN TẦNG 1 NHÀ XƯỞNG 08", "thoat-nan"), ("MẶT BẰNG HÚT KHÓI TỔNG THỂ", "hut-khoi"),
-    ("SƠ ĐỒ NGUYÊN LÍ HỆ THỐNG BÁO CHÁY", "he-thong-rieng"), ("MẶT BẰNG TÔNG THỂ", "khoang-cach"),
-    ("AXIS Y1-Y11 ELEVATION", "loi-vao-tren-cao"), ("BẢNG THỐNG KÊ CỬA ĐI VÀ CỬA SỔ", "thoat-nan"),
+    ("MẶT BẰNG THOÁT NẠN TẦNG 1 NHÀ XƯỞNG 08", "thoat-nan"), ("MẶT BẰNG HÚT KHÓI TỔNG THỂ", "chong-tu-khoi"),
+    ("SƠ ĐỒ NGUYÊN LÍ HỆ THỐNG BÁO CHÁY", "bao-chay"), ("MẶT BẰNG TÔNG THỂ", "khoang-cach"),
+    ("AXIS Y1-Y11 ELEVATION", "giao-thong-xe-chua-chay"), ("BẢNG THỐNG KÊ CỬA ĐI VÀ CỬA SỔ", "thoat-nan"),
+    ("MẶT BẰNG BỐ TRÍ ĐÈN CHIẾU SÁNG SỰ CỐ", "chieu-sang-su-co"), ("MẶT BẰNG CHỮA CHÁY SPRINKLER TẦNG 2", "chua-chay"),
 ])
 def test_chuyen_de(ten, cd):
     assert cd in sheets.chuyen_de(ten)
