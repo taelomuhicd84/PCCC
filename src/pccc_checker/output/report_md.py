@@ -40,7 +40,7 @@ def project_info_md(info, findings: list[Finding]) -> list[str]:
     head, hm = hang_muc_table(info, spec)
     hm_md = ["### Các hạng mục trong khu đất", "", "| " + " | ".join(head) + " |", "|" + "---|" * len(head),
              *("| " + " | ".join(x.replace("|", "/") for x in row) + " |" for row in hm), "",
-             f"Luật được kiểm tra theo hạng mục chính: **{info.hang_muc_chinh}**.", ""] if hm else []
+             f"Mọi hạng mục đều là hạng mục chính; luật YAML tạm chạy theo: **{info.hang_muc_chinh}**.", ""] if hm else []
     lines = ["## Thông tin công trình", "", *hm_md, "| Trường | Giá trị | Trang | Trạng thái |", "|---|---|---|---|"]
     for _, label, val, pages, st in table_rows(info, spec):
         lines.append(f"| {label} | {val.replace('|', '/')} | {pages} | {st.replace('|', '/')} |")
@@ -75,8 +75,10 @@ def findings_md(d: DrawingExtraction, findings: list[Finding], pdf_out: str = ""
         "## Kết quả kiểm tra", "",
         "> (*) = luật chưa được kỹ sư đối chiếu nguyên văn văn bản (`verified: false` trong rules/*.yaml).",
         "> Kết quả do máy đọc bản vẽ — kỹ sư PCCC phải xác nhận trước khi sử dụng chính thức.", "",
-        "| # | Mức | Trang | Luật | Điều khoản | Nội dung |", "|---|---|---|---|---|---|",
     ]
+    hm = any(f.hang_muc for f in findings)
+    lines += (["| # | Hạng mục | Mức | Trang | Luật | Điều khoản | Nội dung |", "|---|---|---|---|---|---|---|"] if hm else
+              ["| # | Mức | Trang | Luật | Điều khoản | Nội dung |", "|---|---|---|---|---|---|"])
     for i, f in enumerate(findings, 1):  # giữ số thứ tự gốc để khớp nhãn #i trên PDF
         if f.dismissed or f.status == "cannot_check":
             continue
@@ -84,5 +86,6 @@ def findings_md(d: DrawingExtraction, findings: list[Finding], pdf_out: str = ""
         msg = f.message.replace("|", "\\|")
         if f.reviewer_note:
             msg += f"<br>_Review: {f.reviewer_note}_"
-        lines.append(f"| {i} | {ICON.get(f.severity, '')} {f.severity} | {f.page or '-'} | {f.rule_id} | {f.clause}{star} | {msg} |")
+        lines.append(f"| {i} |{f' {f.hang_muc} |' if hm else ''} {ICON.get(f.severity, '')} {f.severity} | {f.page or '-'} | "
+                     f"{f.rule_id} | {f.clause}{star} | {msg} |")
     return "\n".join(l for l in lines if l is not None) + "\n"

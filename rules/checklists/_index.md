@@ -1,5 +1,8 @@
 # Chỉ mục bảng đối chiếu (checklist) — nạp khi review hồ sơ khách sạn (F1.2)
 
+> Mục lục luôn nạp là `rules/_index.md`; file chọn tự động theo hạng mục nằm trong `rule_keys.json` (lệnh `keys`).
+> File này là bản chi tiết cho người soát.
+
 Bảng đối chiếu mẫu B7.1/7.2/7.3 chuẩn hoá thành .md, mỗi dòng 1 ID bền vững (vd `K2-TNL-012`), cột Quy định chép nguyên văn
 từ bảng Word (nguồn: thư mục 123, đã kiểm 208/206/257 dòng nguồn có đúng 1 lần). Đây là danh mục PHỦ ĐỦ để reviewer
 không bỏ sót chuyên đề; luật tự chạy bằng số vẫn nằm ở `rules/qcvn06_2022_sd01_2023.yaml`. Dựng lại khi bảng Word đổi:

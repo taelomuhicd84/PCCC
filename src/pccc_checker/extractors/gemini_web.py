@@ -1,6 +1,10 @@
 """Gọi Gemini qua giao diện web gemini.google.com (Playwright + Chrome) thay cho API key.
 
-Hai cách đăng nhập:
+Cách đăng nhập (ưu tiên từ 14/10/2026 — người dùng: "dùng 1 file json cookie mà đăng nhập riết"):
+0. NẠP COOKIE VÀO PROFILE: `gemini-cookie <file>` thêm cookie vào profile Chrome của tool (`data/chrome_gemini`) rồi XOÁ
+   cookie khỏi .env. Từ đó profile là nơi DUY NHẤT giữ phiên: Chrome tự nhận 1PSIDTS mới và ghi xuống ổ đĩa mỗi lần chạy
+   -> 1 file JSON dùng lâu dài (tới khi Google thu hồi phiên / đăng xuất). Xuất cookie từ cửa sổ ẩn danh rồi ĐÓNG cửa sổ đó
+   (không bấm đăng xuất) để trình duyệt của người dùng không xoay cookie song song với tool.
 1. COOKIE (mặc định khi .env có GEMINI_COOKIES / GEMINI_1PSID) — theo docs của người dùng
    (D:/Nhap-Claude/gemini-web-automation-prompts.md): mỗi lượt mở trình duyệt SẠCH (không profile), nạp cookie TRƯỚC khi
    vào trang, và trước khi đóng LƯU LẠI cookie Google vừa cấp mới (nhất là __Secure-1PSIDTS) vào .env -> cookie không chết.
@@ -144,6 +148,17 @@ class GeminiWeb:
             return ok
         except Exception:                                       # người dùng đóng cửa sổ trước khi đăng nhập xong
             return False
+
+    def seed_profile(self, raw) -> bool:
+        """Nạp cookie (JSON / chuỗi) vào profile Chrome của tool, mở Gemini kiểm tra. Sống -> chờ Chrome ghi cookie
+        xuống profile. Từ đó chạy theo cách PROFILE (không cần .env)."""
+        pg = self._open(use_env=False)
+        self._ctx.add_cookies(parse_cookies(raw))
+        pg.goto(URL, wait_until="domcontentloaded")
+        ok = self.state() == "live"
+        if ok:
+            pg.wait_for_timeout(5000)
+        return ok
 
     # ---------------------------------------------------------------- gọi model
     def generate(self, model: str, data: bytes | list, prompt: str, name: str = "tile.png",
@@ -398,6 +413,17 @@ def save_env_cookies(cookies: list[dict], env: Path | None = None) -> None:
     env.write_text("\n".join(keep + [line]) + "\n", encoding="utf-8")
     os.environ["GEMINI_COOKIES"] = line.split("=", 1)[1]
     for k in ("GEMINI_1PSID", "GEMINI_1PSIDTS"):
+        os.environ.pop(k, None)
+
+
+def clear_env_cookies(env: Path | None = None) -> None:
+    """Bỏ dòng cookie khỏi .env (phiên đã nằm trong profile) -> lần chạy sau dùng profile, không ghi đè cookie cũ."""
+    env = env or PROJECT_ROOT / ".env"
+    if env.exists():
+        keep = [ln for ln in env.read_text(encoding="utf-8").splitlines()
+                if not ln.startswith(("GEMINI_COOKIES=", "GEMINI_1PSID=", "GEMINI_1PSIDTS="))]
+        env.write_text("\n".join(keep) + "\n", encoding="utf-8")
+    for k in ("GEMINI_COOKIES", "GEMINI_1PSID", "GEMINI_1PSIDTS"):
         os.environ.pop(k, None)
 
 

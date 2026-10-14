@@ -60,6 +60,12 @@ def _table_images(page) -> list:
             if (im["bbox"][2] - im["bbox"][0]) * (im["bbox"][3] - im["bbox"][1]) >= 0.02 * area and im.get("width", 0) >= 600]
 
 
+def image_rect(page, im) -> "pymupdf.Rect":
+    """bbox ảnh theo hệ toạ độ trang ĐÃ XOAY (cái mà get_pixmap/clip và người xem dùng).
+    get_image_info() trả bbox theo trang CHƯA xoay -> trang xoay 90/270 bị cắt hụt (Luật Phú Trường tr.5, 14/10/2026)."""
+    return (pymupdf.Rect(im["bbox"]) * page.rotation_matrix) & page.rect
+
+
 def image_table_pages(pdf_path: Path, pages) -> set[int]:
     with pymupdf.open(pdf_path) as doc:
         return {p for p in pages if _table_images(doc[p - 1])}
@@ -74,7 +80,7 @@ def export_image_tables(pdf_path: Path, pages, out_dir: Path) -> list[Path]:
         for p in pages:
             page = doc[p - 1]
             for k, im in enumerate(_table_images(page), 1):
-                r = pymupdf.Rect(im["bbox"]) & page.rect
+                r = image_rect(page, im)
                 zoom = min(3.0, 1800 / max(1.0, r.width, r.height))
                 f = out_dir / f"p{p:02d}_bang{k}.png"
                 page.get_pixmap(matrix=pymupdf.Matrix(zoom, zoom), clip=r).save(f)

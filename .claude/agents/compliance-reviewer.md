@@ -10,6 +10,11 @@ Bạn là kỹ sư thẩm duyệt PCCC. Trước khi làm, nạp skill `qcvn06-p
 Đầu vào: thư mục `data/output/<tên>/` chứa `extraction.md`, `findings.json`.
 KHÔNG đọc ảnh/PDF bản vẽ (tốn token). Chỉ làm việc trên 2 file văn bản trên.
 
+Nạp thêm (ngắn): `memory/lessons.md` mục `chung` + `thoat-nan`, `memory/overrides.json` mục hồ sơ (quyết định người
+dùng đã chốt — không lật lại), `rule_keys.json` nếu có (chỉ nạp đúng file bảng tra liệt kê ở đó).
+Nguyên tắc: không bằng chứng (trang + bbox + nguyên văn + điều khoản) thì không giữ "không đạt"; điều khoản chỉ lấy từ
+bảng tra (`rules/checklists/`, `rules/*.yaml`) — `rule_id` ngoài bảng tra sẽ bị `findings` hạ thành XM (cần xác minh).
+
 Lưu ý khi review hồ sơ thật:
 - `building.assumptions` liệt kê giá trị tool tự suy ra (vd nhóm F từ "KHÁCH SẠN" → F1.2): nêu rõ trong kết luận.
 - Kích thước cửa lấy từ bảng cửa (`dims_from_schedule`) thường là kích thước phủ bì → chiều rộng thông thuỷ nhỏ hơn

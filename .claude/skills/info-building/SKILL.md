@@ -7,29 +7,39 @@ description: Đọc THÔNG TIN CÔNG TRÌNH (khu đất, hạng mục, bậc ch�
 
 Mục tiêu: ra bảng **Trường × Hạng mục** (mẫu: `project_info.md` của nhà hàng Thiên Ý) với ký hiệu
 `⚠` trang ghi khác nhau · `*` chỉ Gemini đọc (cần kiểm) · `✓` đã xác nhận trong project.yaml · `—` bản vẽ không ghi.
-KHÔNG tự đọc ảnh cả trang bản vẽ; KHÔNG đọc lại lịch sử cũ — làm theo các bước dưới. Ngoại lệ duy nhất: bước 2b.
+KHÔNG tự đọc ảnh cả trang bản vẽ; KHÔNG đọc lại lịch sử cũ — làm theo các bước dưới. Ngoại lệ duy nhất: Cổng 1 (bước 2b).
 
-## Quy trình (ít token nhất)
+## Quy trình (ít token nhất) — bước 1–3 của pipeline + Cổng 1 (docs/ARCHITECTURE.md)
 
 ```powershell
 $env:PYTHONPATH="src"
 python -m pccc_checker gemini-status                       # BƯỚC ĐẦU mỗi lần gọi skill: exit 1 = chưa đăng nhập
-python -m pccc_checker pages "<pdf>"                       # 0 token: loại trang + tiêu đề
-python -m pccc_checker info "<pdf>" --project data/input/<ho_so>.project.yaml
-# Bảng trống nhiều ô -> cho Gemini đọc thêm các trang có bảng quy mô / ghi chú PCCC:
-python -m pccc_checker info "<pdf>" --project ... --gemini-info always --info-pages 1,7,10,...
+python -m pccc_checker intake "<pdf>"                      # 0 token: page_index.json — loại trang, luồng LAYER/HON-HOP/SCAN, vùng ảnh, mã băm
+python -m pccc_checker info "<pdf>" --project data/input/<ho_so>.project.yaml --gemini-pages smart
+python -m pccc_checker facts data/output/<tên>             # project_facts.json (ô H/M/L) + cong1.md (kiểm tra logic)
+python -m pccc_checker crops "<pdf>" --pages <trang HON-HOP có trường L>   # ảnh bảng cho Cổng 1
 ```
 0. Gọi skill `gemini-web` (kiểm tra đăng nhập). CHƯA đăng nhập -> vẫn làm phần vector (0 token) và nhờ người dùng xuất cookie
    MỚI rồi nạp bằng `gemini-cookie <file>`. KHÔNG lưu/đọc/in cookie trong chat hay memory.
-1. `pages` để chọn trang: bìa, tổng mặt bằng (bảng hạng mục), mặt bằng tầng 1 mỗi hạng mục (ghi chú PCCC), trang nhà phụ trợ.
-2. Chạy `info`. Đọc `data/output/<tên>/project_info.md` (ngắn). Chỉ mở `project_info_chi_tiet.md` khi cần nguyên văn căn cứ.
-2b. **Kiểm giá trị `*` bằng ảnh cắt** (trường bắt buộc còn `*`, nhất là trang có cảnh báo "bảng dạng ảnh"):
-   `python -m pccc_checker crops "<pdf>" --pages <trang có *>` (0 token, vài giây) -> Claude mở ĐÚNG ảnh bảng chứa trường đó
-   (`data/output/<tên>/crops/pNN_bangK.png`, ≤ 5 ảnh). Thử BW Đồng An 14/10/2026: Claude đọc ảnh cắt đúng hết, Argon đọc sai
-   chiều cao kho 1A (21,00 -> 20,45) và nhóm nhà (F5.2 -> F4.2). Khác Gemini -> ghi cả hai vào nghi_ngo.json, báo người dùng.
-3. Hiện nguyên bảng cho người dùng, hỏi xác nhận trường bắt buộc (bậc chịu lửa, nhóm F, chiều cao PCCC, cấp S, hạng cháy nổ nếu F5).
-   KHÔNG tự điền giá trị thay người dùng. Giá trị đã xác nhận -> `data/input/<ho_so>.project.yaml` (mẫu `config/project.example.yaml`).
-4. Cần HTML: dựng đúng bố cục project_info.md (tiêu đề, gạch đầu dòng khu đất/hạng mục chính/file, ký hiệu, bảng, mục "* Cần kiểm").
+1. `intake`: trang HON-HOP (bảng dán ảnh) và SCAN là chỗ Gemini hay sai -> Cổng 1 xem ảnh các trang này. Chạy lại `intake`
+   khi có bản vẽ sửa đổi: nó in các trang đổi băm -> chỉ đọc lại các trang đó (`--gemini-pages <trang đổi>`).
+2. `info` rồi `facts`. Đọc `cong1.md` (ngắn). Chỉ mở `project_info_chi_tiet.md` khi cần nguyên văn căn cứ.
+2b. **Cổng 1 — skill `cong-claude`**: trường quyết định độ tin cậy L / dính kiểm tra logic -> Claude mở ĐÚNG ảnh bảng
+   (`crops/pNN_bangK.png`, ≤ 5 ảnh), ghi giá trị đọc được vào `claude_doc_anh.json` rồi chạy lại `facts`
+   (khớp Gemini -> H, lệch -> M theo Claude). Thử BW Đồng An / Phú Trường 14/10/2026: Claude đọc ảnh đúng hết, Gemini sai
+   nhiều ô (chiều cao, nhóm nhà, diện tích VP, cao PCCC xưởng). Khác Gemini -> ghi cả hai vào nghi_ngo.json.
+3. Hiện nguyên bảng cho người dùng. **KHÔNG hỏi lại** (yêu cầu 14/10/2026): mâu thuẫn giữa trang/bảng, trường bắt buộc
+   thiếu -> ghi `nghi_ngo.json` mục `mau_thuan_tren_ban_ve` kèm trang + nơi ghi từng giá trị;
+   báo ngắn trong kết quả. Skill này CHỈ xuất thông tin (bảng/HTML + nghi_ngo.json): KHÔNG chạy facts/keys/va-cham/check
+   trừ khi người dùng bảo chạy full quy trình (yêu cầu 14/10/2026 — đang test từng phần, tránh tốn token). KHÔNG tự điền giá trị thay người dùng. **Mọi hạng mục đều là hạng mục chính** — không hỏi
+   chọn hạng mục chính, không ghi "(chính)". Số liệu người dùng tự chốt -> `data/input/<ho_so>.project.yaml` (mẫu
+   `config/project.example.yaml`); quyết định phân loại (vd "HM02 coi là F1.3") -> `memory/overrides.json`.
+4. Cần HTML: dựng đúng bố cục project_info.md (tiêu đề, gạch đầu dòng khu đất/số hạng mục/file, ký hiệu, bảng, mục "* Cần kiểm").
+   Ký hiệu HTML: ☑ Claude đã đọc ảnh (H/M) · ✓ người dùng xác nhận · * chỉ Gemini (L) · ⚠ các trang ghi khác nhau.
+   Dựng HTML xong chạy `trang data/output/<tên> --html` -> thêm mục **Danh mục bản vẽ** (trang → ký hiệu, tên bản vẽ,
+   hạng mục, chuyên đề; yêu cầu người dùng 14/10/2026). `info` tự ghi `danh_muc_ban_ve.json/.md` (0 token, đọc khung tên).
+   Trang không có lớp chữ (scan / lỗi font như Liên Minh) -> trống, ghi rõ trong HTML.
+5. Tiếp theo (nếu kiểm tra đầy đủ): `keys` -> skill `doi-chieu` -> Cổng 2.
 
 ## Gemini — GỌI SKILL `gemini-web` TRƯỚC (đăng nhập, cookie, quy tắc gửi, selector, thời gian đo)
 - Bước đầu: skill `gemini-web` (`gemini-status`; cookie chết -> `gemini-cookie`). Mọi quy tắc Playwright nằm ở đó:
@@ -54,32 +64,15 @@ python -m pccc_checker info "<pdf>" --project ... --gemini-info always --info-pa
 - Gemini có thể lệch dòng trong bảng (Liên Minh: TRẠM ĐIỆN cao "-" bị gán 4,2 m của TRẠM BƠM) -> ghi nghi_ngo.json.
 - Bảng HTML: cột đầu tiêu đề "Hạng mục" (không phải "Trường").
 
-## Bẫy đã gặp (đọc trước khi kết luận)
-- **Chữ rác kiểu `3+Ҫ1&+81*`** = font Arial Identity-H thiếu ToUnicode (bản vẽ ICIC). Tool đã tự sửa trong `vector_text`;
-  nếu `pages` vẫn ra toàn "other" -> kiểm tra font khác (VNI đã có `vn_encoding.py`).
-- **Bảng dán dạng ảnh** (bảng Excel dán vào PDF, vd bảng thống kê hạng mục BW Đồng An tr.7): lớp chữ không có số -> giá trị
-  Gemini có nhãn trường hoặc lấy từ cột bảng được giữ `*` (trước 14/10/2026 bị loại nhầm là "tự suy"). Kiểm bằng bước 2b.
-- **Ghi chú vẽ bằng nét** (không có trong lớp chữ): "bậc chịu lửa…", "chiều cao PCCC là…", GFA… chỉ Gemini đọc được -> giữ với `*`
-  nếu câu căn cứ có nhãn trường; câu có trong lớp chữ mà số không khớp -> bị loại (Gemini bịa).
-- **Tên hạng mục trong project.yaml phải trùng tên trên bảng bản vẽ** ("NHÀ KHO 1A", không phải "Kho 1A"), nếu không bảng tách đôi cột.
-- Khu vực trong nhà (KHU VĂN PHÒNG, khu trung chuyển, khu sắp xếp hàng hóa) có thể bị tách thành cột hạng mục -> gộp lại khi trình bày.
-- **Cấp S0** hay lấy nhầm từ câu "tường ngoài không chịu lực có cấp nguy hiểm cháy S0" (nói về cấu kiện, không phải cả nhà) -> ghi chú cho người dùng.
-- Chiều cao PCCC trên mặt đứng thường chỉ là nhãn, số nằm ở nét kích thước -> không có trong text.
-- Nhà kho F5.x: hạng cháy nổ bắt buộc; thông số từng gian (diện tích, chiều cao, khối tích, số người) nằm trong "BẢNG TÍNH KHOẢNG CÁCH… CHO GIAN PHÒNG" trên mặt bằng tầng.
-
-- **Nhà xưởng nhiều xưởng đánh số** (Luật Phú Trường): mỗi mặt bằng ghi `TẦNG 1 NHÀ XƯỞNG CHO THUÊ 02, 03: 2000 M2`
-  -> tool tách từng xưởng, tính số tầng / diện tích XD (tầng 1) / tổng sàn, và gán ghi chú trên trang ("BẬC CHỊU LỬA LÀ BẬC IV")
-  cho xưởng đó. Ghi chú tên trần "Nhà xưởng cho thuê có hạng C, F5.1" áp cho mọi xưởng đánh số.
-- **Số có dấu cách nghìn** "36 510 m3" đã đọc đúng (trước bị cắt còn 36). "Hạng sản xuất: Hạng C" = hạng cháy nổ.
-- **Thuyết minh chữa cháy ngoài nhà** ("Chọn nhà xưởng 08… Khối tích 36 510 m3") ghi cho tên chung -> tool KHÔNG gán khối tích
-  cho xưởng nào, chỉ cảnh báo; hỏi người dùng xưởng nào.
-- Chọn trang cho Gemini: `--gemini-pages 1,4,10,15,...` (bìa, tổng mặt bằng có bảng hạng mục, mặt bằng tầng 1 + mặt cắt mỗi
-  nhóm hạng mục, thuyết minh) — tất cả vào 1 PDF. Các trang khác vẫn đọc vector. Luôn là Gemini **web + cookie**, không API.
-- Tên nhiều số "Nhà xưởng 02, 03, 04, 08" tách thành 4 xưởng; "Nhà xưởng 01" ~ "NHÀ XƯỞNG CHO THUÊ 01" gộp 1 cột.
+## Bẫy đã gặp
+Đã chuyển sang `memory/lessons.md` mục `chung` + `doc-thong-tin` (nạp trước khi kết luận). Bài học mới: ghi mục
+"Chờ duyệt" của file đó, người dùng xác nhận mới chuyển lên.
 
 ## Ví dụ đã làm
-`BẢN VẼ TD LUẬT PHÚ TRƯỜNG.pdf` (178 trang): 8 nhà xưởng cho thuê 2 tầng (01: 900 m²/tầng; 02,03,04,08: 2000; 05,06,07: 2400),
-bậc IV, F5.1, hạng C, S0; nhà văn phòng F4.3 cao PCCC 5,97 m (tr.6); thuyết minh chữa cháy tr.127. Chiều cao PCCC xưởng chưa có trong text.
+`BẢN VẼ TD LUẬT PHÚ TRƯỜNG.pdf` (178 trang, tr.5 xoay 270° có 4 bảng ảnh: thống kê hạng mục, hạng mục chính, nhà phụ
+trợ, cân bằng đất): 8 nhà xưởng (01: 900 m², 02,03,04,08: 2000, 05,06,07: 2400), bậc IV, F5.1, hạng C, S0, cao PCCC
+5,97 (01) / 6,5 m (02–08); văn phòng F4.3 600 m² cao PCCC 5,97; xưởng 01 bảng ghi 1 tầng ↔ 2 tầng (ghi mâu thuẫn);
+thuyết minh chữa cháy tr.127 lệch bảng. Claude đọc ảnh -> `claude_doc_anh.json`.
 `19. BVPCCC .signed….pdf` (FUMEI, 203 trang SCAN, A3): bảng "QUY MÔ PCCC" chữ đỏ nhỏ tr.12 (5 nhà: NX1 C/19,8 m/II/S0/3 tầng/
 12.856 m²/189.823,2 m³; NX2 C/28 m/II/S0/3 tầng/5.201,5 m²/131.198,22 m³), danh sách hạng mục tr.4, chiều cao PCCC 9,15 m tr.10.
 Gửi PDF đọc sai bảng chữ nhỏ (đã đối chiếu tay bằng ảnh phóng to) -> ghi nghi_ngo.json. `BVTK TD LIÊN MINH.pdf` (72 trang có text, 114 MB, trên Drive): nhà kho + xưởng cơ khí,

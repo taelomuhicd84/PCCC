@@ -127,6 +127,7 @@ class Finding:
     reviewer_note: str = ""               # ghi chú từ agent/kỹ sư review
     dismissed: bool = False               # agent/kỹ sư bác bỏ (false positive) -> không ghi lên PDF
     status: str = "violation"             # violation | cannot_check (thiếu/mâu thuẫn thông tin công trình)
+    hang_muc: str = ""                    # hạng mục kiểm theo (check nhiều hạng mục); "chung" = trang tổng thể
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

@@ -50,7 +50,7 @@ def annotate(pdf_in: Path, findings: list[Finding], pdf_out: Path, min_severity:
             corner_y[pno] = y + 18 * len(items)
         for k, (idx, f) in enumerate(items):
             mark = "" if f.verified_rule else " (*luật chưa xác minh)"
-            title = f"#{idx} [{f.severity.upper()}] {f.rule_id}"
+            title = f"#{idx} [{f.severity.upper()}] {f.rule_id}" + (f" · {f.hang_muc}" if f.hang_muc else "")
             body = f"{f.message}\nĐiều khoản: {f.clause}{mark}"
             if f.reviewer_note:
                 body += f"\nReview: {f.reviewer_note}"

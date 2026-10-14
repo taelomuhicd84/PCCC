@@ -116,6 +116,16 @@ class ProjectInfo:
             out["nhom_nha"] = f"nhà nhiều nhóm ({', '.join(nhom.value)}) — cần xác nhận nhóm áp dụng trong project.yaml"
         return out
 
+    def for_hang_muc(self, name: str, spec: Dict[str, Any]) -> "ProjectInfo":
+        """Bản sao lấy thông tin của hạng mục `name` làm thông tin chung -> rule engine kiểm theo hạng mục đó
+        (mọi hạng mục đều là hạng mục chính). Trường hạng mục không ghi -> trống (luật phụ thuộc ra cannot_check)."""
+        c = ProjectInfo.from_dict(self.to_dict())
+        for key in _keys(spec, HM_SECTIONS):
+            sec = section_of(key, spec)
+            getattr(c, sec)[key] = c.hang_muc.get(name, {}).get(key) or FieldValue(unit=spec[sec][key].get("unit"))
+        c.hang_muc_chinh = name
+        return c
+
     def to_building(self, spec: Dict[str, Any]) -> Dict[str, Any]:
         """Ánh xạ sang khoá BuildingInfo cũ. Trường không dùng được -> None (luật phụ thuộc sẽ `cannot_check`)."""
         out: Dict[str, Any] = {}
@@ -1199,7 +1209,7 @@ def hang_muc_table(info: ProjectInfo, spec: Dict[str, Any]) -> Tuple[List[str], 
     rows = []
     for name, fs in info.hang_muc.items():
         pages = sorted({p for fv in fs.values() for p in [fv.page, *(c.get("page") for c in fv.candidates)] if p})
-        rows.append([name + (" (chính)" if name == info.hang_muc_chinh else ""),
+        rows.append([name,
                      *(fmt_value(fs.get(k) or FieldValue()) for k in HM_COLUMNS),
                      ",".join(map(str, pages)) or "project.yaml"])
     return head, rows
@@ -1261,7 +1271,7 @@ def info_markdown(info: ProjectInfo, spec: Dict[str, Any]) -> str:
            f"- Trang đã đọc: {', '.join(map(str, m.get('pages') or []))}",
            f"- Gemini: {m.get('gemini_mode', '')}" + (f" — trang {', '.join(map(str, m.get('gemini_pages') or []))}, "
                                                     f"model {', '.join(m.get('model') or [])}" if m.get("gemini_pages") else ""),
-           f"- Hạng mục chính (dùng để kiểm tra luật): **{info.hang_muc_chinh or '—'}**", "",
+           f"- Mọi hạng mục đều là hạng mục chính; luật YAML (`check`) tạm chạy theo: **{info.hang_muc_chinh or '—'}**", "",
            "> Mỗi trường: dòng **đậm** = giá trị tool dùng; các dòng ↳ = căn cứ (giá trị · trang · nguồn · câu nguyên văn).",
            "> `vector` = chữ trong PDF (chính xác); `gemini` = AI đọc ảnh (đã loại giá trị không có chữ trên trang).",
            "> Sai/thiếu -> sửa trong `project.yaml` (mẫu `config/project.example.yaml`) rồi chạy lại `info --project`.", ""]
@@ -1290,7 +1300,7 @@ def info_markdown(info: ProjectInfo, spec: Dict[str, Any]) -> str:
         out.append("")
 
     main = {**info.project_info, **info.fire_inputs}
-    section(f"## 3. Hạng mục chính: {info.hang_muc_chinh or '(chung)'}", main)
+    section(f"## 3. Hạng mục: {info.hang_muc_chinh or '(chung)'}", main)
     others = [(n, fs) for n, fs in info.hang_muc.items() if n != info.hang_muc_chinh]
     for i, (name, fs) in enumerate(others, 1):
         section(f"## 4.{i} Hạng mục: {name}", fs)
@@ -1330,11 +1340,11 @@ def info_summary(info: ProjectInfo, spec: Dict[str, Any]) -> str:
     land = info.khu_dat.get("dien_tich_khu_dat") or FieldValue()
     out = [f"# {ten}", "",
            f"- Diện tích khu đất: **{fmt_value(land)}**" + (f" (tr.{fmt_pages(land)})" if land.value is not None else ""),
-           f"- Số hạng mục: {len(info.hang_muc) or 1} — hạng mục chính (dùng kiểm tra luật QCVN 06): **{info.hang_muc_chinh or '—'}**",
+           f"- Số hạng mục: {len(info.hang_muc) or 1} — mọi hạng mục đều là hạng mục chính (luật YAML `check` tạm chạy theo: {info.hang_muc_chinh or '—'})",
            f"- File: `{m.get('pdf', '')}` · đọc {len(m.get('pages') or [])} trang · chi tiết căn cứ: `project_info_chi_tiet.md`",
            "", "Ký hiệu: ⚠ = các trang ghi khác nhau (cần chọn) · * = chỉ Gemini đọc được (cần kiểm) · "
            "✔ = đã xác nhận trong project.yaml · — = bản vẽ không ghi", ""]
-    head = ["Hạng mục"] + [f"**{n}**" + (" (chính)" if n == info.hang_muc_chinh and len(cols) > 1 else "") for n in cols]
+    head = ["Hạng mục"] + [f"**{n}**" for n in cols]
     out += ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
     notes: List[str] = []
     gem_by: Dict[str, List[str]] = {}

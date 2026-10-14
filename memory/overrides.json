@@ -1,0 +1,7 @@
+{
+  "_mo_ta": "L3 — quyết định người dùng đã chốt, để lần chạy sau không hỏi lại và mô hình không đổi ý. Khoá = tên thư mục data/output/<hồ sơ>. Mỗi mục: hm (mã HM hoặc tên đúng như bảng), truong (khoá project_facts: nhom_nha, bac_chiu_lua, hang_no, cao_pccc_m, cap_s, so_tang_noi...), gia_tri, ly_do, ngay, boi (nguoi_dung). Giá trị số liệu công trình ưu tiên ghi vào data/input/<hồ sơ>.project.yaml; file này cho quyết định phân loại/diễn giải.",
+  "114.TD.30.01.2024 BV KT BW ĐỒNG AN": [
+    {"hm": "NHÀ KHO 1A", "truong": "nhom_nha", "gia_tri": "F5.2", "ly_do": "bảng vật liệu tr.11 ghi F5.2; Gemini đọc F4.2 là sai", "ngay": "2026-10-14", "boi": "nguoi_dung"},
+    {"hm": "NHÀ KHO 1B", "truong": "nhom_nha", "gia_tri": "F5.2", "ly_do": "như NHÀ KHO 1A", "ngay": "2026-10-14", "boi": "nguoi_dung"}
+  ]
+}

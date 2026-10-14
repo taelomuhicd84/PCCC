@@ -13,10 +13,14 @@ Người dùng chấp nhận rủi ro ToS (không dùng API key). KHÔNG đọc/
 ```powershell
 $env:PYTHONPATH="src"
 python -m pccc_checker gemini-status                 # exit 1 = chưa đăng nhập / cookie chết
-python -m pccc_checker gemini-cookie "<file.json>"   # nạp cookie 1 lần -> .env (GEMINI_COOKIES), xoá file gốc, tự kiểm tra
+python -m pccc_checker gemini-cookie "<file.json>"   # nạp cookie 1 lần VÀO PROFILE tool, bỏ cookie khỏi .env, xoá file gốc
 ```
-- Theo docs người dùng `D:/Nhap-Claude/gemini-web-automation-prompts.md`: mỗi lượt mở **trình duyệt sạch**, nạp cookie
-  TRƯỚC khi vào trang; trước khi đóng **lưu cookie Google vừa cấp lại (1PSIDTS) vào .env** -> cookie sống lâu, không phải xuất lại.
+- **Từ 14/10/2026 (người dùng: "1 file json cookie mà đăng nhập riết"):** cookie nạp thẳng vào profile Chrome của tool
+  `data/chrome_gemini`; profile là nơi DUY NHẤT giữ phiên, Chrome tự nhận 1PSIDTS mới và ghi xuống ổ đĩa -> không phải xuất
+  lại tới khi Google thu hồi phiên. Hướng dẫn người dùng: xuất cookie từ cửa sổ ẩn danh rồi ĐÓNG cửa sổ đó, không bấm đăng
+  xuất (đăng xuất = huỷ phiên của tool). Không dùng tài khoản đó đăng xuất "mọi thiết bị".
+- Cách cũ (cookie trong .env, mỗi lượt mở trình duyệt sạch rồi lưu lại 1PSIDTS vào .env) chết sau vài giờ–2 ngày khi lượt
+  chạy dừng ngang hoặc trình duyệt gốc xoay cookie song song -> chỉ còn dùng khi .env vẫn có GEMINI_COOKIES.
 - Cookie mới được lưu sau MỖI kết quả + mỗi 60 s (`save_cookies`). Trước đây chỉ lưu khi đóng -> dừng ngang (TaskStop)
   2 lần làm .env giữ 1PSIDTS cũ -> cookie chết (13/10). Hạn chế dừng ngang; cần dừng thì chạy `gemini-status` ngay sau.
 - Nhiều chunk chạy theo HÀNG ĐỢI: tab xong -> mở chunk kế (luôn ≤ 10 tab); tab treo quá `timeout_s` (300 s) -> bỏ, gửi lại PDF
