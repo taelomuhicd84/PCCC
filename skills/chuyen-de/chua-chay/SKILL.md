@@ -1,9 +1,9 @@
 # chua-chay — mục 13 bảng đối chiếu: Hệ thống chữa cháy
-Tiểu mục: đối tượng trang bị chữa cháy tự động, họng nước chữa cháy trong nhà, cấp nước chữa cháy ngoài nhà, trạm bơm, bể nước; nhà nhiều công năng.
+Tiểu mục: đối tượng trang bị chữa cháy tự động, họng nước chữa cháy trong nhà, cấp nước chữa cháy ngoài nhà, bể nước (trạm bơm / phòng bơm → skill `tram-bom`); nhà nhiều công năng.
 Bảng tra: `rule_keys.json → file["chua-chay"]` (vd `rules/checklists/khach-san/k2/13-chua-chay*.md`; mục dài có nhiều phần `.1`, `.2`…).
 
 1. Khi nào dùng: mọi hạng mục (mỗi hệ thống 1 nhóm dòng; hệ thống không thuộc diện → NA). Loại hình chưa có bộ bảng (`rule_keys.file` không có `chua-chay`) → không chạy, ghi 1 dòng XM.
-2. Cần từ JSON (`project_facts.json` / `extraction.json`): nhom_nha, cao_pccc_m, so_tang_noi, khoi_tich_m3, dt_san_tong_m2; thuyết minh/bản vẽ hệ thống: lưu lượng, số họng, dung tích bể, trạm bơm.
+2. Cần từ JSON (`project_facts.json` / `extraction.json`): nhom_nha, cao_pccc_m, so_tang_noi, khoi_tich_m3, dt_san_tong_m2; thuyết minh/bản vẽ hệ thống: lưu lượng, số họng, dung tích bể.
    - Thiếu trường → dòng XM kèm tên trường thiếu + trang nên đọc bổ sung (chỉ trang của mục: `rule_keys.trang_theo_chuyen_de["chua-chay"]` hoặc `trang <thư mục> --cd chua-chay`).
    - Chỉ dùng ô độ tin cậy H/M; ô L → kết luận tối đa XM.
 3. Nạp bảng: ĐÚNG file trong `rule_keys.json` cho hạng mục đang xét, nhiều phần thì từng phần một lượt

@@ -29,13 +29,13 @@ MUC = [
     ("05", "bo-tri-cong-nang", "CN", "Bố trí công năng",
      r"BO TRI CONG NANG",
      r"MAT\s*BANG\s*(TANG|LAU|TRET|HAM|MAI|LUNG)|MAT\s*BANG\s*BO\s*TRI|FLOOR\s*PLAN|\bPLANS?\b(?!.*MASTER)"),
+    # mặt bằng tầng / mặt đứng / mặt cắt gán thêm tiểu mục ngang|đứng ở cd_of_sheet
     ("06", "ngan-chay", "NC", "Giải pháp ngăn cháy, chống cháy lan",
      r"NGAN CHAY",
-     r"NGAN\s*CHAY|KHOANG\s*CHAY|MAT\s*CAT|MAT\s*BANG\s*(TANG|LAU|TRET|HAM)|VAT\s*LIEU|HOAN\s*THIEN|HANH\s*LANG|"
-     r"GIEN?G\s*KY\s*THUAT|HOP\s*KY\s*THUAT"),
+     r"NGAN\s*CHAY|KHOANG\s*CHAY|VAT\s*LIEU|HOAN\s*THIEN|HANH\s*LANG|GIEN?G\s*KY\s*THUAT|HOP\s*KY\s*THUAT"),
     ("07", "thoat-nan", "TN", "Lối, đường thoát nạn",
      r"^(LOI, DUONG |GIAI PHAP )?THOAT NAN",
-     r"THOAT\s*NAN|CAU\s*THANG|THANG\s*(BO|SAT|THEP|THOAT)|BUONG\s*THANG|CUA\s*(DI|THOAT)|THONG\s*KE\s*CUA|"
+     r"THOAT\s*NAN|CAU\s*THANG|THANG\s*(BO|SAT|THEP|THOAT)|BUONG\s*THANG|\bB?TB\s*\d|CUA\s*(DI|THOAT)|THONG\s*KE\s*CUA|"
      r"MAT\s*BANG\s*(TANG|LAU|TRET|HAM)|STAIR|DOOR|EXIT\s*PLAN|ESCAPE"),
     ("08", "gian-lanh-nan", "GLN", "Gian lánh nạn",
      r"LANH NAN",
@@ -54,7 +54,7 @@ MUC = [
      r"BAO\s*CHAY"),
     ("13", "chua-chay", "CC", "Hệ thống chữa cháy",
      r"^(HE THONG )?CHUA CHAY",
-     r"CHUA\s*CHAY|SPRINKLER|SPINKLER|TRU\s*CHUA|HONG\s*CHUA|BOM|BE\s*NUOC|DRENCHER"),
+     r"(?<!MAY )(?<!XE )CHUA CHAY|SPRINKLER|SPINKLER|TRU\s*CHUA|HONG\s*CHUA|BE\s*NUOC|DRENCHER"),
     ("14", "cap-dien", "DIEN", "Giải pháp cấp điện cho hệ thống PCCC",
      r"CAP DIEN|HE THONG DIEN|NGUON DIEN",
      r"CAP\s*DIEN|DIEN\s*(PCCC|DONG\s*LUC)|NGUYEN\s*LY\s*DIEN|MAY\s*PHAT"),
@@ -70,6 +70,10 @@ MUC = [
     ("18", "lien-lac", "LL", "Hệ thống liên lạc",
      r"LIEN LAC",
      r"LIEN\s*LAC|DIEN\s*THOAI"),
+    # không phải mục của bảng công trình: mẫu hệ thống B36 — người dùng yêu cầu skill riêng (14/10/2026)
+    ("19", "tram-bom", "TBOM", "Trạm bơm cấp nước chữa cháy (mẫu B36)",
+     r"TRAM BOM",
+     r"(PHONG|TRAM|NHA)\s*BOM|MAY\s*BOM|BOM\s*(PCCC|CHUA\s*CHAY)|PUMP"),
 ]
 SLUGS = [m[1] for m in MUC]
 BY_SLUG = {m[1]: m for m in MUC}
@@ -92,6 +96,30 @@ def muc_of(ten_muc: str) -> str | None:
     return next((s for s, rx in _NHAN if rx.search(p)), None)
 
 
-def cd_of_sheet(ten_ban_ve_plain: str) -> list[str]:
-    """Tên bản vẽ (đã bỏ dấu) -> các chuyên đề cần đọc trang đó."""
-    return [s for s, rx in _TU_KHOA if rx.search(ten_ban_ve_plain)]
+# Loại bản vẽ quyết định tiểu mục (người dùng 14/10/2026): mặt đứng, mặt cắt -> lối vào từ trên cao + ngăn cháy
+# PHƯƠNG ĐỨNG; mặt bằng tầng -> ngăn cháy PHƯƠNG NGANG (không có phương đứng).
+MAT_DUNG_CAT = re.compile(r"MAT (DUNG|CAT)|ELEVATION|SECTION")
+MAT_BANG_TANG = re.compile(r"MAT BANG (TANG|LAU|TRET|HAM|BAN HAM|MAI|LUNG|BO TRI|NGAN CHAY)|FLOOR PLAN")
+TRAM_BOM_HM = re.compile(r"(PHONG|TRAM|NHA) BOM")
+
+
+def cd_of_sheet(ten_ban_ve_plain: str, hang_muc_plain: str = "") -> list[str]:
+    """Tên bản vẽ (đã bỏ dấu) -> chuyên đề cần đọc trang đó. Tiểu mục ngăn cháy: `ngan-chay.ngang` / `ngan-chay.dung`.
+    Trang của hạng mục phòng/trạm bơm PCCC -> chỉ `tram-bom`."""
+    if TRAM_BOM_HM.search(re.sub(r"\s+", " ", hang_muc_plain)):
+        return ["tram-bom"]
+    p = re.sub(r"\s+", " ", ten_ban_ve_plain)
+    out = [s for s, rx in _TU_KHOA if rx.search(p)]
+    dung = bool(MAT_DUNG_CAT.search(p))
+    ngang = bool(MAT_BANG_TANG.search(p)) and not dung
+    if dung and "giao-thong-xe-chua-chay" not in out:
+        out.append("giao-thong-xe-chua-chay")
+    if dung or ngang:
+        sub = "ngan-chay.dung" if dung else "ngan-chay.ngang"
+        out = [sub if s == "ngan-chay" else s for s in out] + ([] if "ngan-chay" in out else [sub])
+    return sorted(set(out), key=lambda s: BY_SLUG[s.split(".")[0]][0])
+
+
+def match_cd(tag: str, cd: str) -> bool:
+    """`ngan-chay` gồm cả `ngan-chay.ngang` / `.dung`; `ngan-chay.dung` chỉ gồm chính nó + trang ngăn cháy chung."""
+    return tag == cd or tag.startswith(cd + ".") or (tag == cd.split(".")[0] and "." in cd)

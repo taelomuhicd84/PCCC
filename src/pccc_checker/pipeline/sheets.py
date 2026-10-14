@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 import unicodedata
 
-from .chuyen_de import cd_of_sheet
+from .chuyen_de import cd_of_sheet, match_cd
 
 LABEL_TEN = re.compile(r"^\W*(TÊN\s*BẢN\s*VẼ|TÊN\s*BV|DRAWING\s*(TITLE|NAME)|SHEET\s*TITLE|TITLE)\b\W*", re.I)
 LABEL_SO = re.compile(r"^\W*((KÍ|KÝ)\s*HIỆU(\s*(BẢN\s*VẼ|BV))?|SỐ\s*HIỆU(\s*BẢN\s*VẼ)?|BẢN\s*VẼ\s*SỐ|SỐ\s*BẢN\s*VẼ|"
@@ -206,9 +206,9 @@ def sheet_info(lines: list[dict], page=None, segs=None) -> dict:
     return out
 
 
-def chuyen_de(ten: str, loai: str = "") -> list[str]:
+def chuyen_de(ten: str, loai: str = "", hang_muc: str = "") -> list[str]:
     p = _plain(ten)
-    out = cd_of_sheet(p)
+    out = cd_of_sheet(p, _plain(hang_muc or ""))
     if not out and loai in ("cover", "thuyet_minh_pccc", "bang_quy_mo"):
         out = ["quy-mo"]
     return out
@@ -223,12 +223,13 @@ def danh_muc(pdf, pages: list[int] | None = None, loai: dict[int, str] | None = 
     doc = pymupdf.open(pdf)
     for p in pages:
         info = sheet_info(vector_text(pdf, p), doc[p - 1])
-        out.append({"trang": p, **info, "chuyen_de": chuyen_de(info["ten_ban_ve"], loai.get(p, ""))})
+        out.append({"trang": p, **info,
+                    "chuyen_de": chuyen_de(info["ten_ban_ve"], loai.get(p, ""), info.get("hang_muc") or "")})
     return out
 
 
 def pages_for(dm: list[dict], cd: str) -> list[int]:
-    return [d["trang"] for d in dm if cd in d.get("chuyen_de", [])]
+    return [d["trang"] for d in dm if any(match_cd(t, cd) for t in d.get("chuyen_de", []))]
 
 
 def to_md(dm: list[dict]) -> str:

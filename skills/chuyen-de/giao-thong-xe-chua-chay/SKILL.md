@@ -2,6 +2,8 @@
 Tiểu mục: 4.1 đường cho xe chữa cháy (chiều rộng, chiều cao thông thủy); 4.2 bãi đỗ (yêu cầu, chiều rộng, chiều dài theo chu vi và diện tích sàn, có/không sprinkler); 4.2.2 lối vào từ trên cao (vị trí, đặc điểm, kích thước, số lượng); 4.3 độ dốc, khoảng không, tải trọng, đường cụt, bãi quay xe, đoạn tránh xe.
 Bảng tra: `rule_keys.json → file["giao-thong-xe-chua-chay"]` (vd `rules/checklists/khach-san/k2/04-giao-thong-xe-chua-chay*.md`; mục dài có nhiều phần `.1`, `.2`…).
 
+Trang: đường, bãi đỗ ← tổng mặt bằng / chi tiết bãi đỗ; lối vào từ trên cao (4.2.2) ← MẶT ĐỨNG + MẶT CẮT (luôn được gán, tuỳ người thiết kế đặt ở đâu).
+
 1. Khi nào dùng: mọi khu đất; phần lối vào từ trên cao chỉ khi nhóm nhà + chiều cao PCCC thuộc điều kiện ghi trong dòng bảng. Loại hình chưa có bộ bảng (`rule_keys.file` không có `giao-thong-xe-chua-chay`) → không chạy, ghi 1 dòng XM.
 2. Cần từ JSON (`project_facts.json` / `extraction.json`): cao_pccc_m, nhom_nha, chu vi nhà, diện tích sàn lớn nhất được tiếp cận, có sprinkler hay không; bề rộng đường, kích thước bãi đỗ, khoảng cách bãi → nhà (tổng mặt bằng, bảng tính bãi đỗ); vị trí + kích thước lối vào trên mặt đứng.
    - Thiếu trường → dòng XM kèm tên trường thiếu + trang nên đọc bổ sung (chỉ trang của mục: `rule_keys.trang_theo_chuyen_de["giao-thong-xe-chua-chay"]` hoặc `trang <thư mục> --cd giao-thong-xe-chua-chay`).

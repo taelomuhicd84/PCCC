@@ -80,9 +80,33 @@ def test_o_ten_ban_ve_trong(tmp_path):
     ("SƠ ĐỒ NGUYÊN LÍ HỆ THỐNG BÁO CHÁY", "bao-chay"), ("MẶT BẰNG TÔNG THỂ", "khoang-cach"),
     ("AXIS Y1-Y11 ELEVATION", "giao-thong-xe-chua-chay"), ("BẢNG THỐNG KÊ CỬA ĐI VÀ CỬA SỔ", "thoat-nan"),
     ("MẶT BẰNG BỐ TRÍ ĐÈN CHIẾU SÁNG SỰ CỐ", "chieu-sang-su-co"), ("MẶT BẰNG CHỮA CHÁY SPRINKLER TẦNG 2", "chua-chay"),
+    ("CHI TIẾT BTB1", "thoat-nan"), ("CHI TIẾT TB3", "thoat-nan"),
 ])
 def test_chuyen_de(ten, cd):
     assert cd in sheets.chuyen_de(ten)
+
+
+@pytest.mark.parametrize("ten,co,khong", [
+    # quy tắc người dùng 14/10/2026: mặt đứng/cắt -> lối vào trên cao + ngăn cháy phương đứng; mặt bằng -> chỉ phương ngang
+    ("MẶT ĐỨNG TRỤC A-C", {"giao-thong-xe-chua-chay", "ngan-chay.dung"}, {"ngan-chay.ngang"}),
+    ("MẶT CẮT 2-2", {"giao-thong-xe-chua-chay", "ngan-chay.dung"}, {"ngan-chay.ngang"}),
+    ("MẶT BẰNG TẦNG 4, 5, 6", {"ngan-chay.ngang", "thoat-nan", "bo-tri-cong-nang"}, {"ngan-chay.dung"}),
+    ("MẶT BẰNG TẦNG BÁN HẦM", {"ngan-chay.ngang"}, {"ngan-chay.dung"}),
+    ("CHI TIẾT THANG MÁY CHỮA CHÁY", {"thang-may-chua-chay"}, {"chua-chay"}),
+    ("CHI TIẾT BÃI ĐỖ XE PCCC", {"giao-thong-xe-chua-chay"}, {"chua-chay"}),
+    ("MẶT BẰNG BỐ TRÍ MÁY BƠM PCCC", {"tram-bom"}, {"chua-chay"}),
+])
+def test_chuyen_de_theo_loai_ban_ve(ten, co, khong):
+    cds = set(sheets.chuyen_de(ten))
+    assert co <= cds and not (khong & cds), cds
+
+
+def test_chuyen_de_hang_muc_phong_bom_va_tra_trang():
+    assert sheets.chuyen_de("MẶT BẰNG TẦNG 1", hang_muc="PHÒNG BƠM VÀ BỂ NƯỚC NGẦM PCCC") == ["tram-bom"]
+    dm = [{"trang": 1, "chuyen_de": ["ngan-chay.ngang"]}, {"trang": 2, "chuyen_de": ["ngan-chay.dung"]},
+          {"trang": 3, "chuyen_de": ["ngan-chay"]}]
+    assert sheets.pages_for(dm, "ngan-chay") == [1, 2, 3]
+    assert sheets.pages_for(dm, "ngan-chay.dung") == [2, 3]
 
 
 def test_insert_html_khong_nhan_doi():

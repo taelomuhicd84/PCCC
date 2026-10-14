@@ -2,6 +2,8 @@
 Tiểu mục: 7.1 lối thoát nạn (yêu cầu chung tầng hầm/tầng 1/tầng trên; số lối ra gian phòng, từng tầng, từ nhà; bố trí phân tán; cửa thoát nạn — kiểu, chiều mở; chiều cao, chiều rộng lối ra; tầng kỹ thuật; khoảng cách tới lối ra gần nhất); 7.2 đường thoát nạn (đường không được coi là thoát nạn, chiều rộng, chiều cao, giật cấp); 7.3 cầu thang và buồng thang (bản thang, độ dốc, mặt bậc, chiều cao bậc, chiếu thang, khe hở, chiếu sáng; chủng loại thang loại 2, 3, L1, L2, N1–N3; lối lên mái).
 Bảng tra: `rule_keys.json → file["thoat-nan"]` (vd `rules/checklists/khach-san/k2/07-thoat-nan*.md`; mục dài có nhiều phần `.1`, `.2`…).
 
+Trang: mặt bằng tầng + chi tiết buồng thang / thang bộ (BTB1, TB3…) — chi tiết thang là nguồn chính của 7.3.
+
 1. Khi nào dùng: mọi hạng mục, xét TỪNG TẦNG. Loại hình chưa có bộ bảng (`rule_keys.file` không có `thoat-nan`) → không chạy, ghi 1 dòng XM.
 2. Cần từ JSON (`project_facts.json` / `extraction.json`): nhom_nha, cao_pccc_m, so_tang_noi, so_tang_ham; `extraction.json` (cửa, thang, hành lang, kích thước); số người từng gian phòng / tầng (bảng tính thoát nạn); khoảng cách đường thoát nạn ghi trên mặt bằng.
    - Thiếu trường → dòng XM kèm tên trường thiếu + trang nên đọc bổ sung (chỉ trang của mục: `rule_keys.trang_theo_chuyen_de["thoat-nan"]` hoặc `trang <thư mục> --cd thoat-nan`).

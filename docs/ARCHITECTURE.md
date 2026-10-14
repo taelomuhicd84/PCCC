@@ -30,6 +30,12 @@ bộ mục lớn; bảng > 50 m chèn "Gian lánh nạn" làm mục 8 nên số 
 6. Mục chỉ ghi "Thực hiện theo mẫu B34/B35/B36–B44/B45/B46/B48/B49/B50" → XM tới khi mẫu hệ thống đó được chuẩn hoá
    thành bộ bảng riêng (cùng quy trình docx → md). Thứ tự nên làm: B50, B34, B35, B45 (hồ sơ khách sạn nào cũng có).
 
+7. **Gán chuyên đề cho trang theo LOẠI bản vẽ** (người dùng 14/10/2026, `chuyen_de.cd_of_sheet`): mặt đứng + mặt cắt →
+   luôn có lối vào từ trên cao (`giao-thong-xe-chua-chay`) + ngăn cháy phương đứng (`ngan-chay.dung`); mặt bằng tầng →
+   chỉ ngăn cháy phương ngang (`ngan-chay.ngang`); chi tiết buồng thang / thang bộ (BTB, TB) → `thoat-nan`; chi tiết thang
+   máy chữa cháy → `thang-may-chua-chay`; trang của hạng mục phòng/trạm bơm PCCC → chỉ skill riêng `tram-bom` (NN 19,
+   mẫu B36). `trang --cd ngan-chay` lấy cả hai tiểu mục; `--cd ngan-chay.dung` chỉ phương đứng.
+
 | NN | Skill | NN | Skill | NN | Skill |
 |---|---|---|---|---|---|
 | 01 | quy-mo | 07 | thoat-nan (3 phần) | 13 | chua-chay (B36–B44) |

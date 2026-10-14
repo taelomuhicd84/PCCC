@@ -456,7 +456,9 @@ def cmd_keys(a, settings) -> Path:
     if (out / "danh_muc_ban_ve.json").exists():          # skill chuyên đề chỉ đọc đúng các trang của mình
         from .pipeline.sheets import pages_for
         dm = _danh_muc(out)
-        rk["trang_theo_chuyen_de"] = {cd: pages_for(dm, cd) for cd in sorted({c for d in dm for c in d["chuyen_de"]})}
+        tags = {c for d in dm for c in d["chuyen_de"]}
+        # khóa cả slug ("ngan-chay") lẫn tiểu mục ("ngan-chay.dung") để skill tra trực tiếp
+        rk["trang_theo_chuyen_de"] = {cd: pages_for(dm, cd) for cd in sorted(tags | {t.split(".")[0] for t in tags})}
     _write_json(out / "rule_keys.json", rk)
     for h in rk["hang_muc"]:
         print(f"{h['hm']} {h['ten']}: {h['loai_hinh']}{'/' + h['bo'] if h['bo'] else ''}"
