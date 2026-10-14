@@ -33,7 +33,9 @@ python -m pccc_checker gemini-cookie "<file.json>"   # nạp cookie 1 lần -> .
   Kể cả dự phòng: trang nào đọc qua PDF lỗi thì gửi lại PDF (chunk nhỏ hơn) hoặc bỏ qua + cảnh báo; code đã chặn đường gửi
   ảnh (`info_gemini.read_page`, `gemini_extractor.extract_page` với backend web). Không đề xuất `--upload png` / tile ảnh.
 - Chrome chạy ẨN NỀN (`headless: true`, người dùng yêu cầu — không hiện cửa sổ). Bị Google chặn thì báo người dùng, đổi false.
-- Gửi **file PDF** (tool gộp trang thành 1 PDF), model **Pro**, mức suy luận `thinking: Trung bình` (người dùng chọn 13/10/2026; trước là Thấp).
+- Gửi **file PDF** (tool gộp trang thành 1 PDF), model **4 Argon** (`model: Argon`, người dùng chọn 14/10/2026; trước là 3.1 Pro), mức suy luận `thinking: Thấp` (người dùng chọn 14/10/2026 cho nhanh; Trung bình quá chậm). Chrome có `playwright-stealth` (requirements) — thiếu thì in cảnh báo.
+  Argon trên web không hết lượt -> không lùi model (`fallback_models: []`). Code chọn model TRƯỚC rồi mới chọn mức tư duy (đổi model có thể
+  đặt lại mức); không thấy mức đã chọn -> in cảnh báo `⚠ không thấy mức tư duy`, phải báo người dùng.
 - Ít trang (≤ `chunk_pages` = 8): **1 cuộc trò chuyện** cho cả lượt; tin nhắn sau nghỉ ngẫu nhiên 5–15 s.
 - Nhiều trang: chia chunk 8 trang, mỗi chunk 1 tab = 1 cuộc trò chuyện, **TỐI ĐA 10 tab cùng lúc** (`MAX_TABS`, code khoá —
   15 tab đã bị Google đăng xuất giữa chừng). Mở tab **giãn cách 8–20 s**; trong tab mỗi thao tác (vào trang, chọn model, tải
@@ -48,7 +50,7 @@ python -m pccc_checker gemini-cookie "<file.json>"   # nạp cookie 1 lần -> .
 | Việc | Selector |
 |---|---|
 | Ô nhập | `rich-textarea [contenteditable='true']` |
-| Menu model | `[data-test-id='bard-mode-menu-button']` -> mục `3.1 Pro` / `3.8 Flash` (chữ dính mô tả) + mức `Thấp/Trung bình/Cao` (từ 13/10/2026 nằm trong menu con "Cấp độ tư duy" — mục ẩn vẫn có trong DOM, phải mở menu con rồi mới click) |
+| Menu model | `[data-test-id='bard-mode-menu-button']` -> mục `4 Argon` / `3.1 Pro` / `3.8 Flash` (chữ dính mô tả) + mức `Thấp/Trung bình/Cao` (từ 13/10/2026 nằm trong menu con "Cấp độ tư duy" — mục ẩn vẫn có trong DOM, phải mở menu con rồi mới click) |
 | Tải file | nút aria "tải lên" -> `[data-test-id='local-images-files-uploader-button']` |
 | Gửi / Dừng | aria "Gửi tin nhắn" / "Dừng" |
 | Xoá chat | aria "Mở trình đơn thao tác đối với cuộc trò chuyện." -> `[data-test-id='delete-button']` -> nút "Xoá" trong `.cdk-overlay-pane` (chữ "Xoá" dấu trên a) |
@@ -56,7 +58,7 @@ python -m pccc_checker gemini-cookie "<file.json>"   # nạp cookie 1 lần -> .
 Dò selector mới: mở trang bằng `GeminiWeb._open()`, in `aria-label`/`data-test-id` các nút đang hiển thị (không in cookie).
 
 ## 4. QUY TRÌNH TỐI ƯU — nhanh mà không bị Google coi là bot (chốt 13/10/2026, từ số đo thực tế)
-Thời gian đo: Gemini Pro "Thấp" trả lời 1 chunk 8 trang PDF mất **3–5 phút** (gần như không đổi theo số tab); mở 1 tab giãn
+Thời gian đo (với 3.1 Pro "Thấp"; 4 Argon "Trung bình" chậm hơn nhiều — xem mục 5): trả lời 1 chunk 8 trang PDF mất **3–5 phút** (gần như không đổi theo số tab); mở 1 tab giãn
 cách 8–20 s; 10 tab ≈ 2 phút chỉ để mở. => Tổng thời gian ≈ (số "đợt" chunk) × 4 phút + thời gian mở tab.
 Cách rút ngắn là GIẢM SỐ CHUNK CHỜ NỐI TIẾP, KHÔNG phải tăng tab (15 tab đã bị đăng xuất).
 1. **Chuẩn bị (0 token, ~10 s):** `gemini-status` (chết -> nhờ xuất cookie MỚI, kiểm giờ xuất trong tên/giờ file). File trên
@@ -84,6 +86,8 @@ Cách rút ngắn là GIẢM SỐ CHUNK CHỜ NỐI TIẾP, KHÔNG phải tăng 
 
 ## 5. Thời gian đã đo
 FUMEI 20 trang scan: PDF 5,5 phút (ảnh PNG từng thử 41 phút — người dùng đã CẤM gửi ảnh). Liên Minh 72 trang có text: 9 tab × 8 trang, Pro "Thấp" = 3 phút 13 giây.
+BW Đồng An 7 trang (1 tab), **4 Argon "Trung bình" = 11 phút 40 giây** (gồm đọc PDF từ Google Drive) — chậm hơn nhiều so với Pro "Thấp";
+đọc sai chiều cao kho 1A (21,00 → 20,45), câu trích dẫn tự diễn đạt lại. Bộ lọc "tự suy" bỏ nhầm giá trị đúng nằm trong bảng ảnh (vd nhà bảo vệ bậc IV).
 Một hồ sơ 118 trang: 15 tab bị Google đăng xuất giữa chừng -> hạ về ≤ 10 tab + giãn cách; chạy lại phần còn lại 8 chunk
 hàng đợi ẩn nền = 8 phút 44 giây (gồm gửi lại 2 chunk JSON lỗi).
 Báo người dùng thời gian dự kiến trước khi chạy.

@@ -226,6 +226,17 @@ def cmd_pages(a, settings) -> None:
     print("(* = được xử lý khi --pages auto)")
 
 
+def cmd_crops(a, settings) -> None:
+    """Cắt bảng dán dạng ảnh ra PNG (0 token) — Claude mở đúng ảnh để kiểm giá trị * mà Gemini đọc."""
+    from .pdf.render import export_image_tables, page_count
+    pdf = Path(a.pdf)
+    pages = _pages(a.pages) if a.pages else list(range(1, page_count(pdf) + 1))
+    files = export_image_tables(pdf, pages, _out_dir(pdf, a.out) / "crops")
+    for f in files:
+        print(f)
+    print(f"{len(files)} bảng ảnh")
+
+
 def cmd_rules(a, settings) -> None:
     from .rules import load_rules
     for r in load_rules(_rule_paths(settings, a.rules)):
@@ -323,6 +334,8 @@ def main(argv: list[str] | None = None) -> None:
     sp.add_argument("--no-dxf", action="store_true")
     sp = sub.add_parser("rules"); sp.add_argument("--rules", action="append")
     sp = sub.add_parser("pages"); sp.add_argument("pdf")
+    sp = sub.add_parser("crops", help="cắt bảng dán dạng ảnh ra PNG để Claude kiểm giá trị *")
+    sp.add_argument("pdf"); sp.add_argument("--pages", help="vd 7,10 (mặc định cả hồ sơ)"); sp.add_argument("--out")
     sub.add_parser("gemini-login", help="mở Chrome để đăng nhập Gemini web (backend: web)")
     sub.add_parser("gemini-status", help="kiểm tra đã đăng nhập Gemini web chưa (exit 1 nếu chưa)")
     sp = sub.add_parser("gemini-cookie", help="nạp cookie JSON (Cookie-Editor) vào .env một lần, xoá file gốc")
@@ -332,7 +345,7 @@ def main(argv: list[str] | None = None) -> None:
     settings = load_settings(Path(a.settings) if a.settings else None)
     try:
         {"info": cmd_info, "extract": cmd_extract, "check": cmd_check, "annotate": cmd_annotate, "dxf": cmd_dxf,
-         "run": cmd_run, "rules": cmd_rules, "pages": cmd_pages, "gemini-login": cmd_gemini_login,
+         "run": cmd_run, "rules": cmd_rules, "pages": cmd_pages, "crops": cmd_crops, "gemini-login": cmd_gemini_login,
          "gemini-status": cmd_gemini_status, "gemini-cookie": cmd_gemini_cookie}[a.cmd](a, settings)
     except PermissionError as e:                        # chưa đăng nhập Gemini web: dừng ngay, không đọc từng trang
         print(f"⚠ {e}", file=sys.stderr)

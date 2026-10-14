@@ -612,6 +612,24 @@ def test_verify_gemini_keeps_labeled_note_drawn_as_graphics():
     assert "giữ * cần kiểm" in warns[0]
 
 
+def test_verify_gemini_keeps_labeled_value_from_image_table():
+    """Bảng dán dạng ảnh (BW Đồng An tr.7): giá trị có nhãn trường giữ *; không nhãn / trang không có ảnh vẫn bỏ."""
+    from pccc_checker.project_info import verify_gemini
+    pages = {7: "MẶT BẰNG TỔNG THỂ | NHÀ BẢO VỆ BẬC CHỊU LỬA | NHÀ KHO 1A" + " " * 50}   # câu căn cứ có, giá trị IV không
+    mk = lambda: [dict(_hit("bac_chiu_lua", "IV", 7, "gemini"), text="NHÀ BẢO VỆ | BẬC CHỊU LỬA CỦA NHÀ: IV"),
+                  dict(_hit("nhom_nha", "F4.2", 7, "gemini"), text="KHO 1A | Nhóm nhà | F4.2")]
+    hits = mk()
+    warns = verify_gemini(hits, pages, {7})
+    assert [h["key"] for h in hits] == ["bac_chiu_lua"] and any("bảng dạng ảnh" in w for w in warns)
+    hits = mk()
+    verify_gemini(hits, pages)
+    assert hits == []
+    row = [dict(_hit("chieu_cao_cong_trinh", 3.65, 7, "gemini"), text="4 | NHÀ BẢO VỆ | 19,25 | 1 | 3,65 | IV",
+                from_table="chieu_cao")]                       # dòng bảng: nhãn nằm ở tên cột
+    verify_gemini(row, pages, {7})
+    assert len(row) == 1
+
+
 def test_floor_area_lines_split_workshops_and_count_floors():
     from pccc_checker.project_info import floor_area_hits, floor_area_lines
     texts = [_t("TẦNG 1 NHÀ XƯỞNG CHO THUÊ 02, 03:  2000 M2", 0, 0, 300, 10),

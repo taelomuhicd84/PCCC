@@ -75,3 +75,8 @@ Thiếu thông tin → nhiều luật không xác định được ngưỡng: gh
 - Cửa phòng kỹ thuật/WC không nằm trên đường thoát nạn nhưng bị gắn `is_exit`.
 - Tỉ lệ bản vẽ sai (mặt bằng có nhiều tỉ lệ / chi tiết phóng to) hoặc khung mặt bằng sai → kết quả 3.2.8 sai.
 - Bản vẽ chi tiết thang (mặt cắt) có số đo bậc khác với mặt bằng → ưu tiên mặt cắt.
+
+## Bảng đối chiếu đầy đủ (checklist) — khách sạn
+`rules/checklists/_index.md` → `khach-san/k1|k2|k3/NN-<chuyên đề>.md` (mẫu B7.1/7.2/7.3, chọn theo chiều cao PCCC ≤28 / ≤50 /
+≤150 m). Mỗi dòng: ID bền vững, nguyên văn quy định, điều khoản. Chỉ nạp file chuyên đề cần dùng (mỗi file vài nghìn token).
+Dòng "Thực hiện theo bảng đối chiếu số Bxx" (hệ thống: B34–B50) chưa có bảng → ghi thiếu, không tự suy.

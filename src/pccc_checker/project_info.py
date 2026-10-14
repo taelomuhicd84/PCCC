@@ -1431,8 +1431,10 @@ def _quote_on_page(quote: str, value: Any, blob: str) -> bool:
     return len(q) < 6 or q in letters(blob)
 
 
-def verify_gemini(hits: List[Dict[str, Any]], page_texts: Dict[int, str]) -> List[str]:
-    """Bỏ hit Gemini có giá trị không xuất hiện trong text vector của trang (trang có text). -> cảnh báo."""
+def verify_gemini(hits: List[Dict[str, Any]], page_texts: Dict[int, str], image_pages=frozenset()) -> List[str]:
+    """Bỏ hit Gemini có giá trị không xuất hiện trong text vector của trang (trang có text). -> cảnh báo.
+    image_pages: trang có bảng dạng ảnh — giá trị có nhãn đúng trường (hoặc lấy từ cột bảng) thì giữ * (lớp chữ không
+    xác minh được)."""
     warns = []
     keep = []
     for h in hits:
@@ -1455,6 +1457,11 @@ def verify_gemini(hits: List[Dict[str, Any]], page_texts: Dict[int, str]) -> Lis
             # câu căn cứ cũng không có trong lớp chữ: ghi chú vẽ bằng nét (vd hồ sơ ICIC) -> không xác minh được, giữ *
             warns.append(f"trang {h['page']} (gemini): {h['key']}={_v(h['value'])} — câu căn cứ không có trong lớp chữ PDF "
                          f"(chữ vẽ bằng nét?), giữ * cần kiểm")
+            keep.append(h)
+        elif h["page"] in image_pages and (h.get("from_table") or (lab and lab.search(h.get("text") or ""))):
+            # bảng dán dạng ảnh (vd bảng thống kê hạng mục BW Đồng An tr.7): chữ không có ở lớp text -> giữ *
+            warns.append(f"trang {h['page']} (gemini): {h['key']}={_v(h['value'])} — trang có bảng dạng ảnh, lớp chữ "
+                         f"không xác minh được, giữ * cần kiểm")
             keep.append(h)
         else:
             warns.append(f"trang {h['page']} (gemini): {h['key']}={_v(h['value'])} KHÔNG có trên bản vẽ (text vector) "
@@ -1537,7 +1544,9 @@ def read_project_info(pdf: Path, settings: Dict[str, Any], gemini: str = "auto",
             log(f"[info] ⚠ {e}")
     user = yaml.safe_load(Path(project_yaml).read_text(encoding="utf-8")) or {} \
         if project_yaml and Path(project_yaml).exists() else None
-    warnings += verify_gemini(hits, page_texts)
+    from .pdf.render import image_table_pages
+    warnings += verify_gemini(hits, page_texts,
+                              image_table_pages(pdf, sorted({h["page"] for h in hits if h["method"] == "gemini"})))
     tag_by_title(hits, titles)
     tag_hang_muc(hits)
     info = merge(hits, spec, (user or {}).get("hang_muc_chinh"))

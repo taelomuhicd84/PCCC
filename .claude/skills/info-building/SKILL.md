@@ -7,7 +7,7 @@ description: Đọc THÔNG TIN CÔNG TRÌNH (khu đất, hạng mục, bậc ch�
 
 Mục tiêu: ra bảng **Trường × Hạng mục** (mẫu: `project_info.md` của nhà hàng Thiên Ý) với ký hiệu
 `⚠` trang ghi khác nhau · `*` chỉ Gemini đọc (cần kiểm) · `✓` đã xác nhận trong project.yaml · `—` bản vẽ không ghi.
-KHÔNG tự đọc ảnh bản vẽ; KHÔNG đọc lại lịch sử cũ — làm theo các bước dưới.
+KHÔNG tự đọc ảnh cả trang bản vẽ; KHÔNG đọc lại lịch sử cũ — làm theo các bước dưới. Ngoại lệ duy nhất: bước 2b.
 
 ## Quy trình (ít token nhất)
 
@@ -23,19 +23,23 @@ python -m pccc_checker info "<pdf>" --project ... --gemini-info always --info-pa
    MỚI rồi nạp bằng `gemini-cookie <file>`. KHÔNG lưu/đọc/in cookie trong chat hay memory.
 1. `pages` để chọn trang: bìa, tổng mặt bằng (bảng hạng mục), mặt bằng tầng 1 mỗi hạng mục (ghi chú PCCC), trang nhà phụ trợ.
 2. Chạy `info`. Đọc `data/output/<tên>/project_info.md` (ngắn). Chỉ mở `project_info_chi_tiet.md` khi cần nguyên văn căn cứ.
+2b. **Kiểm giá trị `*` bằng ảnh cắt** (trường bắt buộc còn `*`, nhất là trang có cảnh báo "bảng dạng ảnh"):
+   `python -m pccc_checker crops "<pdf>" --pages <trang có *>` (0 token, vài giây) -> Claude mở ĐÚNG ảnh bảng chứa trường đó
+   (`data/output/<tên>/crops/pNN_bangK.png`, ≤ 5 ảnh). Thử BW Đồng An 14/10/2026: Claude đọc ảnh cắt đúng hết, Argon đọc sai
+   chiều cao kho 1A (21,00 -> 20,45) và nhóm nhà (F5.2 -> F4.2). Khác Gemini -> ghi cả hai vào nghi_ngo.json, báo người dùng.
 3. Hiện nguyên bảng cho người dùng, hỏi xác nhận trường bắt buộc (bậc chịu lửa, nhóm F, chiều cao PCCC, cấp S, hạng cháy nổ nếu F5).
    KHÔNG tự điền giá trị thay người dùng. Giá trị đã xác nhận -> `data/input/<ho_so>.project.yaml` (mẫu `config/project.example.yaml`).
 4. Cần HTML: dựng đúng bố cục project_info.md (tiêu đề, gạch đầu dòng khu đất/hạng mục chính/file, ký hiệu, bảng, mục "* Cần kiểm").
 
 ## Gemini — GỌI SKILL `gemini-web` TRƯỚC (đăng nhập, cookie, quy tắc gửi, selector, thời gian đo)
 - Bước đầu: skill `gemini-web` (`gemini-status`; cookie chết -> `gemini-cookie`). Mọi quy tắc Playwright nằm ở đó:
-  **CHỈ GỬI FILE PDF, KHÔNG BAO GIỜ GỬI HÌNH**; Pro "Trung bình" / 1 cuộc trò chuyện; nhiều trang -> chunk 8 trang, TỐI ĐA 10 tab,
+  **CHỈ GỬI FILE PDF, KHÔNG BAO GIỜ GỬI HÌNH**; 4 Argon "Thấp" / 1 cuộc trò chuyện; nhiều trang -> chunk 8 trang, TỐI ĐA 10 tab,
   giãn cách như người thật;
   có kết quả -> lưu tạm `data/cache/raw/` rồi xoá cuộc trò chuyện.
 - Lệnh chuẩn: `info "<pdf>" --gemini-pages smart` — tự lọc trang gửi Gemini (giữ trang không có chữ + trang có từ khoá
   PCCC/quy mô/mặt bằng; bản scan -> cả hồ sơ). Kiểm chứng Liên Minh: 72 -> 49 trang, kết quả giống hệt bản đủ.
   Cần chắc chắn tuyệt đối thì `--gemini-pages 1-N` (cả hồ sơ). Bản scan chữ nhỏ: vẫn gửi PDF, giá trị nghi ngờ ghi `nghi_ngo.json` (không gửi ảnh).
-- File trên **Google Drive** (`D:.DRIVE CÔNG TY\...`) có thể lỗi đọc giữa chừng (file online-only) -> chép về `data/input/` trước.
+- File trên **Google Drive** (`D:\1.DRIVE CÔNG TY\...`) có thể lỗi đọc giữa chừng (file online-only) -> chép về `data/input/` trước.
 - Cache Gemini: `data/cache/` theo hash PDF + trang + model (+ `_png`). Nghi cache sai -> xoá `data/cache/<hash>*`
   (hash trong project_info.json `meta.pdf_hash`).
 - **Xuất kết quả (người dùng hay yêu cầu):** HTML theo bố cục project_info.md + file `nghi_ngo.json` cùng thư mục (mâu thuẫn
@@ -53,6 +57,8 @@ python -m pccc_checker info "<pdf>" --project ... --gemini-info always --info-pa
 ## Bẫy đã gặp (đọc trước khi kết luận)
 - **Chữ rác kiểu `3+Ҫ1&+81*`** = font Arial Identity-H thiếu ToUnicode (bản vẽ ICIC). Tool đã tự sửa trong `vector_text`;
   nếu `pages` vẫn ra toàn "other" -> kiểm tra font khác (VNI đã có `vn_encoding.py`).
+- **Bảng dán dạng ảnh** (bảng Excel dán vào PDF, vd bảng thống kê hạng mục BW Đồng An tr.7): lớp chữ không có số -> giá trị
+  Gemini có nhãn trường hoặc lấy từ cột bảng được giữ `*` (trước 14/10/2026 bị loại nhầm là "tự suy"). Kiểm bằng bước 2b.
 - **Ghi chú vẽ bằng nét** (không có trong lớp chữ): "bậc chịu lửa…", "chiều cao PCCC là…", GFA… chỉ Gemini đọc được -> giữ với `*`
   nếu câu căn cứ có nhãn trường; câu có trong lớp chữ mà số không khớp -> bị loại (Gemini bịa).
 - **Tên hạng mục trong project.yaml phải trùng tên trên bảng bản vẽ** ("NHÀ KHO 1A", không phải "Kho 1A"), nếu không bảng tách đôi cột.

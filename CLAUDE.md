@@ -13,12 +13,16 @@ PDF ──extract──> extraction.json/.md ──check──> findings.json/re
 - `src/pccc_checker/extractors/` — "mắt": Gemini vision (`gemini`), text vector PDF (`vector`, offline), `hybrid` (mặc định).
 - `src/pccc_checker/rules/` — "luật": engine + thư viện check; **nội dung luật nằm trong `rules/*.yaml`**, không hard-code trong Python.
 - `src/pccc_checker/output/` — ghi chú PDF, báo cáo MD, xuất DXF.
+- `rules/checklists/` — bảng đối chiếu đầy đủ (khách sạn k1/k2/k3, ID dòng + nguyên văn) cho `compliance-reviewer`;
+  dựng lại từ Word bằng `scripts/checklists/`. Luật chạy tự động vẫn ở `rules/*.yaml`.
 - `prompts/` — prompt gửi Gemini. `config/settings.yaml` — model, dpi, rule packs. `.env` — `GEMINI_API_KEY`.
 - Kết quả: `data/output/<tên-pdf>/`. Cache Gemini: `data/cache/` (chạy lại không tốn API).
 
 ## Nguyên tắc tiết kiệm token (QUAN TRỌNG)
 
-1. **Claude KHÔNG tự đọc ảnh bản vẽ.** Gemini đọc ảnh; Claude chỉ đọc `extraction.md` / `findings.json` (văn bản ngắn).
+1. **Claude KHÔNG tự đọc ảnh cả trang bản vẽ.** Gemini đọc ảnh; Claude chỉ đọc `extraction.md` / `findings.json` (văn bản ngắn).
+   Ngoại lệ: kiểm giá trị `*` (chỉ Gemini đọc) bằng ảnh cắt của đúng bảng đó (`crops`, ≤ 5 ảnh) — Claude đọc bảng ảnh
+   chính xác hơn Gemini (thử BW Đồng An 14/10/2026).
 2. Việc lặp/cơ học (chạy CLI, kiểm tra file) giao cho subagent model nhỏ (`drawing-reader`, `pdf-annotator` – haiku).
 3. Phán đoán chuyên môn (bác bỏ false-positive, bổ sung lỗi luật không mã hoá được) giao `compliance-reviewer` (sonnet).
 4. Luật kiểm tra được bằng số → viết vào YAML để engine chạy, đừng để LLM kiểm tra lại mỗi lần.
@@ -30,6 +34,7 @@ PDF ──extract──> extraction.json/.md ──check──> findings.json/re
 set PYTHONPATH=src            # (PowerShell: $env:PYTHONPATH="src")
 python -m pccc_checker run <pdf> [--extractor hybrid|gemini|vector] [--grid 2x2] [--building config/building.yaml] [--set height_pccc_m=24]
 python -m pccc_checker pages <pdf>          # phân loại trang (0 token), --pages auto mặc định chỉ xử lý trang liên quan
+python -m pccc_checker crops <pdf> --pages 7,10   # cắt bảng dán dạng ảnh ra PNG (0 token) để kiểm giá trị *
 python -m pccc_checker extract|check|annotate|dxf|rules ...
 python -m pytest -q           # test offline, không cần API key
 python scripts/make_sample_pdf.py data/input/sample.pdf

@@ -53,6 +53,35 @@ def page_size(pdf_path: Path, page_no: int) -> tuple[float, float]:
         return r.width, r.height
 
 
+def _table_images(page) -> list:
+    """Ảnh raster dán vào trang (bảng Word/Excel...: ≥ 2% khổ giấy, rộng ≥ 600 px) — chữ trong đó không có ở lớp text."""
+    area = page.rect.width * page.rect.height
+    return [im for im in page.get_image_info()
+            if (im["bbox"][2] - im["bbox"][0]) * (im["bbox"][3] - im["bbox"][1]) >= 0.02 * area and im.get("width", 0) >= 600]
+
+
+def image_table_pages(pdf_path: Path, pages) -> set[int]:
+    with pymupdf.open(pdf_path) as doc:
+        return {p for p in pages if _table_images(doc[p - 1])}
+
+
+def export_image_tables(pdf_path: Path, pages, out_dir: Path) -> list[Path]:
+    """Cắt từng bảng dạng ảnh ra PNG (cạnh dài ~1800 px) để Claude kiểm giá trị * — đọc ảnh cắt chính xác hơn Gemini
+    (thử BW Đồng An 14/10/2026). -> danh sách file."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    files = []
+    with pymupdf.open(pdf_path) as doc:
+        for p in pages:
+            page = doc[p - 1]
+            for k, im in enumerate(_table_images(page), 1):
+                r = pymupdf.Rect(im["bbox"]) & page.rect
+                zoom = min(3.0, 1800 / max(1.0, r.width, r.height))
+                f = out_dir / f"p{p:02d}_bang{k}.png"
+                page.get_pixmap(matrix=pymupdf.Matrix(zoom, zoom), clip=r).save(f)
+                files.append(f)
+    return files
+
+
 def vector_text(pdf_path: Path, page_no: int) -> list[dict]:
     """Trả về các dòng text vector: [{'text', 'bbox'}] (đã chuyển font VNI -> Unicode). Rỗng nếu PDF là ảnh scan."""
     out = []

@@ -221,7 +221,7 @@ def to_hits(data: Dict[str, Any], page_no: int) -> List[Dict[str, Any]]:
             v = _norm(key, raw, parse_number)
             if v is not None:
                 hits.append({"key": key, "value": v, "unit": None, "page": page_no, "text": text,
-                             "method": "gemini", "hang_muc": name})
+                             "method": "gemini", "hang_muc": name, "from_table": col})   # nhãn = tên cột
     if floor_groups:          # nhóm F theo tầng -> nhóm nhà của cả tòa nhà (nhà hỗn hợp)
         hits.append({"key": "nhom_nha", "value": sorted({f for _, f in floor_groups}), "unit": None, "page": page_no,
                      "method": "gemini", "hang_muc": None,

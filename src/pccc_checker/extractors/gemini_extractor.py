@@ -41,7 +41,7 @@ def backend_kwargs(g: dict[str, Any]) -> dict[str, Any]:
     w = dict(g.get("web") or {})
     for k in ("upload", "chunk_pages", "tabs"):         # (thinking: GeminiWeb nhận thẳng)  # cách gửi trang — người gọi (info_gemini) đọc thẳng từ settings
         w.pop(k, None)
-    return {"model": w.pop("model", "Pro"), "fallback_models": w.pop("fallback_models", ["Flash"]), "web": w}
+    return {"model": w.pop("model", "Argon"), "fallback_models": w.pop("fallback_models", []), "web": w}
 
 
 def cached(exact: Path, any_model: str) -> Path | None:

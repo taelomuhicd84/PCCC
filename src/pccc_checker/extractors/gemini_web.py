@@ -9,7 +9,7 @@ Hai cách đăng nhập:
 Kiểm tra đăng nhập: chờ tối đa 30 s xem cái gì hiện ra (ô nhập đứng yên = sống; nút đúng chữ "Đăng nhập"/"Sign in" hoặc
 chuyển sang accounts.google.com = chết) — không kiểm tra tức thời (DOM chưa render cho kết quả sai).
 Cả lượt chạy dùng MỘT cuộc trò chuyện (yêu cầu người dùng), nghỉ ngẫu nhiên 5–15 s giữa các tin nhắn. Chọn model theo tên
-hiển thị ("Pro", "Flash"...), tải file, gửi prompt, chờ câu trả lời đứng yên rồi trả về text. Playwright sync chỉ chạy
+hiển thị ("Argon", "Pro", "Flash"...), tải file, gửi prompt, chờ câu trả lời đứng yên rồi trả về text. Playwright sync chỉ chạy
 trên 1 luồng -> extractor phải dùng workers=1.
 shortcut: dựa vào cấu trúc trang Gemini (data-test-id, class) tháng 10/2026 — Google đổi giao diện thì sửa selector ở đây.
 """
@@ -77,6 +77,7 @@ class GeminiWeb:
             self._ctx = self._pw.chromium.launch_persistent_context(
                 str(self.profile), channel="chrome", headless=self.headless, viewport={"width": 1280, "height": 900},
                 args=ARGS + ([f"--profile-directory={self.profile_directory}"] if self.profile_directory else []))
+            _stealth(self._ctx)
             self.page = self._ctx.pages[0] if self._ctx.pages else self._ctx.new_page()
         atexit.register(self.close)
         return self.page
@@ -285,22 +286,23 @@ class GeminiWeb:
         pg = pg or self.page
         btn = pg.locator("[data-test-id='bard-mode-menu-button']")
         btn.wait_for(timeout=30000)
-        if self.thinking:
+        label = (btn.inner_text() or "").lower().split()      # nút ghi "Argon Cao" = model + mức tư duy đang chọn
+        if label[:1] != [model.lower()]:
+            btn.click()
+            # "4 Argon", "3.1 Pro", "3.8 Flash" — khớp đúng tên, để "Flash" không trúng "Flash-Lite"; textContent có thể
+            # dính liền mô tả ("3.8 FlashTrợ giúp toàn diện") nên không đòi khoảng trắng sau tên
+            item = pg.locator("[role=menuitem]").filter(has_text=re.compile(rf"\d[\d.]*\s*{re.escape(model)}(?!-)", re.I)).first
+            if item.count() == 0:
+                pg.keyboard.press("Escape")
+                raise RuntimeError(f"Gemini web không có model '{model}'")
+            item.click()
+            pg.wait_for_timeout(800)
+        # SAU khi đổi model (đổi model có thể đặt lại mức tư duy); nút đã ghi đúng mức -> khỏi mở menu
+        if self.thinking and not " ".join((btn.inner_text() or "").lower().split()).endswith(self.thinking.lower()):
             self._pick_thinking(pg, btn)
-        if (btn.inner_text() or "").strip().lower() == model.lower():
-            return
-        btn.click()
-        # "3.1 Pro", "3.8 Flash" — khớp đúng tên, để "Flash" không trúng "Flash-Lite"; textContent có thể dính liền
-        # mô tả ("3.8 FlashTrợ giúp toàn diện") nên không đòi khoảng trắng sau tên
-        item = pg.locator("[role=menuitem]").filter(has_text=re.compile(rf"\d[\d.]*\s*{re.escape(model)}(?!-)", re.I)).first
-        if item.count() == 0:
-            pg.keyboard.press("Escape")
-            raise RuntimeError(f"Gemini web không có model '{model}'")
-        item.click()
-        pg.wait_for_timeout(800)
 
     def _pick_thinking(self, pg, btn):
-        """Chọn mức suy luận ('Thấp' nhanh hơn — đọc bảng/ghi chú là nhận dạng chữ). Không có mục -> bỏ qua."""
+        """Chọn mức suy luận (mặc định Thấp — settings.yaml). Không có mục -> cảnh báo rồi bỏ qua."""
         btn.click()
         item = pg.locator("[role=menuitem]").filter(has_text=re.compile(rf"^\s*{re.escape(self.thinking)}", re.I)).first
         sub = pg.locator("[role=menuitem]").filter(has_text=re.compile(r"^\s*(Cấp độ tư duy|Thinking)", re.I)).first
@@ -310,6 +312,8 @@ class GeminiWeb:
         if item.count() and item.is_visible():
             item.click()
             pg.wait_for_timeout(500)
+        else:                                              # không im lặng: model này không có mức tư duy đã chọn
+            print(f"[gemini-web] ⚠ không thấy mức tư duy '{self.thinking}' — chạy mức mặc định của model", file=sys.stderr)
         for _ in range(2):                                 # đóng menu con + menu chính nếu còn mở
             if pg.locator("[role=menuitem]:visible").count():
                 pg.keyboard.press("Escape")
@@ -405,9 +409,10 @@ def import_cookie_file(src: Path, env: Path) -> int:
 
 
 def _stealth(ctx) -> None:
-    """playwright-stealth nếu đã cài (pip install playwright-stealth); không có thì bỏ qua."""
+    """Che dấu hiệu trình duyệt tự động (navigator.webdriver, plugin, WebGL...) — giảm rủi ro Google coi là bot."""
     try:
         from playwright_stealth import Stealth
-        Stealth().apply_stealth_sync(ctx)
-    except Exception:
-        pass
+    except ImportError:
+        print("[gemini-web] ⚠ chưa cài playwright-stealth (pip install playwright-stealth) — dễ bị coi là bot", file=sys.stderr)
+        return
+    Stealth().apply_stealth_sync(ctx)
