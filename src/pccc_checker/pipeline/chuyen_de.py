@@ -32,10 +32,10 @@ MUC = [
     # mặt bằng tầng / mặt đứng / mặt cắt gán thêm tiểu mục ngang|đứng ở cd_of_sheet
     ("06", "ngan-chay", "NC", "Giải pháp ngăn cháy, chống cháy lan",
      r"NGAN CHAY",
-     r"NGAN\s*CHAY|KHOANG\s*CHAY|VAT\s*LIEU|HOAN\s*THIEN|HANH\s*LANG|GIEN?G\s*KY\s*THUAT|HOP\s*KY\s*THUAT"),
+     r"NGAN\s*CHAY|KHOANG\s*CHAY|CHI\s*TIET\s*CUA|VAT\s*LIEU|HOAN\s*THIEN|HANH\s*LANG|GIEN?G\s*KY\s*THUAT|HOP\s*KY\s*THUAT"),
     ("07", "thoat-nan", "TN", "Lối, đường thoát nạn",
      r"^(LOI, DUONG |GIAI PHAP )?THOAT NAN",
-     r"THOAT\s*NAN|CAU\s*THANG|THANG\s*(BO|SAT|THEP|THOAT)|BUONG\s*THANG|\bB?TB\s*\d|CUA\s*(DI|THOAT)|THONG\s*KE\s*CUA|"
+     r"THOAT\s*NAN|CHI\s*TIET\s*CUA|CAU\s*THANG|THANG\s*(BO|SAT|THEP|THOAT)|BUONG\s*THANG|\bB?TB\s*\d|CUA\s*(DI|THOAT)|THONG\s*KE\s*CUA|"
      r"MAT\s*BANG\s*(TANG|LAU|TRET|HAM)|STAIR|DOOR|EXIT\s*PLAN|ESCAPE"),
     ("08", "gian-lanh-nan", "GLN", "Gian lánh nạn",
      r"LANH NAN",

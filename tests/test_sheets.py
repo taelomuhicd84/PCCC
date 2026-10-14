@@ -92,7 +92,8 @@ def test_chuyen_de(ten, cd):
     ("MẶT CẮT 2-2", {"giao-thong-xe-chua-chay", "ngan-chay.dung"}, {"ngan-chay.ngang"}),
     ("MẶT BẰNG TẦNG 4, 5, 6", {"ngan-chay.ngang", "thoat-nan", "bo-tri-cong-nang"}, {"ngan-chay.dung"}),
     ("MẶT BẰNG TẦNG BÁN HẦM", {"ngan-chay.ngang"}, {"ngan-chay.dung"}),
-    ("CHI TIẾT THANG MÁY CHỮA CHÁY", {"thang-may-chua-chay"}, {"chua-chay"}),
+    ("CHI TIẾT THANG MÁY CHỮA CHÁY", {"thang-may-chua-chay"}, {"chua-chay", "thoat-nan"}),
+    ("CHI TIẾT CỬA", {"thoat-nan", "ngan-chay"}, set()),
     ("CHI TIẾT BÃI ĐỖ XE PCCC", {"giao-thong-xe-chua-chay"}, {"chua-chay"}),
     ("MẶT BẰNG BỐ TRÍ MÁY BƠM PCCC", {"tram-bom"}, {"chua-chay"}),
 ])
