@@ -1,0 +1,15 @@
+[B21] CANH BAO muc 'Dung tích chai chứa khí' -> 'quy-mo' da co truoc do, gop vao
+[B21] CANH BAO muc 'Khu vực tồn chứa chai LPG' -> 'an-toan-cong-nghe' da co truoc do, gop vao
+[B21] CANH BAO muc 'Vị trí nguồn gây cháy' -> 'an-toan-cong-nghe' da co truoc do, gop vao
+[B21] CANH BAO muc 'Kho chứa hàng' -> 'an-toan-cong-nghe' da co truoc do, gop vao
+[B21] CANH BAO muc 'Xếp chai LPG trong cửa hàng' -> 'an-toan-cong-nghe' da co truoc do, gop vao
+[B21] cua-hang-khi-dot/chung/01-quy-mo.md                   rows=  3 chars=  1056
+[B21] cua-hang-khi-dot/chung/02-bac-chiu-lua.md             rows=  1 chars=  4417
+[B21] cua-hang-khi-dot/chung/03-khoang-cach.md              rows=  1 chars=   792
+[B21] cua-hang-khi-dot/chung/04-giao-thong-xe-chua-chay.md  rows=  5 chars=  2479
+[B21] cua-hang-khi-dot/chung/06-ngan-chay.md                rows=  9 chars=  2096
+[B21] cua-hang-khi-dot/chung/07-thoat-nan.md                rows=  2 chars=  5809
+[B21] cua-hang-khi-dot/chung/13-chua-chay.md                rows=  7 chars=  1334
+[B21] cua-hang-khi-dot/chung/14-cap-dien.md                 rows=  5 chars=  1305
+[B21] cua-hang-khi-dot/chung/22-an-toan-cong-nghe.md        rows= 21 chars=  3936
+[B21] TONG 54 / 54 dong nguon ; 9 muc: quy-mo, an-toan-cong-nghe, giao-thong-xe-chua-chay, bac-chiu-lua, khoang-cach, thoat-nan, ngan-chay, cap-dien, chua-chay

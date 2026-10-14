@@ -143,6 +143,14 @@ def test_rule_keys_override_va_loai_chua_co(tmp_path):
     ("Nhà 2", "", "F1.1", None),                                                          # F1.1 = nhà trẻ hoặc bệnh viện
     ("Nhà 3", "", "F1.2; F3.2", None),                                                    # nhiều nhóm -> hỗn hợp?, người chốt
     ("Phòng bơm và bể nước ngầm PCCC 140m3", "Phòng bơm PCCC", None, "tram-bom"),
+    # công trình đặc thù: từ khoá cụ thể thắng từ khoá chung ("KHO" ⊂ "KHO XĂNG DẦU")
+    ("Kho xăng dầu Nhà Bè", "", "F5.2", "kho-xang-dau"),
+    ("Kho chứa LPG 2000 tấn", "", None, "kho-lpg"),
+    ("Trạm chiết nạp LPG", "", None, "tram-chiet-lpg"),
+    ("Cửa hàng xăng dầu số 5", "", None, "cua-hang-xang-dau"),
+    ("Nhà điều hành", "Nhà máy điện mặt trời 50 MWp", None, "dien-mat-troi"),
+    ("Kho chứa vật liệu nổ công nghiệp", "", None, "kho-vlncn"),
+    ("Kho chứa LNG", "", None, "kho-lng"),
 ])
 def test_chon_bang_theo_cong_nang(ten, cn, nhom, loai):
     from pccc_checker.pipeline.loai_hinh import chon

@@ -1,0 +1,17 @@
+---
+chuyen_de: khoang-cach
+muc: 5 - Khoảng cách an toàn PCCC  (so thu tu muc trong bang goc B19)
+phan: 1/1  tieu muc: 5.1, 5.2
+ap_dung: loai_hinh=cua-hang-xang-dau (Cửa hàng xăng dầu) ; moi chieu cao
+nguon: bang doi chieu mau B19 (Cửa hàng xăng dầu); QCVN 06:2022/BXD + Sua doi 1:2023 va cac TCVN ghi o cot Dieu khoan
+so_dong: 7
+---
+| ID | TT | Nội dung đối chiếu | Lưu ý khi đối chiếu | Quy định | Điều khoản |
+|---|---|---|---|---|---|
+| XD-KC-001 | 5 | Khoảng cách an toàn PCCC |  |  |  |
+| XD-KC-002 | 5.1 | Khoảng cách an toàn từ bể chứa và cột bơm đến các công trình bên ngoài của hàng: |  | Khoảng cách an toàn và giảm khoảng cách:<br>- Công trình dân dụng có:<br>- Khoảng cách an toàn từ bể chứa và cột bơm đến nơi tập trung đông người được giảm xuống còn 25 mét (17 mét trường hợp có hệ thống thu hồi hơi xăng dầu) nếu cửa hàng xăng dầu được trang bị hệ thống chữa cháy cố định hoặc bán cố định<br>Chú thích:<br>+ Bậc chịu lửa của công trình theo QCVN 06:2022/BXD.<br>+ Khoảng cách đối với bể tính từ mép bể.<br>+ Khoảng cách đối với cột bơm tính từ tâm cột bơm.<br>+ Khoảng cách đối với công trình công cộng (trường học, bệnh viện, trung tâm thương mại, triển lãm quốc gia) tính đến ranh giới công trình.<br>+ Khoảng cách đối với công trình dân dụng tính đến chân công trình.<br>* Theo quy định hiện hành về hành lang an toàn lưới điện và của ngành viễn thông (phải có văn bản bên điện và bên viễn thông). Trường hợp không có trong quá trình thẩm duyệt có thể áp dụng quy định về hành lang an toàn lưới điện đối với các công trình xây dựng dưới đường dây điện, giai đoạn nghiệm thu yêu cầu phải có.<br>“Khoảng cách từ bất kỳ bộ phận nào của nhà ở, công trình đến dây dẫn điện gần nhất khi dây ở trạng thái võng cực đại không nhỏ hơn:<br>* Đến 22 KV:<br>-Dây bọc: 1m.<br>- Dây trần: 2m.<br>* Đến 35 KV: 3m.<br>- Dây bọc: 1,5m.<br>- Dây trần: 3m.<br>* Đến 110 KV: 4m.<br>* Đến 500 KV:<br>Không cho phép tồn tại nhà ở và công trình trong hành lang bảo vệ đường dây 500 KV<br>- Đối với đường dây tín hiệu: “Khoảng cách thẳng đứng nhỏ nhất cho phép từ cáp treo đến các công trình cố định: 1m.<br>- Khoảng cách đường cột treo cáp tới nhà cửa và các vật kiến trúc khác: 3,5 m | Nghị định số 106/2005/NĐ-CP ngày 17/8/2005; Nghị định số 81/2009/NĐ-CP ngày 12/10/2009; Khoản 3, Đ 51 Luật Điện lực<br>Nghị định số<br>14/2014/NĐ-CP<br>Ngày 26/02/2014 của Chính phủ; |
+| XD-KC-003 | 5.2 | Khoảng cách giữa các hạng mục xây dựng trong cửa hàng: |  | Khoảng cách tối thiểu giữa các hạng mục xây dựng trong cửa hàng phải đảm bảo các yêu cầu sau: |  |
+| XD-KC-004 | - | Bể chứa ngầm đến: |  | - Bể chứa ngầm đến bể chứa ngầm: ≥0,5m.<br>- Bể chứa ngầm đến cột bơm: Không quy định.<br>- Bể chứa ngầm đến gian bán hàng: ≥ 2 m (không quy định khoảng cách an toàn giữa các bể chứa với gian bán hàng phía tường không có cửa sổ, cửa đi) | K7, Đ6<br>Bảng 2 QCVN 01:2020/<br>BCT |
+| XD-KC-005 | - | Họng nhập kín đến: |  | - Họng nhập kín đến bể chứa ngầm: Không quy định.<br>- Họng nhập kín đến cột bơm: Không quy định.<br>- Họng nhập kín đến gian bán hàng: ≥ 3m. | K7, Đ7<br>Bảng 2 QCVN 01:2020/<br>BCT |
+| XD-KC-006 | - | Cột bơm đến: |  | - Cột bơm đến bể chứa ngầm: Không quy định.<br>- Cột bơm đến cọt bơm: Không quy định.<br>- Cột bơm đến gian bán hàng: Không quy định. | K7, Đ7<br>Bảng 2 QCVN 01:2020/<br>BCT |
+| XD-KC-007 | - | Các hạng mục xây dựng khác đến: |  | - Các hạng mục xây dựng khác đến bể chứa ngầm: ≥ 2 m.<br>- Các hạng mục xây dựng khác đến cột bơm: ≥ 2 m.<br>- Các hạng mục xây dựng khác đến gian bán hàng: ≥ 2 m | K7, Đ7<br>Bảng 2 QCVN 01:2020/<br>BCT |

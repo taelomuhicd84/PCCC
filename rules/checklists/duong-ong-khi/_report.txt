@@ -1,0 +1,7 @@
+[B22] duong-ong-khi/chung/01-quy-mo.md                   rows=  6 chars=  3115
+[B22] duong-ong-khi/chung/03-khoang-cach.md              rows=  5 chars=  1344
+[B22] duong-ong-khi/chung/04-giao-thong-xe-chua-chay.md  rows=  9 chars=  5068
+[B22] duong-ong-khi/chung/11-binh-chua-chay.md           rows=  1 chars=   610
+[B22] duong-ong-khi/chung/12-bao-chay.md                 rows=  4 chars=  1027
+[B22] duong-ong-khi/chung/14-cap-dien.md                 rows=  9 chars=  2416
+[B22] TONG 34 / 34 dong nguon ; 6 muc: quy-mo, khoang-cach, giao-thong-xe-chua-chay, bao-chay, binh-chua-chay, cap-dien

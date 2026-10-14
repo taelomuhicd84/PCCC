@@ -45,6 +45,27 @@ LOAI = {
                   ["F5.1"], r"NHÀ XƯỞNG|XƯỞNG|SẢN XUẤT"),
     "kho": ("KHO", "Nhà kho", [("B18", "chung", None)],
             ["F5.2"], r"NHÀ KHO|\bKHO\b"),
+    # công trình đặc thù (xăng dầu, khí đốt, vật liệu nổ, năng lượng) — từ khoá cụ thể thắng từ khoá chung ("KHO")
+    "cua-hang-xang-dau": ("XD", "Cửa hàng xăng dầu", [("B19", "chung", None)],
+                          [], r"CỬA HÀNG XĂNG|TRẠM XĂNG|CÂY XĂNG|CỬA HÀNG (KINH DOANH )?NHIÊN LIỆU"),
+    "kho-xang-dau": ("KXD", "Kho xăng dầu", [("B20", "chung", None)],
+                     [], r"KHO XĂNG|KHO DẦU|KHO NHIÊN LIỆU|BỂ CHỨA XĂNG|TỔNG KHO XĂNG"),
+    "cua-hang-khi-dot": ("KD", "Cửa hàng kinh doanh khí đốt", [("B21", "chung", None)],
+                         [], r"CỬA HÀNG (KINH DOANH )?(KHÍ|GAS|LPG)|CỬA HÀNG CHAI KHÍ"),
+    "duong-ong-khi": ("OK", "Đường ống khí", [("B22", "chung", None)],
+                      [], r"ĐƯỜNG ỐNG (DẪN |CẤP )?KHÍ"),
+    "tram-chiet-lpg": ("TC", "Kho và trạm san chiết nạp LPG", [("B23", "chung", None)],
+                       [], r"(SAN|SANG) CHIẾT|CHIẾT NẠP"),
+    "kho-lpg": ("LPG", "Kho chứa LPG", [("B24", "chung", None)],
+                [], r"KHO (CHỨA )?LPG|BỒN (CHỨA )?LPG|KHO (CHỨA )?KHÍ HÓA LỎNG"),
+    "kho-lng": ("LNG", "Kho chứa LNG", [("B25", "chung", None)],
+                [], r"KHO (CHỨA )?LNG|\bLNG\b|KHÍ THIÊN NHIÊN HÓA LỎNG"),
+    "kho-vlncn": ("VLN", "Kho chứa vật liệu nổ công nghiệp", [("B26", "chung", None)],
+                  [], r"KHO (CHỨA )?(VẬT LIỆU|THUỐC) NỔ|VẬT LIỆU NỔ|THUỐC NỔ"),
+    "dien-gio": ("DG", "Nhà máy điện gió", [("B27", "chung", None)],
+                 [], r"ĐIỆN GIÓ|TURBINE GIÓ|TUA BIN GIÓ"),
+    "dien-mat-troi": ("MT", "Nhà máy điện mặt trời", [("B28", "chung", None)],
+                      [], r"ĐIỆN MẶT TRỜI|NĂNG LƯỢNG MẶT TRỜI|QUANG ĐIỆN|SOLAR"),
 }
 # hạng mục không dùng bảng công trình mà skill hệ thống riêng (người dùng 14/10/2026)
 RIENG = {"tram-bom": r"PHÒNG BƠM|TRẠM BƠM|NHÀ BƠM"}
@@ -69,8 +90,14 @@ def _up(t: str) -> str:
 
 
 def theo_tu_khoa(text: str) -> list[str]:
+    """Loại có từ khoá trong text; chữ khớp nằm trọn trong chữ khớp của loại khác ("KHO" ⊂ "KHO XĂNG") -> bỏ loại chung."""
     u = _up(text)
-    return [k for k, rx in _KW.items() if rx.search(u)]
+    hit = {k: [m.span() for m in rx.finditer(u)] for k, rx in _KW.items()}
+    hit = {k: v for k, v in hit.items() if v}
+
+    def trong(a, b):
+        return all(any(s2 <= s1 and e1 <= e2 and (s1, e1) != (s2, e2) for s2, e2 in hit[b]) for s1, e1 in hit[a])
+    return [k for k in hit if not any(trong(k, o) and not trong(o, k) for o in hit if o != k)]
 
 
 def chon(ten: str, cong_nang: str, nhom: str | None, override: str | None = None) -> tuple[str | None, str, list[str]]:

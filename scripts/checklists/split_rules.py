@@ -29,7 +29,7 @@ def row_line(rid, r):
 
 
 def _tt(r):
-    return r[1].replace(" ", "")
+    return r[1].replace(" ", "").rstrip(".")  # B22 ghi "1." cho muc lon
 
 
 def parts_of(rs):

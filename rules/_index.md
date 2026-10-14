@@ -25,7 +25,18 @@ Nhiều công năng / không chắc → `chua-xac-dinh` + ghi chú ứng viên (
 | gara | B16 | chung | GR | — | gara, nhà để xe |
 | nha-xuong | B17 | chung | SX | F5.1 | nhà xưởng, sản xuất |
 | kho | B18 | chung | KHO | F5.2 | nhà kho, kho |
+| cua-hang-xang-dau | B19 | chung | XD | — | cửa hàng xăng, trạm xăng, cây xăng |
+| kho-xang-dau | B20 | chung | KXD | — | kho xăng, kho dầu, kho nhiên liệu |
+| cua-hang-khi-dot | B21 | chung | KD | — | cửa hàng (kinh doanh) khí / gas / LPG |
+| duong-ong-khi | B22 | chung | OK | — | đường ống (dẫn/cấp) khí |
+| tram-chiet-lpg | B23 | chung | TC | — | san chiết, chiết nạp |
+| kho-lpg | B24 | chung | LPG | — | kho (chứa) LPG, bồn LPG |
+| kho-lng | B25 | chung | LNG | — | kho (chứa) LNG, khí thiên nhiên hóa lỏng |
+| kho-vlncn | B26 | chung | VLN | — | (kho chứa) vật liệu nổ, thuốc nổ |
+| dien-gio | B27 | chung | DG | — | điện gió, tua bin gió |
+| dien-mat-troi | B28 | chung | MT | — | điện mặt trời, quang điện, solar |
 | (riêng) tram-bom | B36 | — | — | — | phòng bơm, trạm bơm → skill `tram-bom` |
+Từ khoá cụ thể thắng từ khoá chung: "kho xăng dầu" → kho-xang-dau, không phải kho (B18).
 Chiều cao PCCC > dải cao nhất (150 m) → ngoài phạm vi: dừng, báo người dùng.
 Thêm loại hình: 1 dòng `LOAI` trong `loai_hinh.py` → `docx_to_md.py` + `split_rules.py <md> rules/checklists <mẫu>`. Skill không sửa.
 ## Chuyên đề = mục lớn của bảng đối chiếu → file `NN-<slug>[.<phần>].md` (trong thư mục bộ đã chọn)
@@ -35,7 +46,7 @@ Nhận mục theo TÊN (số thứ tự lệch giữa các bảng); khai báo du
 05 bo-tri-cong-nang · 06 ngan-chay · 07 thoat-nan · 08 gian-lanh-nan (chỉ bảng > 50 m) · 09 thang-may-chua-chay ·
 10 chong-tu-khoi · 11 binh-chua-chay · 12 bao-chay · 13 chua-chay · 14 cap-dien · 15 chieu-sang-su-co ·
 16 pha-do-bao-ho · 17 chong-set · 18 lien-lac · 19 tram-bom (mẫu B36, hạng mục phòng bơm) ·
-20 co-gioi (chỉ B17, B18) · 21 bien-quang-cao (chỉ B14, B15). Bảng có mục nào thì thư mục bộ có file mục đó.
+20 co-gioi (B17, B18, B20, B24) · 21 bien-quang-cao (B14, B15) · 22 an-toan-cong-nghe (công trình đặc thù B19–B25). Bảng có mục nào thì thư mục bộ có file mục đó.
 
 ## Luật chạy bằng số (0 token)
 `qcvn06_2022_sd01_2023.yaml` — rule engine (`check`). ID YAML cũng là "bảng tra" hợp lệ cho findings.jsonl.
