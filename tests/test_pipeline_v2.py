@@ -117,7 +117,11 @@ def test_rule_keys_khach_san_k2(tmp_path):
     assert (h["loai_hinh"], h["bo"], h["thieu"]) == ("khach-san", "k2", [])
     # 1 mục bảng = 1 chuyên đề; B7.2 có 17 mục (không có gian lánh nạn); mục dài tách phần .1 .2 …
     assert len(h["file"]) == 17 and "gian-lanh-nan" not in h["file"]
-    assert h["file"]["bao-chay"] == ["rules/checklists/khach-san/k2/12-bao-chay.md"]
+    # mẫu hệ thống nạp kèm: B35 vào báo cháy, B34 vào chống tụ khói, B37 + B38 vào chữa cháy
+    assert h["file"]["bao-chay"][0] == "rules/checklists/khach-san/k2/12-bao-chay.md"
+    assert any("/he-thong/B35/" in p for p in h["file"]["bao-chay"])
+    assert any("/he-thong/B34/" in p for p in h["file"]["chong-tu-khoi"])
+    assert {"B37", "B38"} <= {p.split("/")[3] for p in h["file"]["chua-chay"] if "/he-thong/" in p}
     assert all(".".join(p.split("/")[-1].split(".")[:-2]) == "07-thoat-nan" for p in h["file"]["thoat-nan"])
     assert all((PROJECT_ROOT / p).exists() for fs in h["file"].values() for p in fs)
 
@@ -151,6 +155,10 @@ def test_rule_keys_override_va_loai_chua_co(tmp_path):
     ("Nhà điều hành", "Nhà máy điện mặt trời 50 MWp", None, "dien-mat-troi"),
     ("Kho chứa vật liệu nổ công nghiệp", "", None, "kho-vlncn"),
     ("Kho chứa LNG", "", None, "kho-lng"),
+    ("Trạm biến áp 110kV", "", None, "tram-bien-ap"),
+    ("Hầm đường bộ Hải Vân", "", None, "ham-duong-bo"),
+    ("Tàu chở khách du lịch", "", None, "ptt-cho-khach"),
+    ("Tàu chở xăng dầu 500 tấn", "", None, "ptt-hang-nguy-hiem"),
 ])
 def test_chon_bang_theo_cong_nang(ten, cn, nhom, loai):
     from pccc_checker.pipeline.loai_hinh import chon
@@ -215,3 +223,10 @@ def test_bo_bang_khach_san_du_muc():
     for bo, n in (("k1", 17), ("k2", 17), ("k3", 18)):
         cds = {p.name.split(".")[0][3:] for p in (d / bo).glob("*.md")}
         assert cds <= set(rule_keys.CHUYEN_DE) and len(cds) == n, bo
+
+
+def test_hang_muc_phong_bom_nap_mau_b36(tmp_path):
+    info = _info(**{"PHÒNG BƠM PCCC": {"chieu_cao_pccc": fv(3, "user", "confirmed")}})
+    (h,) = rule_keys.build_rule_keys(facts.build_facts(info), "x", tmp_path / "none.json")["hang_muc"]
+    assert h["loai_hinh"] == "tram-bom" and h["file"]["tram-bom"]
+    assert all("/he-thong/B36/" in p for p in h["file"]["tram-bom"])

@@ -19,7 +19,7 @@ from ..config import PROJECT_ROOT
 TT = ("D", "KD", "XM", "NA")
 TT_VI = {"D": "Đạt", "KD": "Không đạt", "XM": "Cần xác minh", "NA": "—"}
 KEYS = ("id", "hm", "tang", "cd", "rule", "yc", "ht", "tt", "ly_do", "truc", "trang", "bbox", "conf", "evid")
-CHECKLIST_ID = re.compile(r"^\|\s*([A-Z]{2,3}\d?-[A-Z]+-\d{3})\s*\|", re.M)  # KS2-TN-012, BV-TN-003 (pipeline/loai_hinh.ma_id)
+CHECKLIST_ID = re.compile(r"^\|\s*([A-Z]{2,3}\d{0,2}-[A-Z]+-\d{3})\s*\|", re.M)  # KS2-TN-012, BV-TN-003, HT34-KHOI-001 (pipeline/loai_hinh)
 
 
 def known_rules(root: Path = PROJECT_ROOT) -> set[str]:

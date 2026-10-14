@@ -1,0 +1,10 @@
+[B33] CANH BAO muc 'Trang bị phương tiện cứu sinh' -> 'cuu-sinh' da co truoc do, gop vao
+[B33] ptt-cho-khach/chung/01-quy-mo.md                   rows=  1 chars=  1552
+[B33] ptt-cho-khach/chung/06-ngan-chay.md                rows=  2 chars=   644
+[B33] ptt-cho-khach/chung/07-thoat-nan.md                rows=  1 chars=   592
+[B33] ptt-cho-khach/chung/11-binh-chua-chay.md           rows=  1 chars=   650
+[B33] ptt-cho-khach/chung/12-bao-chay.md                 rows=  1 chars=   572
+[B33] ptt-cho-khach/chung/13-chua-chay.md                rows=  4 chars=   811
+[B33] ptt-cho-khach/chung/14-cap-dien.md                 rows=  2 chars=   634
+[B33] ptt-cho-khach/chung/23-cuu-sinh.md                 rows=  2 chars=  1227
+[B33] TONG 14 / 14 dong nguon ; 8 muc: quy-mo, ngan-chay, cap-dien, bao-chay, chua-chay, binh-chua-chay, cuu-sinh, thoat-nan

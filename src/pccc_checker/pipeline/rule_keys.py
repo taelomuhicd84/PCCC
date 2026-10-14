@@ -10,7 +10,7 @@ from pathlib import Path
 
 from ..config import PROJECT_ROOT
 from .chuyen_de import MUC
-from .loai_hinh import LOAI, chon
+from .loai_hinh import HE_THONG, LOAI, chon
 
 CHECKLISTS = "rules/checklists"
 LUON_NAP = ["rules/_index.md", "rules/qcvn06/00-dinh-nghia.md"]
@@ -88,8 +88,16 @@ def keys_for(h: dict, overrides: list[dict]) -> dict:
                           for p in sorted(d.glob(f"{n}*.md")) if p.stem == n or p.stem.startswith(n + ".")]
                      for cd, n in CHUYEN_DE.items()}
             files = {cd: fs for cd, fs in files.items() if fs}
+    elif loai == "tram-bom":
+        files = {"tram-bom": []}
     elif loai == "chua-xac-dinh":
         ghi_chu.append("chưa chọn được bảng đối chiếu -> mọi chuyên đề XM; chỉ chạy luật YAML")
+    # mẫu hệ thống (B34 chống tụ khói, B35 báo cháy, B36 trạm bơm, B37/B38 chữa cháy) nạp KÈM file chuyên đề của bảng công trình
+    for mau, (cd, _, _) in HE_THONG.items():
+        d = PROJECT_ROOT / CHECKLISTS / "he-thong" / mau
+        if cd in files and d.is_dir():
+            files[cd] += [f"{CHECKLISTS}/he-thong/{mau}/{p.name}" for p in sorted(d.glob("*.md"))]
+    files = {cd: fs for cd, fs in files.items() if fs}
     if any(nguon.get(f) == "tinh" for f in can):
         ghi_chu.append("có khóa lấy theo công năng (tinh), chưa có chữ trên bản vẽ -> Cổng 1 phải xác nhận")
     mau = next((m for m, b, _ in LOAI[loai][2] if b == bo), None) if loai in LOAI else None

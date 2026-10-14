@@ -1,0 +1,14 @@
+[B34] he-thong/B34/10-chong-tu-khoi.1.md      rows= 39 chars= 34009
+[B34] he-thong/B34/10-chong-tu-khoi.2.md      rows= 16 chars= 17371
+[B34] TONG 55 dong -> chuyen de chong-tu-khoi
+[B35] he-thong/B35/12-bao-chay.1.md           rows=  1 chars=  1122
+[B35] he-thong/B35/12-bao-chay.2.md           rows= 40 chars= 21566
+[B35] TONG 41 dong -> chuyen de bao-chay
+[B36] he-thong/B36/19-tram-bom.1.md           rows= 45 chars= 15336
+[B36] he-thong/B36/19-tram-bom.2.md           rows= 40 chars= 13770
+[B36] TONG 85 dong -> chuyen de tram-bom
+[B37] he-thong/B37/13-chua-chay.1.md          rows= 17 chars= 14608
+[B37] he-thong/B37/13-chua-chay.2.md          rows= 13 chars=  6554
+[B37] TONG 30 dong -> chuyen de chua-chay
+[B38] he-thong/B38/13-chua-chay.md            rows= 14 chars= 12333
+[B38] TONG 14 dong -> chuyen de chua-chay

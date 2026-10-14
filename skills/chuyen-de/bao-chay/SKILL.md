@@ -11,7 +11,8 @@ Bảng tra: `rule_keys.json → file["bao-chay"]` (vd `rules/checklists/<loại 
 4. Cách kiểm — cột "Quy định" là căn cứ DUY NHẤT (ngưỡng lấy từ bảng, không từ trí nhớ; dẫn tới bảng số chưa có → XM ghi tên bảng):
    - Script / so số: thuộc diện trang bị theo ngưỡng số tầng/khối tích trong cột Quy định.
    - Cần phán đoán: hệ thống có trên bản vẽ hay chỉ trong thuyết minh; vùng báo cháy, đầu báo phù hợp không gian — chỉ xem ảnh cắt vùng (≤ 3 ảnh, lệnh `crops`), không xem cả trang.
-   Dòng ghi "Thực hiện theo bảng đối chiếu B35" → XM "chưa có mẫu B35" cho tới khi mẫu được chuẩn hoá.
+   Mẫu hệ thống B35 ĐÃ CÓ: `rules/checklists/he-thong/B35/*` nằm sẵn trong `rule_keys.file["bao-chay"]` (sau file bảng công trình).
+   Dòng "Thực hiện theo B35" → đối chiếu từng dòng của mẫu; mục 1 của mẫu = đối tượng trang bị: không thuộc diện → cả mẫu NA.
 5. Đầu ra: mỗi dòng bảng tra có nội dung kiểm (bỏ dòng chỉ là tiêu đề tiểu mục) = 1 dòng `findings.jsonl`:
    `{"hm","tang","cd":"bao-chay","rule":"<ID dòng, vd KS2-BAO-001>","yc","ht","tt":"D|KD|XM|NA","ly_do","truc","trang","bbox","conf","evid","dieu_khoan"}`
    - KD phải có trang + bbox (0–1) + evid (chữ nguyên văn trên bản vẽ) + điều khoản; thiếu → tự hạ XM.

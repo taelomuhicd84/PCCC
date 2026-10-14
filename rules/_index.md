@@ -35,7 +35,23 @@ Nhiều công năng / không chắc → `chua-xac-dinh` + ghi chú ứng viên (
 | kho-vlncn | B26 | chung | VLN | — | (kho chứa) vật liệu nổ, thuốc nổ |
 | dien-gio | B27 | chung | DG | — | điện gió, tua bin gió |
 | dien-mat-troi | B28 | chung | MT | — | điện mặt trời, quang điện, solar |
-| (riêng) tram-bom | B36 | — | — | — | phòng bơm, trạm bơm → skill `tram-bom` |
+| tram-bien-ap | B29 | chung | TBA | — | trạm biến áp, TBA, trạm điện |
+| ham-duong-bo | B30 | chung | HAM | — | hầm đường bộ, hầm giao thông |
+| tau-bien | B31 | chung | TAU | — | tàu biển |
+| ptt-hang-nguy-hiem | B32 | chung | PTH | — | tàu / sà lan … chở hàng nguy hiểm, xăng, dầu |
+| ptt-cho-khach | B33 | chung | PTK | — | tàu / ca nô / du thuyền … chở khách |
+| (riêng) tram-bom | B36 | — | HT36 | — | phòng bơm, trạm bơm → skill `tram-bom` + mẫu B36 |
+
+## Mẫu hệ thống → nạp KÈM chuyên đề (`rules/checklists/he-thong/<mẫu>/`, khai báo `HE_THONG` trong `loai_hinh.py`)
+Không phải loại công trình: là bảng chi tiết mà dòng "Thực hiện theo bảng đối chiếu B3x" của bảng công trình dẫn tới.
+`rule_keys.file[<chuyên đề>]` = file mục của bảng công trình + các phần của mẫu. Mục 1 mỗi mẫu = đối tượng trang bị.
+| Mẫu | Chuyên đề | Mã ID | Nội dung |
+|---|---|---|---|
+| B34 | chong-tu-khoi | HT34 | hút xả khói, cấp không khí (tăng áp) khi có cháy |
+| B35 | bao-chay | HT35 | đối tượng trang bị, yêu cầu chung báo cháy tự động |
+| B36 | tram-bom | HT36 | nhà/phòng trạm bơm, bơm, bơm bù áp, động cơ, tủ điều khiển, nguồn điện |
+| B37 | chua-chay | HT37 | cấp nước chữa cháy ngoài nhà (lưu lượng, thời gian, trụ nước, bể) |
+| B38 | chua-chay | HT38 | họng nước chữa cháy trong nhà (số tia, lưu lượng, đường ống, dự trữ) |
 Từ khoá cụ thể thắng từ khoá chung: "kho xăng dầu" → kho-xang-dau, không phải kho (B18).
 Chiều cao PCCC > dải cao nhất (150 m) → ngoài phạm vi: dừng, báo người dùng.
 Thêm loại hình: 1 dòng `LOAI` trong `loai_hinh.py` → `docx_to_md.py` + `split_rules.py <md> rules/checklists <mẫu>`. Skill không sửa.
@@ -46,7 +62,7 @@ Nhận mục theo TÊN (số thứ tự lệch giữa các bảng); khai báo du
 05 bo-tri-cong-nang · 06 ngan-chay · 07 thoat-nan · 08 gian-lanh-nan (chỉ bảng > 50 m) · 09 thang-may-chua-chay ·
 10 chong-tu-khoi · 11 binh-chua-chay · 12 bao-chay · 13 chua-chay · 14 cap-dien · 15 chieu-sang-su-co ·
 16 pha-do-bao-ho · 17 chong-set · 18 lien-lac · 19 tram-bom (mẫu B36, hạng mục phòng bơm) ·
-20 co-gioi (B17, B18, B20, B24) · 21 bien-quang-cao (B14, B15) · 22 an-toan-cong-nghe (công trình đặc thù B19–B25). Bảng có mục nào thì thư mục bộ có file mục đó.
+20 co-gioi (B17, B18, B20, B24) · 21 bien-quang-cao (B14, B15) · 22 an-toan-cong-nghe (công trình đặc thù B19–B25) · 23 cuu-sinh (phương tiện thủy B31–B33). Bảng có mục nào thì thư mục bộ có file mục đó.
 
 ## Luật chạy bằng số (0 token)
 `qcvn06_2022_sd01_2023.yaml` — rule engine (`check`). ID YAML cũng là "bảng tra" hợp lệ cho findings.jsonl.
@@ -57,4 +73,4 @@ Nguyên văn: `docs/regulations/QCVN 06 SỬA ĐỔI BỔ SUNG 10.2023.(pdf|docx
 
 ## Còn thiếu (gặp điều khoản cần số mà chưa có bảng → XM)
 Bảng số QCVN 06: 1–5, A.1–A.3, E.1/E.3/E.4, G.9, H.2, B.1, B.6; QCVN 13:2018; TCVN 6396-72:2010; TCVN 3890:2023.
-Mẫu hệ thống: B34, B35, B36–B44, B45, B46, B49, B50.
+Mẫu hệ thống chưa nạp: B39–B44 (chữa cháy tự động), B45, B46, B47, B48, B49, B50.

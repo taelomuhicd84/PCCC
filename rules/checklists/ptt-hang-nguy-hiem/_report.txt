@@ -1,0 +1,9 @@
+[B32] ptt-hang-nguy-hiem/chung/01-quy-mo.md                   rows=  1 chars=  1679
+[B32] ptt-hang-nguy-hiem/chung/06-ngan-chay.md                rows=  2 chars=   713
+[B32] ptt-hang-nguy-hiem/chung/07-thoat-nan.md                rows=  1 chars=   661
+[B32] ptt-hang-nguy-hiem/chung/11-binh-chua-chay.md           rows=  1 chars=   719
+[B32] ptt-hang-nguy-hiem/chung/12-bao-chay.md                 rows=  1 chars=   641
+[B32] ptt-hang-nguy-hiem/chung/13-chua-chay.md                rows=  4 chars=   880
+[B32] ptt-hang-nguy-hiem/chung/14-cap-dien.md                 rows=  2 chars=   703
+[B32] ptt-hang-nguy-hiem/chung/23-cuu-sinh.md                 rows=  1 chars=   685
+[B32] TONG 13 / 13 dong nguon ; 8 muc: quy-mo, ngan-chay, cap-dien, bao-chay, chua-chay, binh-chua-chay, cuu-sinh, thoat-nan

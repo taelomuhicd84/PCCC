@@ -1,0 +1,14 @@
+---
+chuyen_de: chong-tu-khoi
+muc: 4 - Giải pháp chống tụ khói (hút khói, tăng áp)  (so thu tu muc trong bang goc B31)
+phan: 1/1  tieu muc: 4.1, 4.2, 4.4
+ap_dung: loai_hinh=tau-bien (Phương tiện tàu biển) ; moi chieu cao
+nguon: bang doi chieu mau B31 (Phương tiện tàu biển); QCVN 06:2022/BXD + Sua doi 1:2023 va cac TCVN ghi o cot Dieu khoan
+so_dong: 4
+---
+| ID | TT | Nội dung đối chiếu | Lưu ý khi đối chiếu | Quy định | Điều khoản |
+|---|---|---|---|---|---|
+| TAU-KHOI-001 | 4 | Thông gió |  |  |  |
+| TAU-KHOI-002 | 4.1 | Bố trí chung |  | 1 Các quạt thông gió được lắp đặt trong buồng bơm hàng và buồng máy nén khí hàng phải được bố trí sao cho không xảy ra việc ngắt thông gió không mong muốn trong thời gian dài và không xảy ra hiện tượng tích tụ khí hoặc hơi. Trong trường hợp hư hỏng thông gió, thì phải có phát tín hiệu báo động liên tục tại vị trí có người trực, chẳng hạn như buồng lái hoặc buồng điều khiển máy, ngoài ra có thể trong buồng bơm hàng hoặc buồng máy nén khí hàng.<br>2 Các động cơ điện dùng cho quạt thông gió nêu ở -1 trên phải được đặt ngoài ống thông gió.<br>3 Các quạt thông gió nêu -1 trên phải là loại không sinh ra tia lửa.<br>4 Đối với các tàu dầu, bất kể các yêu cầu nêu ở 4.5.4-1(1), phần 5, Tỉ số trao đối thông gió phải tối thiểu là 30 lần trên 1 giờ trên cơ sở tổng thể tích của không gian được thông gió. Tuy nhiên, Đăng kiểm có thể xem xét không bắt buộc phải áp dụng yêu cầu này một cách thích hợp. | Điều 4.2.6<br>Chương 4<br>Phần 5<br>QCVN 21:2015/BGTVT |
+| TAU-KHOI-003 | 4.2 | Số lần thay đổi không khí |  | 1 Hệ thống thông gió buồng bơm hàng (1) Các buồng bơm hàng phải được thông gió cơ giới và khí thải ra từ các quạt hút phải được dẫn đến vị trí an toàn trên boong hở. Việc thông gió cho các buồng bơm này phải có đủ công suất để giảm đến mức tối thiểu khả năng tích tụ các hơi dễ cháy. Số lần thay đổi khí phải tối thiểu 20 lần/giờ, dựa trên tổng dung tích của buồng. | Điều 4.5.4<br>Chương 4<br>Phần 5<br>QCVN 21:2015/BGTVT |
+| TAU-KHOI-004 | 4.4 | Thoát khói từ buồng máy |  | 1 Phải áp dụng các quy định ở 8.3.1 cho các buồng máy loại A và, về nguyên tắc, cho cả các buồng máy khác.<br>2 Phải bố trí thích hợp để, trong trường hợp có cháy, khói có thể thoát ra khỏi buồng được bảo vệ, thoả mãn các quy định ở 9.5.2-1. Các hệ thống thông gió thông thường có thể được chấp nhận thoả mãn yêu cầu này.<br>3 Phải trang bị phương tiện điều khiển để khói có thể thoát ra, phương tiện điều khiển phải được bố trí bên ngoài khoang liên quan sao cho chúng không bị mất tác dụng khi có cháy trong buồng mà chúng phục vụ.<br>4 Phương tiện điều khiển nêu ở -3 trên phải được bố trí ở một vị trí điều khiển hoặc được tập trung ở càng ít vị trí càng tốt, thoả mãn yêu cầu của Đăng kiểm. Các vị trí điều khiển đó phải có lối đến an toàn từ boong hở. | Điều 8.3.1<br>Chương 8<br>Phần 5<br>QCVN 21:2015/BGTVT |

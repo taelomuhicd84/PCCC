@@ -14,11 +14,11 @@ import unicodedata
 MUC = [
     ("01", "quy-mo", "QM", "Xác định chiều cao PCCC, số tầng, nhóm nhà, hạng nguy hiểm cháy nổ, cấp nguy hiểm cháy",
      r"XAC DINH CHIEU CAO|NHOM NHA|^THONG TIN|^QUY MO|PHAN CAP|(HANG|MUC) NGUY HIEM|"
-     r"DANH MUC (CAC )?(QUY CHUAN|TIEU CHUAN)|DIEN TICH TANG|CHIEU CAO VA KHOI TICH|DUNG TICH",
+     r"DANH MUC (CAC )?(QUY CHUAN|TIEU CHUAN)|DIEN TICH TANG|CHIEU CAO VA KHOI TICH|DUNG TICH|HANG SAN XUAT|THONG SO CO BAN",
      r"TONG\s*MAT\s*BANG|MAT\s*BANG\s*(TONG\s*THE|DINH\s*VI|VI\s*TRI)|QUY\s*MO|THONG\s*KE\s*(HANG\s*MUC|DIEN\s*TICH)|"
      r"THUYET\s*MINH|BIA|DANH\s*MUC|GHI\s*CHU\s*PCCC|CO\s*CAU\s*SU\s*DUNG\s*DAT|MASTER\s*PLAN|SITE\s*PLAN|MAT\s*CAT|SECTION"),
     ("02", "bac-chiu-lua", "BCL", "Bậc chịu lửa",
-     r"BAC CHIU LUA",
+     r"BAC CHIU LUA|GIOI HAN CHIU LUA",
      r"BAC\s*CHIU\s*LUA|GIOI\s*HAN\s*CHIU\s*LUA|KET\s*CAU|MAT\s*CAT|GHI\s*CHU\s*PCCC|SECTION"),
     ("03", "khoang-cach", "KC", "Khoảng cách an toàn PCCC",
      r"KHOANG CACH",
@@ -32,10 +32,10 @@ MUC = [
      r"MAT\s*BANG\s*(TANG|LAU|TRET|HAM|MAI|LUNG)|MAT\s*BANG\s*BO\s*TRI|FLOOR\s*PLAN|\bPLANS?\b(?!.*MASTER)"),
     # mặt bằng tầng / mặt đứng / mặt cắt gán thêm tiểu mục ngang|đứng ở cd_of_sheet
     ("06", "ngan-chay", "NC", "Giải pháp ngăn cháy, chống cháy lan",
-     r"NGAN CHAY|BAO VE THU DONG|^(NEN|TUONG|MAI VA TRAN|CUA NHA) ",
+     r"NGAN CHAY|CHAY LAN|BAO VE THU DONG|KET CAU CHONG CHAY|^(NEN|TUONG|MAI VA TRAN|CUA NHA) ",
      r"NGAN\s*CHAY|KHOANG\s*CHAY|CHI\s*TIET\s*CUA|VAT\s*LIEU|HOAN\s*THIEN|HANH\s*LANG|GIEN?G\s*KY\s*THUAT|HOP\s*KY\s*THUAT"),
     ("07", "thoat-nan", "TN", "Lối, đường thoát nạn",
-     r"THOAT NAN",
+     r"THOAT NAN|LOI QUA LAI",
      r"THOAT\s*NAN|CHI\s*TIET\s*CUA|CAU\s*THANG|THANG\s*(BO|SAT|THEP|THOAT)|BUONG\s*THANG|\bB?TB\s*\d|CUA\s*(DI|THOAT)|THONG\s*KE\s*CUA|"
      r"MAT\s*BANG\s*(TANG|LAU|TRET|HAM)|STAIR|DOOR|EXIT\s*PLAN|ESCAPE"),
     ("08", "gian-lanh-nan", "GLN", "Gian lánh nạn",
@@ -45,17 +45,17 @@ MUC = [
      r"THANG MAY CHUA CHAY",
      r"THANG\s*MAY"),
     ("10", "chong-tu-khoi", "KHOI", "Giải pháp chống tụ khói (hút khói, tăng áp)",
-     r"TU KHOI|HUT KHOI",
+     r"TU KHOI|HUT KHOI|THONG GIO",
      r"HUT\s*KHOI|THOAT\s*KHOI|TANG\s*AP|THONG\s*GIO|TU\s*KHOI"),
     ("11", "binh-chua-chay", "BCC", "Bình chữa cháy (phương tiện chữa cháy ban đầu)",
-     r"BINH CHUA CHAY|CHUA CHAY BAN DAU",
+     r"BINH CHUA CHAY|CHUA CHAY BAN DAU|XACH TAY",
      r"BINH\s*CHUA|BAN\s*DAU"),
     ("12", "bao-chay", "BAO", "Hệ thống báo cháy",
      r"BAO CHAY|NONG DO KHI",
      r"BAO\s*CHAY"),
     ("13", "chua-chay", "CC", "Hệ thống chữa cháy",
      r"^(HE THONG )?CHUA CHAY|CAP NUOC CHUA CHAY|HONG NUOC|CAP THOAT NUOC|TRANG BI PHONG CHAY|"
-     r"THIET BI PCCC|PHUONG TIEN PCCC|BAO VE CHU DONG|CHUA CHAY VA CUU NAN",
+     r"THIET BI PCCC|PHUONG TIEN PCCC|HE THONG PCCC|BAO VE CHU DONG|CHUA CHAY VA CUU NAN",
      r"(?<!MAY )(?<!XE )CHUA CHAY|SPRINKLER|SPINKLER|TRU\s*CHUA|HONG\s*CHUA|BE\s*NUOC|DRENCHER"),
     ("14", "cap-dien", "DIEN", "Giải pháp cấp điện cho hệ thống PCCC",
      r"CAP DIEN|HE THONG DIEN|NGUON DIEN|AN TOAN DIEN",
@@ -64,13 +64,13 @@ MUC = [
      r"CHIEU SANG SU CO|LOA THONG BAO",
      r"CHIEU\s*SANG|SU\s*CO|EXIT|CHI\s*DAN|LOA"),
     ("16", "pha-do-bao-ho", "PD", "Dụng cụ phá dỡ thông thường, phương tiện bảo hộ chống khói",
-     r"PHA DO|MAT NA",
+     r"PHA DO|MAT NA|DUNG CU CHUA CHAY",
      r"PHA\s*DO|BAO\s*HO|MAT\s*NA"),
     ("17", "chong-set", "SET", "Phương án chống sét",
      r"CHONG SET",
      r"CHONG\s*SET|THU\s*SET"),
     ("18", "lien-lac", "LL", "Hệ thống liên lạc",
-     r"LIEN LAC",
+     r"LIEN LAC|DIEN THOAI",
      r"LIEN\s*LAC|DIEN\s*THOAI"),
     # không phải mục của bảng công trình: mẫu hệ thống B36 — người dùng yêu cầu skill riêng (14/10/2026)
     ("19", "tram-bom", "TBOM", "Trạm bơm cấp nước chữa cháy (mẫu B36)",
@@ -88,11 +88,15 @@ MUC = [
      r"AN TOAN CONG NGHE|BON (BE|CHUA)|LAP DAT BON|TON (CHUA|TRU)|SANG CHIET|XEP CHAI|KHO CHUA|YEU CAU DOI VOI KHO|"
      r"THU HOI HOI|THU GOM|NGUON GAY CHAY|YEU CAU CHUNG DOI VOI CAC CUA HANG|DUONG ONG CONG NGHE|NUOC THAI",
      r"CONG\s*NGHE|BON\s*(BE|CHUA)|CHIET\s*NAP|SAN\s*CHIET|THU\s*HOI\s*HOI|TRU\s*BOM\s*XANG|CAY\s*XANG|DUONG\s*ONG\s*(KHI|DAU)"),
+    # phương tiện thủy B31–B33
+    ("23", "cuu-sinh", "CSN", "Trang bị phương tiện cứu sinh (phương tiện thủy)",
+     r"CUU SINH",
+     r"CUU\s*SINH|PHAO|XUONG\s*CUU"),
 ]
 SLUGS = [m[1] for m in MUC]
 BY_SLUG = {m[1]: m for m in MUC}
 # tên mục nào chứa tên mục khác ("đèn chiếu sáng sự cố và chỉ dẫn THOÁT NẠN", "THANG MÁY CHỮA CHÁY") -> xét trước
-_THU_TU_NHAN = ["tram-bom", "an-toan-cong-nghe", "co-gioi", "chieu-sang-su-co", "thang-may-chua-chay", "binh-chua-chay", "bao-chay", "gian-lanh-nan",
+_THU_TU_NHAN = ["tram-bom", "an-toan-cong-nghe", "co-gioi", "cuu-sinh", "lien-lac", "chieu-sang-su-co", "thang-may-chua-chay", "binh-chua-chay", "bao-chay", "gian-lanh-nan",
                 "pha-do-bao-ho", "cap-dien"] + SLUGS
 _NHAN = [(s, re.compile(BY_SLUG[s][4])) for s in dict.fromkeys(_THU_TU_NHAN)]
 _TU_KHOA = [(m[1], re.compile(m[5])) for m in MUC]

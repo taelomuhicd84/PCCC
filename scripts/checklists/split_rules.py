@@ -9,7 +9,7 @@ import sys, re, json, os, collections
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "src"))
 from pccc_checker.pipeline.chuyen_de import BY_SLUG, muc_of  # noqa: E402
-from pccc_checker.pipeline.loai_hinh import LOAI, MAU, file_md, ma_id  # noqa: E402
+from pccc_checker.pipeline.loai_hinh import HE_THONG, LOAI, MAU, file_md, ma_id  # noqa: E402
 
 GIOI_HAN = 12000  # ky tu / file (~3-4k token)
 
@@ -32,14 +32,14 @@ def _tt(r):
     return r[1].replace(" ", "").rstrip(".")  # B22 ghi "1." cho muc lon
 
 
-def parts_of(rs):
-    """Gom cac tieu muc cap 2 lien tiep thanh phan <= GIOI_HAN ky tu; muc ngan -> 1 phan."""
+def parts_of(rs, cap=r"\d+\.\d+"):
+    """Gom cac tieu muc (mac dinh cap 2; mau he thong: cap 1) lien tiep thanh phan <= GIOI_HAN ky tu; ngan -> 1 phan."""
     if sum(len(row_line("X", r)) for r in rs) <= GIOI_HAN:
         return [rs]
     groups, cur = [], []
     for r in rs:
         # dong tieu de muc lon (TT = "7") di cung tieu muc dau, khong thanh phan rieng
-        if re.fullmatch(r"\d+\.\d+", _tt(r)) and any(not re.fullmatch(r"\d+", _tt(x)) for x in cur):
+        if re.fullmatch(cap, _tt(r)) and any(not re.fullmatch(r"\d+", _tt(x)) or cap == r"\d+" for x in cur):
             groups.append(cur)
             cur = []
         cur.append(r)
@@ -125,11 +125,57 @@ def write_bo(out, mau, buckets, so_goc, report, src_map):
     return total
 
 
+def write_he_thong(out, mau, rows, report, src_map):
+    """Mau he thong (B34...): ca bang = 1 chuyen de, chia phan theo muc cap 1 cua chinh bang do."""
+    cd, pre, ten = HE_THONG[mau]
+    nn, _, short, _ = BY_SLUG[cd][:4]
+    rs = [r for r in rows if _tt(r) != "TT" and not all(re.fullmatch(r"\d+", c.strip() or "x") for c in r[1:6])]
+    first = next((i for i, r in enumerate(rs) if re.fullmatch(r"\d+", _tt(r))), 0)
+    if first:
+        report.append(f"[{mau}] bo {first} dong dau bieu truoc muc 1")
+    rs = rs[first:]
+    d = os.path.join(out, "he-thong", mau)
+    os.makedirs(d, exist_ok=True)
+    for old in os.listdir(d):
+        os.remove(os.path.join(d, old))
+    parts, i = parts_of(rs, r"\d+"), 0
+    for pi, prs in enumerate(parts, 1):
+        phan = f".{pi}" if len(parts) > 1 else ""
+        mucs = "; ".join(_tt(r) + " " + r[2].split("<br>")[0][:40] for r in prs if re.fullmatch(r"\d+", _tt(r)))
+        lines = ["---", f"chuyen_de: {cd}", f"mau_he_thong: {mau} - {ten}", f"phan: {pi}/{len(parts)}  muc: {mucs}",
+                 f"ap_dung: nap kem file chuyen de {cd} cua bang cong trinh (dong 'Thuc hien theo {mau}'); muc dau = doi tuong trang bi",
+                 f"nguon: bang doi chieu mau {mau} ({ten}); QCVN 06:2022/BXD + Sua doi 1:2023 va cac TCVN ghi o cot Dieu khoan",
+                 f"so_dong: {len(prs)}", "---",
+                 "| ID | TT | Nội dung đối chiếu | Lưu ý khi đối chiếu | Quy định | Điều khoản |", "|---|---|---|---|---|---|"]
+        for r in prs:
+            i += 1
+            rid = f"{pre}-{short}-{i:03d}"
+            src_map[rid] = {"mau": mau, "row": r[0], "cd": cd}
+            lines.append(row_line(rid, r))
+        path = os.path.join(d, f"{nn}-{cd}{phan}.md")
+        open(path, "w", encoding="utf-8").write("\n".join(lines) + "\n")
+        report.append(f"[{mau}] he-thong/{mau}/{os.path.basename(path):<26} rows={len(prs):>3} chars={os.path.getsize(path):>6}")
+    report.append(f"[{mau}] TONG {i} dong -> chuyen de {cd}")
+
+
 def run(mddir, out, maus=None):
-    maus = maus or [m for m in MAU if os.path.exists(os.path.join(mddir, file_md(m) + ".md"))]
+    have = lambda m: os.path.exists(os.path.join(mddir, file_md(m) + ".md"))  # noqa: E731
+    maus = maus or [m for m in list(MAU) + list(HE_THONG) if have(m)]
+    ht = [m for m in maus if m in HE_THONG]
+    if ht:
+        smp = os.path.join(out, "he-thong", "src_map.json")
+        src_map = json.load(open(smp, encoding="utf-8")) if os.path.exists(smp) else {}
+        src_map = {k: v for k, v in src_map.items() if v.get("mau") not in ht}
+        report = []
+        for m in ht:
+            write_he_thong(out, m, parse(os.path.join(mddir, file_md(m) + ".md")), report, src_map)
+        json.dump(src_map, open(smp, "w", encoding="utf-8"), ensure_ascii=False)
+        open(os.path.join(out, "he-thong", "_report.txt"), "w", encoding="utf-8").write("\n".join(report) + "\n")
+        print("\n".join(x for x in report if "TONG" in x or "bo " in x))
     by_loai = collections.defaultdict(list)
     for m in maus:
-        by_loai[MAU[m][0]].append(m)
+        if m in MAU:
+            by_loai[MAU[m][0]].append(m)
     for loai, ms in by_loai.items():
         smp = os.path.join(out, loai, "src_map.json")
         src_map = json.load(open(smp, encoding="utf-8")) if os.path.exists(smp) else {}

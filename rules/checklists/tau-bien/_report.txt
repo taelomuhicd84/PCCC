@@ -1,0 +1,14 @@
+[B31] bo qua dong ngoai muc: R004
+[B31] CANH BAO muc 'Chữa cháy bằng khí CO2' -> 'chua-chay' da co truoc do, gop vao
+[B31] tau-bien/chung/01-quy-mo.md                   rows=  1 chars=  5763
+[B31] tau-bien/chung/06-ngan-chay.md                rows=  5 chars=  5641
+[B31] tau-bien/chung/07-thoat-nan.md                rows=  6 chars=  6898
+[B31] tau-bien/chung/10-chong-tu-khoi.md            rows=  4 chars=  3601
+[B31] tau-bien/chung/11-binh-chua-chay.md           rows=  3 chars=  3120
+[B31] tau-bien/chung/12-bao-chay.md                 rows=  4 chars=  4235
+[B31] tau-bien/chung/13-chua-chay.1.md              rows= 13 chars= 14639
+[B31] tau-bien/chung/13-chua-chay.2.md              rows=  2 chars=  4155
+[B31] tau-bien/chung/14-cap-dien.md                 rows=  4 chars=  4249
+[B31] tau-bien/chung/16-pha-do-bao-ho.md            rows=  1 chars=  2416
+[B31] tau-bien/chung/23-cuu-sinh.md                 rows=  1 chars=  1120
+[B31] TONG 44 / 45 dong nguon ; 10 muc: ngan-chay, thoat-nan, cap-dien, chong-tu-khoi, quy-mo, bao-chay, chua-chay, binh-chua-chay, pha-do-bao-ho, cuu-sinh

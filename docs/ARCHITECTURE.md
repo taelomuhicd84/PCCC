@@ -36,8 +36,11 @@ bộ mục lớn; bảng > 50 m chèn "Gian lánh nạn" làm mục 8 nên số 
    máy chữa cháy → `thang-may-chua-chay`; trang của hạng mục phòng/trạm bơm PCCC → chỉ skill riêng `tram-bom` (NN 19,
    mẫu B36). `trang --cd ngan-chay` lấy cả hai tiểu mục; `--cd ngan-chay.dung` chỉ phương đứng.
 
-8. **Bảng đối chiếu chọn theo CÔNG NĂNG** (người dùng 14/10/2026), khai báo duy nhất `pipeline/loai_hinh.py`: 25 loại
-   hình = 33 mẫu B4.1–B28 (nhà dân dụng + công trình đặc thù; phần công nghệ riêng → chuyên đề `an-toan-cong-nghe`) trong `rules/checklists/<loại>/<bộ>/` (k1/k2/k3 theo chiều cao, `chung` khi 1 bảng). Thứ tự:
+8. **Bảng đối chiếu chọn theo CÔNG NĂNG** (người dùng 14/10/2026), khai báo duy nhất `pipeline/loai_hinh.py`: 30 loại
+   hình = 38 mẫu B4.1–B33 (nhà dân dụng, công trình đặc thù — phần công nghệ → `an-toan-cong-nghe`, trạm biến áp, hầm,
+   phương tiện thủy — phương tiện cứu sinh → `cuu-sinh`). Mẫu HỆ THỐNG B34–B38 (`HE_THONG`) không phải loại công trình:
+   lưu ở `rules/checklists/he-thong/<mẫu>/`, `rule_keys` nạp kèm file chuyên đề (B34 chống tụ khói, B35 báo cháy,
+   B36 trạm bơm, B37 + B38 chữa cháy). Bảng công trình nằm trong `rules/checklists/<loại>/<bộ>/` (k1/k2/k3 theo chiều cao, `chung` khi 1 bảng). Thứ tự:
    overrides `loai_hinh` → từ khoá tên hạng mục → từ khoá công năng (bước info) → nhóm F (chỉ khi F ứng đúng 1 bảng:
    F1.1 = nhà trẻ hoặc bệnh viện, F3.1 = chợ hoặc TTTM → không chọn). Nhiều công năng → ghi chú "cân nhắc B5.x hỗn hợp",
    không tự đổi. Hạng mục phòng/trạm bơm → skill `tram-bom`. ID dòng có tiền tố loại: `KS2-TN-012`, `BV-TN-003`.

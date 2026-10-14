@@ -62,7 +62,7 @@ Skill: `info-building` (bước 1–3), `gemini-web`, `cong-claude` (2 cổng), 
   Mỗi luật phải có `id`, `clause`, `source` (QCVN06|SD01), `severity`, `message`, `verified`. Thêm test vào `tests/`.
 - Thêm loại phần tử bản vẽ: cập nhật `ELEMENT_TYPES` (models.py) + `prompts/gemini_extract.md` + layer DXF.
 - Thêm quy chuẩn khác (TCVN 3890, TCVN 5738...): tạo rule pack mới trong `rules/` và khai báo ở `config/settings.yaml`.
-- Loại hình / bảng đối chiếu (25 loại, B4.1–B28: nhà dân dụng + công trình đặc thù xăng dầu, khí, LPG, LNG, vật liệu nổ, điện gió, mặt trời): khai báo duy nhất `pipeline/loai_hinh.py`; bảng chọn theo CÔNG NĂNG đọc ở bước info
+- Loại hình / bảng đối chiếu (30 loại, B4.1–B33: nhà dân dụng, công trình đặc thù, trạm biến áp, hầm, phương tiện thủy; mẫu hệ thống B34–B38 nạp kèm chuyên đề qua `HE_THONG`): khai báo duy nhất `pipeline/loai_hinh.py`; bảng chọn theo CÔNG NĂNG đọc ở bước info
   (tên hạng mục → công năng → nhóm F duy nhất). Thêm loại: 1 dòng `LOAI` + `docx_to_md.py` + `split_rules.py` + dòng `rules/_index.md`
   (`pipeline/rule_keys.py` `BO`). Bảng có mục lớn mới: thêm 1 dòng `MUC` (`pipeline/chuyen_de.py`) + `skills/chuyen-de/<slug>/SKILL.md`
   (khung 6 bước, < 60 dòng); chạy lại `split_rules.py`.

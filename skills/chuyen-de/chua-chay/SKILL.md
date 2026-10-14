@@ -11,7 +11,8 @@ Bảng tra: `rule_keys.json → file["chua-chay"]` (vd `rules/checklists/<loại
 4. Cách kiểm — cột "Quy định" là căn cứ DUY NHẤT (ngưỡng lấy từ bảng, không từ trí nhớ; dẫn tới bảng số chưa có → XM ghi tên bảng):
    - Script / so số: thuộc diện trang bị theo ngưỡng; lưu lượng/dung tích bể theo khối tích — so số trong cột Quy định.
    - Cần phán đoán: hệ thống có trên bản vẽ hay chỉ thuyết minh; nhà ≥ 2 công năng chọn yêu cầu theo công năng nào — chỉ xem ảnh cắt vùng (≤ 3 ảnh, lệnh `crops`), không xem cả trang.
-   Dòng ghi "Thực hiện theo bảng đối chiếu B36–B44" → XM "chưa có mẫu B36–B44" cho tới khi mẫu được chuẩn hoá.
+   Mẫu ĐÃ CÓ trong `rule_keys.file["chua-chay"]`: `he-thong/B37` (cấp nước ngoài nhà), `he-thong/B38` (họng nước trong nhà) — đối chiếu từng dòng,
+   mục 1 mỗi mẫu = đối tượng trang bị (không thuộc diện → mẫu đó NA). Trạm bơm B36 → skill `tram-bom`. B39–B44 (chữa cháy tự động) chưa có → XM "chưa có mẫu B39–B44".
 5. Đầu ra: mỗi dòng bảng tra có nội dung kiểm (bỏ dòng chỉ là tiêu đề tiểu mục) = 1 dòng `findings.jsonl`:
    `{"hm","tang","cd":"chua-chay","rule":"<ID dòng, vd KS2-CC-001>","yc","ht","tt":"D|KD|XM|NA","ly_do","truc","trang","bbox","conf","evid","dieu_khoan"}`
    - KD phải có trang + bbox (0–1) + evid (chữ nguyên văn trên bản vẽ) + điều khoản; thiếu → tự hạ XM.

@@ -11,7 +11,8 @@ Bảng tra: `rule_keys.json → file["chong-tu-khoi"]` (vd `rules/checklists/<lo
 4. Cách kiểm — cột "Quy định" là căn cứ DUY NHẤT (ngưỡng lấy từ bảng, không từ trí nhớ; dẫn tới bảng số chưa có → XM ghi tên bảng):
    - Script / so số: phần lớn không kiểm bằng số được khi chưa có mẫu kỹ thuật → XM.
    - Cần phán đoán: đối tượng nào bắt buộc trang bị; hệ thống có thể hiện trên bản vẽ hay chỉ trong thuyết minh; GHCL ống hút khói — chỉ xem ảnh cắt vùng (≤ 3 ảnh, lệnh `crops`), không xem cả trang.
-   Dòng ghi "Thực hiện theo bảng đối chiếu B34" → XM "chưa có mẫu B34" cho tới khi mẫu được chuẩn hoá.
+   Mẫu hệ thống B34 ĐÃ CÓ: `rules/checklists/he-thong/B34/*` nằm sẵn trong `rule_keys.file["chong-tu-khoi"]` (sau file bảng công trình).
+   Dòng "Thực hiện theo B34" → đối chiếu từng dòng của mẫu; mục 1 của mẫu = đối tượng trang bị: không thuộc diện → cả mẫu NA.
 5. Đầu ra: mỗi dòng bảng tra có nội dung kiểm (bỏ dòng chỉ là tiêu đề tiểu mục) = 1 dòng `findings.jsonl`:
    `{"hm","tang","cd":"chong-tu-khoi","rule":"<ID dòng, vd KS2-KHOI-001>","yc","ht","tt":"D|KD|XM|NA","ly_do","truc","trang","bbox","conf","evid","dieu_khoan"}`
    - KD phải có trang + bbox (0–1) + evid (chữ nguyên văn trên bản vẽ) + điều khoản; thiếu → tự hạ XM.

@@ -66,6 +66,26 @@ LOAI = {
                  [], r"ĐIỆN GIÓ|TURBINE GIÓ|TUA BIN GIÓ"),
     "dien-mat-troi": ("MT", "Nhà máy điện mặt trời", [("B28", "chung", None)],
                       [], r"ĐIỆN MẶT TRỜI|NĂNG LƯỢNG MẶT TRỜI|QUANG ĐIỆN|SOLAR"),
+    "tram-bien-ap": ("TBA", "Trạm biến áp", [("B29", "chung", None)],
+                     [], r"TRẠM BIẾN ÁP|\bTBA\b|TRẠM ĐIỆN"),
+    "ham-duong-bo": ("HAM", "Hầm đường bộ", [("B30", "chung", None)],
+                     [], r"HẦM ĐƯỜNG BỘ|HẦM GIAO THÔNG|HẦM XUYÊN"),
+    # phương tiện giao thông thủy (không phải nhà): chọn theo tên phương tiện
+    "tau-bien": ("TAU", "Phương tiện tàu biển", [("B31", "chung", None)],
+                 [], r"TÀU BIỂN"),
+    "ptt-hang-nguy-hiem": ("PTH", "Phương tiện thủy nội địa vận chuyển hàng nguy hiểm cháy, nổ", [("B32", "chung", None)],
+                           [], r"(TÀU|PHƯƠNG TIỆN|SÀ LAN).{0,30}(HÀNG (HÓA )?NGUY HIỂM|XĂNG|DẦU|KHÍ HÓA LỎNG)"),
+    "ptt-cho-khach": ("PTK", "Phương tiện thủy nội địa chở khách", [("B33", "chung", None)],
+                      [], r"(TÀU|PHƯƠNG TIỆN|CA NÔ|DU THUYỀN).{0,30}(CHỞ KHÁCH|HÀNH KHÁCH|DU LỊCH)"),
+}
+# MẪU HỆ THỐNG: không phải loại công trình mà bảng chi tiết của 1 chuyên đề, được bảng công trình dẫn tới
+# ("Thực hiện theo bảng đối chiếu B34…"). Lưu ở rules/checklists/he-thong/<mẫu>/, nạp KÈM file chuyên đề đó.
+HE_THONG = {  # mẫu: (chuyên đề gắn vào, mã ID, tên)
+    "B34": ("chong-tu-khoi", "HT34", "Hệ thống chống tụ khói"),
+    "B35": ("bao-chay", "HT35", "Hệ thống báo cháy"),
+    "B36": ("tram-bom", "HT36", "Trạm bơm cấp nước chữa cháy"),
+    "B37": ("chua-chay", "HT37", "Cấp nước chữa cháy ngoài nhà"),
+    "B38": ("chua-chay", "HT38", "Hệ thống họng nước chữa cháy trong nhà"),
 }
 # hạng mục không dùng bảng công trình mà skill hệ thống riêng (người dùng 14/10/2026)
 RIENG = {"tram-bom": r"PHÒNG BƠM|TRẠM BƠM|NHÀ BƠM"}
