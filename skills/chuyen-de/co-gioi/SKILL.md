@@ -2,6 +2,8 @@
 Tiểu mục: đối tượng phải trang bị, số lượng và chủng loại xe/phương tiện chữa cháy cơ giới, nơi để phương tiện.
 Bảng tra: `rule_keys.json → file["co-gioi"]` (vd `rules/checklists/nha-xuong/chung/20-co-gioi.md`).
 
+Mẫu hệ thống nạp kèm: `rules/checklists/he-thong/B45/` (phần của mục này) — đọc mục yêu cầu trang bị trước; không thuộc diện → NA.
+
 1. Khi nào dùng: chỉ khi `rule_keys.file` có `co-gioi` (bảng của loại hình có mục này); không có file → không chạy, không ghi dòng.
 2. Cần từ JSON (`project_facts.json` / `extraction.json`): nhom_nha, hang_no, khoi_tich_m3, dt_khu_dat_m2; thuyết minh/bản vẽ trang bị: số xe, loại xe, nhà để xe chữa cháy.
    - Thiếu trường → dòng XM kèm tên trường thiếu + trang nên đọc bổ sung (`trang <thư mục> --cd co-gioi`).

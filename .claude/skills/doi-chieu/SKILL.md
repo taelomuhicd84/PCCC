@@ -25,7 +25,8 @@ python -m pccc_checker findings --check data/output/<hồ sơ>/findings.jsonl   
    Trang cần đọc của chuyên đề: `rule_keys.trang_theo_chuyen_de[<chuyên đề>]` (từ danh mục bản vẽ `danh_muc_ban_ve.json`,
    lệnh `trang <thư mục> --cd <chuyên đề>`) — chỉ xem ảnh cắt / gửi Gemini đúng các trang này, không cả hồ sơ.
    Thứ tự: `quy-mo` (mục 1) LUÔN trước — nó chốt bộ bảng và khóa tra; sau đó theo số NN (= thứ tự bảng Word đầu ra).
-   Mục chỉ dẫn "Thực hiện theo mẫu B34/B35/B36–B44/B45/B46/B48/B49/B50" → XM tới khi mẫu đó được chuẩn hoá.
+   Mẫu hệ thống B34–B50 đã nạp sẵn trong `rule_keys.file[<chuyên đề>]` (đường dẫn `he-thong/B3x/`): với mỗi mẫu đọc phần 1
+   (đối tượng / yêu cầu trang bị) trước — không thuộc diện → cả mẫu NA, không nạp các phần sau (tiết kiệm token).
    Nhiều hạng mục / chuyên đề độc lập → có thể giao subagent song song, mỗi subagent 1 cặp (HM, chuyên đề),
    chỉ trả về số dòng D/KD/XM/NA + đường dẫn file.
 3. Cột "Quy định" của bảng là căn cứ duy nhất. Dòng dẫn tới bảng số chưa chuẩn hoá (Bảng 1–5, E.1, G.9, H.2…, xem

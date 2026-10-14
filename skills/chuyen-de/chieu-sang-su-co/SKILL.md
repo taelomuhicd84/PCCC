@@ -11,7 +11,8 @@ Bảng tra: `rule_keys.json → file["chieu-sang-su-co"]` (vd `rules/checklists/
 4. Cách kiểm — cột "Quy định" là căn cứ DUY NHẤT (ngưỡng lấy từ bảng, không từ trí nhớ; dẫn tới bảng số chưa có → XM ghi tên bảng):
    - Script / so số: khoảng cách giữa các đèn chỉ dẫn (khi bảng có số).
    - Cần phán đoán: đèn chỉ dẫn đặt đủ ở lối ra, chỗ đổi hướng; có loa thông báo khi thuộc diện — chỉ xem ảnh cắt vùng (≤ 3 ảnh, lệnh `crops`), không xem cả trang.
-   Dòng ghi "Thực hiện theo bảng đối chiếu B46" → XM "chưa có mẫu B46" cho tới khi mẫu được chuẩn hoá.
+   Mẫu hệ thống B46 ĐÃ CÓ: `rules/checklists/he-thong/B46/*` nằm sẵn trong `rule_keys.file["chieu-sang-su-co"]` (sau file bảng công trình).
+   Đọc phần 1 của mẫu (đối tượng / yêu cầu trang bị) trước: không thuộc diện → cả mẫu NA, không đọc tiếp.
 5. Đầu ra: mỗi dòng bảng tra có nội dung kiểm (bỏ dòng chỉ là tiêu đề tiểu mục) = 1 dòng `findings.jsonl`:
    `{"hm","tang","cd":"chieu-sang-su-co","rule":"<ID dòng, vd KS2-CS-001>","yc","ht","tt":"D|KD|XM|NA","ly_do","truc","trang","bbox","conf","evid","dieu_khoan"}`
    - KD phải có trang + bbox (0–1) + evid (chữ nguyên văn trên bản vẽ) + điều khoản; thiếu → tự hạ XM.

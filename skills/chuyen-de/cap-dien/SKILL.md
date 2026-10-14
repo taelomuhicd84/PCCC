@@ -11,7 +11,8 @@ Bảng tra: `rule_keys.json → file["cap-dien"]` (vd `rules/checklists/<loại 
 4. Cách kiểm — cột "Quy định" là căn cứ DUY NHẤT (ngưỡng lấy từ bảng, không từ trí nhớ; dẫn tới bảng số chưa có → XM ghi tên bảng):
    - Script / so số: không có số để so → kết luận theo có/không thể hiện.
    - Cần phán đoán: có 2 nguồn / nguồn dự phòng; cáp cấp cho thiết bị PCCC có chống cháy — chỉ xem ảnh cắt vùng (≤ 3 ảnh, lệnh `crops`), không xem cả trang.
-   Dòng ghi "Thực hiện theo bảng đối chiếu B48" → XM "chưa có mẫu B48" cho tới khi mẫu được chuẩn hoá.
+   Mẫu hệ thống B48 ĐÃ CÓ: `rules/checklists/he-thong/B48/*` nằm sẵn trong `rule_keys.file["cap-dien"]` (sau file bảng công trình).
+   Đọc phần 1 của mẫu (đối tượng / yêu cầu trang bị) trước: không thuộc diện → cả mẫu NA, không đọc tiếp.
 5. Đầu ra: mỗi dòng bảng tra có nội dung kiểm (bỏ dòng chỉ là tiêu đề tiểu mục) = 1 dòng `findings.jsonl`:
    `{"hm","tang","cd":"cap-dien","rule":"<ID dòng, vd KS2-DIEN-001>","yc","ht","tt":"D|KD|XM|NA","ly_do","truc","trang","bbox","conf","evid","dieu_khoan"}`
    - KD phải có trang + bbox (0–1) + evid (chữ nguyên văn trên bản vẽ) + điều khoản; thiếu → tự hạ XM.

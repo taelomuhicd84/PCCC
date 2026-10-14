@@ -11,7 +11,8 @@ Bảng tra: `rule_keys.json → file["thang-may-chua-chay"]` (vd `rules/checklis
 4. Cách kiểm — cột "Quy định" là căn cứ DUY NHẤT (ngưỡng lấy từ bảng, không từ trí nhớ; dẫn tới bảng số chưa có → XM ghi tên bảng):
    - Script / so số: bán kính phục vụ, diện tích sảnh, kích thước cabin, tải trọng — so số trong cột Quy định.
    - Cần phán đoán: thang có giếng riêng không; sảnh có là khoang đệm ngăn cháy; có họng chờ khô — chỉ xem ảnh cắt vùng (≤ 3 ảnh, lệnh `crops`), không xem cả trang.
-   Dòng ghi "Thực hiện theo bảng đối chiếu B50" → XM "chưa có mẫu B50" cho tới khi mẫu được chuẩn hoá.
+   Mẫu hệ thống B50 ĐÃ CÓ: `rules/checklists/he-thong/B50/*` nằm sẵn trong `rule_keys.file["thang-may-chua-chay"]` (sau file bảng công trình).
+   Đọc phần 1 của mẫu (đối tượng / yêu cầu trang bị) trước: không thuộc diện → cả mẫu NA, không đọc tiếp.
 5. Đầu ra: mỗi dòng bảng tra có nội dung kiểm (bỏ dòng chỉ là tiêu đề tiểu mục) = 1 dòng `findings.jsonl`:
    `{"hm","tang","cd":"thang-may-chua-chay","rule":"<ID dòng, vd KS2-TMCC-001>","yc","ht","tt":"D|KD|XM|NA","ly_do","truc","trang","bbox","conf","evid","dieu_khoan"}`
    - KD phải có trang + bbox (0–1) + evid (chữ nguyên văn trên bản vẽ) + điều khoản; thiếu → tự hạ XM.

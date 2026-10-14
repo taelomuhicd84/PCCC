@@ -12,3 +12,36 @@
 [B37] TONG 30 dong -> chuyen de chua-chay
 [B38] he-thong/B38/13-chua-chay.md            rows= 14 chars= 12333
 [B38] TONG 14 dong -> chuyen de chua-chay
+[B39] he-thong/B39/13-chua-chay.1.md          rows= 32 chars= 14531
+[B39] he-thong/B39/13-chua-chay.2.md          rows= 23 chars= 12824
+[B39] TONG 55 dong -> chuyen de chua-chay
+[B40] he-thong/B40/13-chua-chay.md            rows= 25 chars= 10690
+[B40] TONG 25 dong -> chuyen de chua-chay
+[B41] he-thong/B41/13-chua-chay.md            rows= 24 chars= 10226
+[B41] TONG 24 dong -> chuyen de chua-chay
+[B42] he-thong/B42/13-chua-chay.md            rows= 19 chars=  8575
+[B42] TONG 19 dong -> chuyen de chua-chay
+[B43] he-thong/B43/13-chua-chay.md            rows= 16 chars=  8424
+[B43] TONG 16 dong -> chuyen de chua-chay
+[B44] he-thong/B44/13-chua-chay.1.md          rows= 10 chars=  9059
+[B44] he-thong/B44/13-chua-chay.2.md          rows= 22 chars= 18238
+[B44] TONG 32 dong -> chuyen de chua-chay
+[B45] he-thong/B45/11-binh-chua-chay.md       rows= 15 chars= 14887
+[B45] TONG 15 dong -> chuyen de binh-chua-chay
+[B45] he-thong/B45/20-co-gioi.md              rows=  4 chars=  2046
+[B45] TONG 4 dong -> chuyen de co-gioi
+[B45] he-thong/B45/16-pha-do-bao-ho.md        rows= 14 chars=  4675
+[B45] TONG 14 dong -> chuyen de pha-do-bao-ho
+[B46] bo 1 dong dau bieu truoc muc 1
+[B46] he-thong/B46/15-chieu-sang-su-co.md     rows= 25 chars= 14327
+[B46] TONG 25 dong -> chuyen de chieu-sang-su-co
+[B47] he-thong/B47/22-an-toan-cong-nghe.md    rows= 30 chars= 11329
+[B47] TONG 30 dong -> chuyen de an-toan-cong-nghe
+[B48] he-thong/B48/14-cap-dien.md             rows= 14 chars=  8011
+[B48] TONG 14 dong -> chuyen de cap-dien
+[B49] bo 1 dong dau bieu truoc muc 1
+[B49] he-thong/B49/17-chong-set.1.md          rows= 23 chars= 13686
+[B49] he-thong/B49/17-chong-set.2.md          rows=  7 chars=  3727
+[B49] TONG 30 dong -> chuyen de chong-set
+[B50] he-thong/B50/09-thang-may-chua-chay.md  rows= 24 chars= 14883
+[B50] TONG 24 dong -> chuyen de thang-may-chua-chay

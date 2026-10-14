@@ -93,10 +93,15 @@ def keys_for(h: dict, overrides: list[dict]) -> dict:
     elif loai == "chua-xac-dinh":
         ghi_chu.append("chưa chọn được bảng đối chiếu -> mọi chuyên đề XM; chỉ chạy luật YAML")
     # mẫu hệ thống (B34 chống tụ khói, B35 báo cháy, B36 trạm bơm, B37/B38 chữa cháy) nạp KÈM file chuyên đề của bảng công trình
-    for mau, (cd, _, _) in HE_THONG.items():
+    # file mẫu `NN-<chuyên đề>[.phần].md` -> chuyên đề theo tên file (B45 tách bình / cơ giới / phá dỡ);
+    # mẫu `luon` (B47 cấp khí trung tâm, không bảng công trình nào dẫn tới) nạp cả khi bảng không có mục đó
+    co_bang = bool(files)
+    for mau, (_, _, _, _, luon) in HE_THONG.items():
         d = PROJECT_ROOT / CHECKLISTS / "he-thong" / mau
-        if cd in files and d.is_dir():
-            files[cd] += [f"{CHECKLISTS}/he-thong/{mau}/{p.name}" for p in sorted(d.glob("*.md"))]
+        for p in sorted(d.glob("*.md")) if d.is_dir() else []:
+            cd = p.stem.split(".")[0][3:]
+            if cd in files or (luon and co_bang and loai != "tram-bom"):
+                files.setdefault(cd, []).append(f"{CHECKLISTS}/he-thong/{mau}/{p.name}")
     files = {cd: fs for cd, fs in files.items() if fs}
     if any(nguon.get(f) == "tinh" for f in can):
         ghi_chu.append("có khóa lấy theo công năng (tinh), chưa có chữ trên bản vẽ -> Cổng 1 phải xác nhận")

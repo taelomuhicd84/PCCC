@@ -4,6 +4,8 @@ sang chiết nạp, tồn chứa / xếp / tồn trữ chai LPG, vị trí ngu�
 kho chứa chai (B23); vị trí lắp đặt và an toàn công nghệ bồn bể (B24); hệ thống thu gom khu chế biến, giao nhận (B25).
 Bảng tra: `rule_keys.json → file["an-toan-cong-nghe"]` (vd `rules/checklists/kho-lpg/chung/22-an-toan-cong-nghe.md`).
 
+Mẫu hệ thống nạp kèm: `rules/checklists/he-thong/B47/` (phần của mục này) — đọc mục yêu cầu trang bị trước; không thuộc diện → NA.
+
 1. Khi nào dùng: chỉ khi `rule_keys.file` có `an-toan-cong-nghe` (loại hình đặc thù); không có file → không chạy, không ghi dòng.
 2. Cần từ JSON (`project_facts.json` / `extraction.json`): sức chứa (m³ xăng dầu, kg/chai LPG, tấn LNG), số và dung tích bồn/bể, cột bơm,
    vị trí bồn so với nhà và ranh giới, van/thiết bị an toàn, hệ thống thu hồi hơi / thu gom, nguồn gây cháy gần khu tồn chứa.

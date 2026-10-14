@@ -116,7 +116,9 @@ def test_rule_keys_khach_san_k2(tmp_path):
     (h,) = rk["hang_muc"]
     assert (h["loai_hinh"], h["bo"], h["thieu"]) == ("khach-san", "k2", [])
     # 1 mục bảng = 1 chuyên đề; B7.2 có 17 mục (không có gian lánh nạn); mục dài tách phần .1 .2 …
-    assert len(h["file"]) == 17 and "gian-lanh-nan" not in h["file"]
+    # 17 mục của B7.2 + an-toan-cong-nghe do mẫu B47 (cấp khí đốt trung tâm) luôn nạp
+    assert len(h["file"]) == 18 and "gian-lanh-nan" not in h["file"]
+    assert all("/he-thong/B47/" in p for p in h["file"]["an-toan-cong-nghe"])
     # mẫu hệ thống nạp kèm: B35 vào báo cháy, B34 vào chống tụ khói, B37 + B38 vào chữa cháy
     assert h["file"]["bao-chay"][0] == "rules/checklists/khach-san/k2/12-bao-chay.md"
     assert any("/he-thong/B35/" in p for p in h["file"]["bao-chay"])
@@ -230,3 +232,21 @@ def test_hang_muc_phong_bom_nap_mau_b36(tmp_path):
     (h,) = rule_keys.build_rule_keys(facts.build_facts(info), "x", tmp_path / "none.json")["hang_muc"]
     assert h["loai_hinh"] == "tram-bom" and h["file"]["tram-bom"]
     assert all("/he-thong/B36/" in p for p in h["file"]["tram-bom"])
+
+
+def test_ten_file_md_khong_trung_giua_cac_mau():
+    # B4.1 (chung cư) và B41 (chữa cháy khí) từng trùng "b41.md" -> bảng chung cư bị ghi đè (14/10/2026)
+    from pccc_checker.pipeline.loai_hinh import HE_THONG, MAU, file_md
+    names = [file_md(m) for m in list(MAU) + list(HE_THONG)]
+    assert len(names) == len(set(names))
+    assert file_md("B4.1") != file_md("B41")
+
+
+def test_mau_he_thong_nap_dung_chuyen_de():
+    d = PROJECT_ROOT / "rules" / "checklists" / "he-thong"
+    assert (d / "B45" / "20-co-gioi.md").exists() and (d / "B45" / "16-pha-do-bao-ho.md").exists()
+    assert (d / "B50" / "09-thang-may-chua-chay.md").exists()
+    (h,) = rule_keys.build_rule_keys(_facts_ks(), "x", PROJECT_ROOT / "none.json")["hang_muc"]
+    tm = h["file"]["thang-may-chua-chay"]
+    assert tm[0].endswith("k2/09-thang-may-chua-chay.md") and any("/he-thong/B50/" in p for p in tm)
+    assert any("/he-thong/B47/" in p for p in h["file"]["an-toan-cong-nghe"])   # B47 luôn nạp

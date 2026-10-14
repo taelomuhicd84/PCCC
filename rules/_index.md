@@ -52,6 +52,19 @@ Không phải loại công trình: là bảng chi tiết mà dòng "Thực hiệ
 | B36 | tram-bom | HT36 | nhà/phòng trạm bơm, bơm, bơm bù áp, động cơ, tủ điều khiển, nguồn điện |
 | B37 | chua-chay | HT37 | cấp nước chữa cháy ngoài nhà (lưu lượng, thời gian, trụ nước, bể) |
 | B38 | chua-chay | HT38 | họng nước chữa cháy trong nhà (số tia, lưu lượng, đường ống, dự trữ) |
+| B39 | chua-chay | HT39 | chữa cháy tự động bằng nước, bọt (sprinkler, drencher) |
+| B40 | chua-chay | HT40 | chữa cháy bằng bọt cố định |
+| B41 | chua-chay | HT41 | chữa cháy bằng khí hóa lỏng (FM200, Novec 1230) |
+| B42 | chua-chay | HT42 | chữa cháy bằng khí nén |
+| B43 | chua-chay | HT43 | chữa cháy tự động bằng khí CO2 |
+| B44 | chua-chay | HT44 | chữa cháy bằng sol-khí |
+| B45 | binh-chua-chay · co-gioi · pha-do-bao-ho | HT45 | phương tiện chữa cháy ban đầu (tách 3 chuyên đề theo mục) |
+| B46 | chieu-sang-su-co | HT46 | chiếu sáng sự cố, chỉ dẫn thoát nạn, loa thông báo |
+| B47 | an-toan-cong-nghe | HT47 | cấp khí đốt trung tâm — LUÔN nạp (không bảng công trình nào dẫn tới), mục 1 quyết định NA |
+| B48 | cap-dien | HT48 | nguồn điện cho hệ thống PCCC |
+| B49 | chong-set | HT49 | hệ thống chống sét |
+| B50 | thang-may-chua-chay | HT50 | thang máy chữa cháy |
+Mỗi mẫu: đọc phần 1 (đối tượng / yêu cầu trang bị) trước; không thuộc diện → cả mẫu NA, không đọc tiếp.
 Từ khoá cụ thể thắng từ khoá chung: "kho xăng dầu" → kho-xang-dau, không phải kho (B18).
 Chiều cao PCCC > dải cao nhất (150 m) → ngoài phạm vi: dừng, báo người dùng.
 Thêm loại hình: 1 dòng `LOAI` trong `loai_hinh.py` → `docx_to_md.py` + `split_rules.py <md> rules/checklists <mẫu>`. Skill không sửa.
@@ -73,4 +86,4 @@ Nguyên văn: `docs/regulations/QCVN 06 SỬA ĐỔI BỔ SUNG 10.2023.(pdf|docx
 
 ## Còn thiếu (gặp điều khoản cần số mà chưa có bảng → XM)
 Bảng số QCVN 06: 1–5, A.1–A.3, E.1/E.3/E.4, G.9, H.2, B.1, B.6; QCVN 13:2018; TCVN 6396-72:2010; TCVN 3890:2023.
-Mẫu hệ thống chưa nạp: B39–B44 (chữa cháy tự động), B45, B46, B47, B48, B49, B50.
+Mẫu hệ thống: đã đủ B34–B50. Bảng quy hoạch / chấp thuận địa điểm / hạ tầng (B1–B3) chưa nạp.

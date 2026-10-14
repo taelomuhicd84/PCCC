@@ -80,12 +80,26 @@ LOAI = {
 }
 # MẪU HỆ THỐNG: không phải loại công trình mà bảng chi tiết của 1 chuyên đề, được bảng công trình dẫn tới
 # ("Thực hiện theo bảng đối chiếu B34…"). Lưu ở rules/checklists/he-thong/<mẫu>/, nạp KÈM file chuyên đề đó.
-HE_THONG = {  # mẫu: (chuyên đề gắn vào, mã ID, tên)
-    "B34": ("chong-tu-khoi", "HT34", "Hệ thống chống tụ khói"),
-    "B35": ("bao-chay", "HT35", "Hệ thống báo cháy"),
-    "B36": ("tram-bom", "HT36", "Trạm bơm cấp nước chữa cháy"),
-    "B37": ("chua-chay", "HT37", "Cấp nước chữa cháy ngoài nhà"),
-    "B38": ("chua-chay", "HT38", "Hệ thống họng nước chữa cháy trong nhà"),
+HE_THONG = {  # mẫu: (chuyên đề gắn vào, mã ID, tên, chuyên đề được tách riêng theo tên mục của mẫu, luôn nạp)
+    "B34": ("chong-tu-khoi", "HT34", "Hệ thống chống tụ khói", (), False),
+    "B35": ("bao-chay", "HT35", "Hệ thống báo cháy", (), False),
+    "B36": ("tram-bom", "HT36", "Trạm bơm cấp nước chữa cháy", (), False),
+    "B37": ("chua-chay", "HT37", "Cấp nước chữa cháy ngoài nhà", (), False),
+    "B38": ("chua-chay", "HT38", "Hệ thống họng nước chữa cháy trong nhà", (), False),
+    "B39": ("chua-chay", "HT39", "Hệ thống chữa cháy tự động bằng nước, bọt (sprinkler, drencher)", (), False),
+    "B40": ("chua-chay", "HT40", "Hệ thống chữa cháy bằng bọt cố định", (), False),
+    "B41": ("chua-chay", "HT41", "Hệ thống chữa cháy bằng khí hóa lỏng", (), False),
+    "B42": ("chua-chay", "HT42", "Hệ thống chữa cháy bằng khí nén", (), False),
+    "B43": ("chua-chay", "HT43", "Hệ thống chữa cháy tự động bằng khí CO2", (), False),
+    "B44": ("chua-chay", "HT44", "Hệ thống chữa cháy bằng Sol-khí", (), False),
+    # B45 gồm 3 chuyên đề: bình (xách tay, bột / khí tự động) · cơ giới · phá dỡ, mặt nạ
+    "B45": ("binh-chua-chay", "HT45", "Trang bị phương tiện chữa cháy ban đầu", ("co-gioi", "pha-do-bao-ho"), False),
+    "B46": ("chieu-sang-su-co", "HT46", "Chiếu sáng sự cố, chỉ dẫn thoát nạn, loa thông báo", (), False),
+    # không bảng công trình nào dẫn tới B47 -> luôn nạp, skill xét mục 1 (có hệ thống cấp khí trung tâm không) rồi NA
+    "B47": ("an-toan-cong-nghe", "HT47", "Hệ thống cấp khí đốt trung tâm", (), True),
+    "B48": ("cap-dien", "HT48", "Nguồn điện cho hệ thống PCCC", (), False),
+    "B49": ("chong-set", "HT49", "Hệ thống chống sét", (), False),
+    "B50": ("thang-may-chua-chay", "HT50", "Thang máy chữa cháy", (), False),
 }
 # hạng mục không dùng bảng công trình mà skill hệ thống riêng (người dùng 14/10/2026)
 RIENG = {"tram-bom": r"PHÒNG BƠM|TRẠM BƠM|NHÀ BƠM"}
@@ -101,8 +115,8 @@ def ma_id(loai: str, bo: str) -> str:
 
 
 def file_md(mau: str) -> str:
-    """Tên file .md do docx_to_md.py tạo: B7.2 -> b72."""
-    return "b" + mau[1:].replace(".", "")
+    """Tên file .md do docx_to_md.py tạo: B7.2 -> b7_2, B41 -> b41 (gạch dưới: B4.1 ≠ B41 — lỗi trùng 14/10/2026)."""
+    return "b" + mau[1:].replace(".", "_")
 
 
 def _up(t: str) -> str:

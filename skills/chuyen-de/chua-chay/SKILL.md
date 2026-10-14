@@ -12,7 +12,9 @@ Bảng tra: `rule_keys.json → file["chua-chay"]` (vd `rules/checklists/<loại
    - Script / so số: thuộc diện trang bị theo ngưỡng; lưu lượng/dung tích bể theo khối tích — so số trong cột Quy định.
    - Cần phán đoán: hệ thống có trên bản vẽ hay chỉ thuyết minh; nhà ≥ 2 công năng chọn yêu cầu theo công năng nào — chỉ xem ảnh cắt vùng (≤ 3 ảnh, lệnh `crops`), không xem cả trang.
    Mẫu ĐÃ CÓ trong `rule_keys.file["chua-chay"]`: `he-thong/B37` (cấp nước ngoài nhà), `he-thong/B38` (họng nước trong nhà) — đối chiếu từng dòng,
-   mục 1 mỗi mẫu = đối tượng trang bị (không thuộc diện → mẫu đó NA). Trạm bơm B36 → skill `tram-bom`. B39–B44 (chữa cháy tự động) chưa có → XM "chưa có mẫu B39–B44".
+   mục 1 mỗi mẫu = đối tượng trang bị (không thuộc diện → mẫu đó NA). Trạm bơm B36 → skill `tram-bom`.
+   Cũng đã có B39 (tự động nước, bọt: sprinkler, drencher), B40 (bọt cố định), B41 (khí hóa lỏng), B42 (khí nén), B43 (CO2), B44 (sol-khí).
+   Có tới 8 mẫu → đọc phần đầu (yêu cầu trang bị) của từng mẫu trước, chỉ đối chiếu tiếp mẫu của hệ thống thực có trên bản vẽ / thuộc diện.
 5. Đầu ra: mỗi dòng bảng tra có nội dung kiểm (bỏ dòng chỉ là tiêu đề tiểu mục) = 1 dòng `findings.jsonl`:
    `{"hm","tang","cd":"chua-chay","rule":"<ID dòng, vd KS2-CC-001>","yc","ht","tt":"D|KD|XM|NA","ly_do","truc","trang","bbox","conf","evid","dieu_khoan"}`
    - KD phải có trang + bbox (0–1) + evid (chữ nguyên văn trên bản vẽ) + điều khoản; thiếu → tự hạ XM.

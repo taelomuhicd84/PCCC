@@ -126,9 +126,9 @@ def write_bo(out, mau, buckets, so_goc, report, src_map):
 
 
 def write_he_thong(out, mau, rows, report, src_map):
-    """Mau he thong (B34...): ca bang = 1 chuyen de, chia phan theo muc cap 1 cua chinh bang do."""
-    cd, pre, ten = HE_THONG[mau]
-    nn, _, short, _ = BY_SLUG[cd][:4]
+    """Mau he thong (B34...): ca bang = 1 chuyen de, chia phan theo muc cap 1 cua chinh bang do.
+    Mau gom nhieu chuyen de (B45): muc co ten thuoc `tach` -> file chuyen de do."""
+    cd0, pre, ten, tach, _ = HE_THONG[mau]
     rs = [r for r in rows if _tt(r) != "TT" and not all(re.fullmatch(r"\d+", c.strip() or "x") for c in r[1:6])]
     first = next((i for i, r in enumerate(rs) if re.fullmatch(r"\d+", _tt(r))), 0)
     if first:
@@ -138,6 +138,18 @@ def write_he_thong(out, mau, rows, report, src_map):
     os.makedirs(d, exist_ok=True)
     for old in os.listdir(d):
         os.remove(os.path.join(d, old))
+    buckets, cur = collections.OrderedDict(), cd0
+    for r in rs:
+        if re.fullmatch(r"\d+", _tt(r)):
+            m = muc_of(r[2].split("<br>")[0])
+            cur = m if m in tach else cd0
+        buckets.setdefault(cur, []).append(r)
+    for cd, brs in buckets.items():
+        _write_ht_cd(d, mau, cd, pre, ten, brs, report, src_map)
+
+
+def _write_ht_cd(d, mau, cd, pre, ten, rs, report, src_map):
+    nn, _, short, _ = BY_SLUG[cd][:4]
     parts, i = parts_of(rs, r"\d+"), 0
     for pi, prs in enumerate(parts, 1):
         phan = f".{pi}" if len(parts) > 1 else ""
