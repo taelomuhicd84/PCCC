@@ -1,0 +1,133 @@
+﻿# Bảng "train" phán đoán công năng: TÊN khu vực/phòng/hạng mục -> loại + nhóm F. Người dùng sửa/thêm dòng ở đây (không phải sửa code).
+# Khớp không phân biệt dấu/hoa thường; DÒNG ĐẦU TIÊN khớp thì thắng (đặt dòng cụ thể lên trước dòng chung).
+# loai:
+#   cong-nang   khu có công năng thật -> tính vào tỷ lệ 70% (nhom bắt buộc, theo Bảng 6 knowled `bang-6-phan-nhom-nha`)
+#   loai-tru    KHÔNG tính vào tổng (QCVN 06 1.4.41 CHÚ THÍCH: hệ thống kỹ thuật, PCCC, gian lánh nạn, đỗ xe) — ghi `ly` = kỹ thuật|pccc|lanh-nan|do-xe
+#   chung       diện tích dùng chung / đi lại (hành lang, thang, WC…): không gán công năng riêng, bỏ khỏi cả tử và mẫu (GIẢ ĐỊNH, chờ duyệt)
+#   phu-tro     phục vụ công năng chính của cùng hạng mục (bếp nhà hàng…): cộng vào công năng chính (GIẢ ĐỊNH, chờ duyệt); kết luận được thử
+#               cả hai cách (có / không cộng) — lệch nhau thì báo "nhạy" để người xem.
+#   theo-chinh  sảnh đón/tiếp tân của chính công năng chính (người dùng chốt 15/10/2026: sảnh trống vẫn là công năng sảnh đón của nhà): LUÔN cộng vào công năng chính
+# nguon: căn cứ (Bảng 6 hay ghi chú). "suy từ…" = chưa có chữ trực tiếp trong Bảng 6 -> cần duyệt.
+- id: LT-LANH-NAN
+  khop: 'lánh nạn'
+  loai: loai-tru
+  ly: lanh-nan
+  nguon: QCVN 06 1.4.41 chú thích
+- id: LT-PCCC
+  khop: 'phòng bơm|trạm bơm|bể nước|phòng pccc|điều khiển chống cháy|phòng trực chống cháy|chữa cháy'
+  loai: loai-tru
+  ly: pccc
+  nguon: QCVN 06 1.4.41 chú thích
+- id: LT-KY-THUAT
+  khop: 'kỹ thuật|máy phát|trạm điện|biến áp|phòng điện|phòng máy|tủ điện|điều hòa|xử lý nước thải|bể phốt|máy nén'
+  loai: loai-tru
+  ly: kỹ thuật
+  nguon: QCVN 06 1.4.41 chú thích (hệ thống kỹ thuật)
+- id: LT-DO-XE
+  khop: 'đỗ xe|để xe|bãi xe|hầm xe|gara|ga ra|nhà xe'
+  loai: loai-tru
+  ly: do-xe
+  nguon: QCVN 06 1.4.41 chú thích (đỗ xe); nếu CẢ hạng mục chỉ là nhà/gara đỗ xe thì công năng là F5.2 (Bảng 6)
+- id: CH-DI-LAI
+  khop: 'hành lang|cầu thang|thang bộ|thang máy|giếng thang|sảnh thang|lối đi chung|nhà vệ sinh|vệ sinh|\bwc\b|toilet'
+  loai: chung
+  nguon: không có chữ trong QCVN; giả định (chờ duyệt)
+- id: PT-BEP
+  khop: 'nhà bếp|khu bếp|bếp|chế biến|phòng để đồ|để đồ|phòng kho|\bkho\b|quầy bar|phục vụ ăn uống|phục vụ'
+  loai: phu-tro
+  nguon: giả định phục vụ công năng chính của hạng mục (chờ duyệt)
+- id: TC-SANH-DON
+  khop: 'sảnh đón|sảnh tiếp tân|sảnh lễ tân|sảnh chính|sảnh tầng|sảnh trống|không bố trí công năng'
+  loai: theo-chinh
+  nguon: người dùng chốt 15/10/2026 (ca 72 Nguyễn Khoái) — sảnh ghi "không bố trí công năng" vẫn là sảnh đón phục vụ công năng chính (home stay)
+# ---- công năng theo Bảng 6 (knowled doc bang-6-phan-nhom-nha) ----
+- id: F1.1
+  khop: 'nhà trẻ|mẫu giáo|mầm non|bệnh viện|nội trú|nhà hộ sinh|dưỡng lão|nhà chuyên dùng cho người cao tuổi'
+  loai: cong-nang
+  nhom: F1.1
+  nguon: Bảng 6 F1.1
+- id: F1.2
+  khop: 'khách sạn|nhà khách|nhà nghỉ|nhà trọ|ký túc xá|nhà ở tập thể|resort|home ?stay'
+  loai: cong-nang
+  nhom: F1.2
+  nguon: Bảng 6 F1.2
+- id: F1.3
+  khop: 'chung cư|căn hộ'
+  loai: cong-nang
+  nhom: F1.3
+  nguon: Bảng 6 F1.3
+- id: F1.4
+  khop: 'nhà ở riêng lẻ|nhà ở gia đình|nhà ở|phòng ngủ|phòng khách|phòng thờ'
+  loai: cong-nang
+  nhom: F1.4
+  nguon: Bảng 6 F1.4 (phòng ngủ/khách/thờ trong nhà ở — suy từ "nhà ở riêng lẻ", chờ duyệt)
+- id: F2.1
+  khop: 'nhà hát|rạp chiếu phim|rạp xiếc|hòa nhạc|karaoke|vũ trường|quán bar|phòng hát|hộp đêm|nhà thi đấu|cung thể thao|thư viện|khán đài'
+  loai: cong-nang
+  nhom: F2.1
+  nguon: Bảng 6 F2.1
+- id: F2.2
+  khop: 'bảo tàng|triển lãm|phòng nhảy|thủy cung|vui chơi giải trí|khu giải trí|khu vực giải trí|hầm giải trí|phòng giải trí'
+  loai: cong-nang
+  nhom: F2.2
+  nguon: Bảng 6 F2.2 ("khu giải trí" trong nhà nghỉ — suy từ "công trình vui chơi giải trí", chờ duyệt; có thể chỉ là phòng sinh hoạt phụ trợ)
+- id: F3.1
+  khop: 'siêu thị|trung tâm thương mại|cửa hàng|nhà sách|hội chợ|phòng trưng bày|showroom|điện máy|bách hóa'
+  loai: cong-nang
+  nhom: F3.1
+  nguon: Bảng 6 F3.1
+- id: F3.2
+  khop: 'nhà hàng|ăn uống|giải khát|cà phê|cafe|café|trạm dừng nghỉ|sảnh tiệc|tiệc cưới|sân khấu|hội nghị'
+  loai: cong-nang
+  nhom: F3.2
+  nguon: Bảng 6 F3.2 (tiệc cưới/sảnh tiệc = tổ chức sự kiện có dịch vụ ăn uống; sân khấu, hội nghị — suy từ Bảng 6, chờ duyệt)
+- id: F3.3
+  khop: 'nhà ga|bến xe khách|bến phà|nhà chờ'
+  loai: cong-nang
+  nhom: F3.3
+  nguon: Bảng 6 F3.3
+- id: F3.4
+  khop: 'phòng khám|trạm y tế|thẩm mỹ viện|xoa bóp|\bspa\b|phục hồi chức năng'
+  loai: cong-nang
+  nhom: F3.4
+  nguon: Bảng 6 F3.4 (khám NGOẠI TRÚ; khám nội trú là F1.1)
+- id: F3.5
+  khop: 'bưu điện|phòng vé|công chứng|giặt là|cắt tóc|tiệm may|cơ sở phục vụ lễ tang'
+  loai: cong-nang
+  nhom: F3.5
+  nguon: Bảng 6 F3.5
+- id: F3.6
+  khop: 'sân vận động|trường đua|trường bắn|phòng tập|gym|thể dục thể thao'
+  loai: cong-nang
+  nhom: F3.6
+  nguon: Bảng 6 F3.6 (không khán đài)
+- id: F4.1
+  khop: 'tiểu học|trung học|thpt|thcs|trường dạy nghề|phổ thông'
+  loai: cong-nang
+  nhom: F4.1
+  nguon: Bảng 6 F4.1
+- id: F4.2
+  khop: 'đại học|cao đẳng|học viện|trung cấp'
+  loai: cong-nang
+  nhom: F4.2
+  nguon: Bảng 6 F4.2
+- id: F4.3
+  khop: 'văn phòng|trụ sở|nhà làm việc|ngân hàng|cơ quan|phòng họp'
+  loai: cong-nang
+  nhom: F4.3
+  nguon: Bảng 6 F4.3
+- id: F4.4
+  khop: 'trạm chữa cháy|đội chữa cháy'
+  loai: cong-nang
+  nhom: F4.4
+  nguon: Bảng 6 F4.4
+- id: F5.1
+  khop: 'nhà xưởng|xưởng|sản xuất|nhà máy|thí nghiệm|sửa chữa ô tô|bảo dưỡng ô tô'
+  loai: cong-nang
+  nhom: F5.1
+  nguon: Bảng 6 F5.1
+- id: F5.2
+  khop: 'nhà kho|\bkho\b|kho hàng|lưu trữ'
+  loai: cong-nang
+  nhom: F5.2
+  nguon: Bảng 6 F5.2

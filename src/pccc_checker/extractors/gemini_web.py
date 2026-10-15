@@ -292,7 +292,8 @@ class GeminiWeb:
 
     @staticmethod
     def _check_limit(text: str, model: str) -> str:
-        if "{" not in text and re.search(r"limit|giới hạn|hạn mức", text, re.I):
+        # chỉ thông báo hết lượt (ngắn); câu trả lời dài nhắc "giới hạn chịu lửa" KHÔNG phải hết lượt (lỗi 15/10/2026)
+        if "{" not in text and len(text) < 400 and re.search(r"limit|giới hạn|hạn mức", text, re.I):
             # hết lượt model này trong ngày -> báo như quota API để _call chuyển ngay sang model dự phòng
             raise RuntimeError(f"RESOURCE_EXHAUSTED PerDay (Gemini web {model}): {text[:150]}")
         return text

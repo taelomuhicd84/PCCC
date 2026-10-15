@@ -10,7 +10,9 @@ Mỗi giá trị có 1 vị trí {trang, bbox 0–1 theo trang đang hiển th�
   vector?  : số xuất hiện nhiều chỗ trên trang -> lấy chỗ đầu, Claude kiểm
   vung_anh : số nằm trong bảng dán ảnh -> khung = cả ảnh (`anh` = số thứ tự ảnh, khớp crops/pNN_bangK.png)
   claude   : Claude chỉ vị trí (va_cham_claude.json)
-  trang    : không định vị được -> ghi chú ở góc trang
+  trang    : không định vị được -> không vẽ, chỉ liệt kê trong Note phản hồi.docx
+Khung trên PDF = comment → rectangle, chỉ vẽ khi vị trí chính xác (bbox ≤ 15 % trang); nội dung ghi thẳng số liệu va chạm.
+nghi_ngo.json `gia_tri` = {"tr.7,11": giá trị, ...} (KHÓA = nơi ghi, GIÁ TRỊ = số liệu).
 Claude sửa/bổ sung bằng `va_cham_claude.json`:
   [{"vt": "VC-002.1", "bbox": [x0,y0,x1,y1]}                        bbox 0–1 của trang
    {"vt": "VC-002.1", "anh": 2, "bbox_trong_anh": [x0,y0,x1,y1]}    bbox 0–1 trong ảnh cắt pNN_bang2.png
@@ -295,46 +297,73 @@ def can_claude(items: list[dict]) -> list[str]:
 
 
 # ------------------------------------------------------------------ xuất
-def _desc(it: dict) -> str:
-    vals = "\n".join(f"- {v['gia_tri']}: {v['nguon']} (tr.{v.get('trang')})" for v in it["gia_tri"])
-    return f"{it['id']} · {it['hm'] or 'khu đất'} · {LABEL.get(it['truong'], it['truong'])}\n{vals}" + \
-        (f"\n{it['ghi_chu']}" if it.get("ghi_chu") else "")
+def _so(x):
+    try:
+        return float(str(x).replace(",", "."))
+    except (TypeError, ValueError):
+        return None
+
+
+def chenh(it: dict) -> str:
+    """Các giá trị đều là số -> 'lệch X' (cao nhất - thấp nhất); không thì rỗng."""
+    n = [_so(v["gia_tri"]) for v in it["gia_tri"]]
+    if len(n) >= 2 and all(x is not None for x in n) and max(n) != min(n):
+        return f"lệch {max(n) - min(n):g}"
+    return ""
+
+
+def mo_ta(it: dict, v: dict | None = None) -> str:
+    """Nội dung 1 va chạm kèm SỐ LIỆU. Có `v`: nêu giá trị tại vị trí này rồi các giá trị còn lại."""
+    ten = LABEL.get(it["truong"], it["truong"])
+    ch = chenh(it)
+    if v is None:
+        s = f"{ten}: " + " ≠ ".join(f"{x['gia_tri']} [tr.{x.get('trang')}]" for x in it["gia_tri"])
+    else:
+        khac = "; ".join(f"{o['gia_tri']} (tr.{o.get('trang')})" for o in it["gia_tri"] if o is not v)
+        s = f"{ten}: ghi {v['gia_tri']} tại đây ≠ {khac}"
+    return s + (f" — {ch}" if ch else "")
+
+
+def chinh_xac(bbox) -> bool:
+    """bbox chỉ 1 chỗ (không phải cả trang / cả bảng ảnh)."""
+    if not bbox:
+        return False
+    x0, y0, x1, y1 = bbox
+    return (x1 - x0) * (y1 - y0) <= 0.15
 
 
 def annotate(pdf: Path, items: list[dict], pdf_out: Path) -> int:
+    """Mỗi vị trí va chạm chính xác = 1 ghi chú dạng comment → rectangle (khung chữ nhật, nội dung ở popup).
+    Không ghi biểu tượng Note phụ, không ghi trùng: cùng khung gộp nội dung, cùng nội dung chỉ ghi 1 lần.
+    Vị trí chưa chỉ được chính xác (cả bảng ảnh / chỉ có trang) KHÔNG vẽ — liệt kê trong Note phản hồi.docx
+    (Claude chỉ vị trí bằng va_cham_claude.json rồi chạy lại)."""
     doc = pymupdf.open(pdf)
-    corner: dict[int, float] = {}
-    n = 0
+    groups: dict[tuple, dict] = {}
     for it in items:
         if it.get("bo"):
             continue
-        body = _desc(it)
         for v in it["gia_tri"]:
             vt = v.get("vi_tri") or {}
             p = vt.get("trang")
-            if not p or p > doc.page_count:
+            if not p or p > doc.page_count or not chinh_xac(vt.get("bbox")):
                 continue
-            page = doc[p - 1]
-            W, H = page.rect.width, page.rect.height
-            if vt.get("bbox"):
-                x0, y0, x1, y1 = vt["bbox"]
-                vis = pymupdf.Rect(x0 * W, y0 * H, x1 * W, y1 * H) + (-3, -3, 3, 3)
-                r = (vis * page.derotation_matrix) & page.mediabox      # annot dùng toạ độ trang chưa xoay
-                box = page.add_rect_annot(r)
-                box.set_colors(stroke=COLOR)
-                box.set_border(width=2)
-                box.set_info(title=f"Va chạm {v['vt']}", content=body)
-                box.update(opacity=0.9)
-                pt = pymupdf.Point(vis.x1 + 2, vis.y0) * page.derotation_matrix
-            else:
-                y = corner.get(p, 20.0)
-                corner[p] = y + 20
-                pt = pymupdf.Point(20, y) * page.derotation_matrix
-            note = page.add_text_annot(pt, body, icon="Note")
-            note.set_info(title=f"Va chạm {v['vt']} — {v['gia_tri']}", content=body)
-            note.set_colors(stroke=COLOR)
-            note.update()
-            n += 1
+            g = groups.setdefault((p, tuple(round(x, 3) for x in vt["bbox"])), {"ma": [], "nd": []})
+            nd = mo_ta(it, v)
+            if nd not in g["nd"]:
+                g["nd"].append(nd)
+            g["ma"].append(v["vt"])
+    n = 0
+    for (p, bb), g in groups.items():
+        page = doc[p - 1]
+        W, H = page.rect.width, page.rect.height
+        vis = pymupdf.Rect(bb[0] * W, bb[1] * H, bb[2] * W, bb[3] * H) + (-3, -3, 3, 3)
+        r = (vis * page.derotation_matrix) & page.mediabox      # annot dùng toạ độ trang chưa xoay
+        box = page.add_rect_annot(r)
+        box.set_colors(stroke=COLOR)
+        box.set_border(width=2)
+        box.set_info(title="Va chạm " + ", ".join(g["ma"]), content="\n".join(g["nd"]))
+        box.update(opacity=0.9)
+        n += 1
     pdf_out.parent.mkdir(parents=True, exist_ok=True)
     doc.save(pdf_out, garbage=3, deflate=True)
     doc.close()

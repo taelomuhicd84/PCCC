@@ -152,8 +152,10 @@ def test_locate_annotate_trang_xoay(tmp_path):
     # ảnh 600x200 trên trang chưa xoay -> trang hiển thị 595x842: ảnh dọc 200x600; nửa trên ảnh cắt = 200x300
     assert box[2] - box[0] == pytest.approx(200 / 595, abs=0.01) and box[3] - box[1] == pytest.approx(300 / 842, abs=0.01)
     n = va_cham.annotate(pdf, items, tmp_path / "vc.pdf")
-    assert n == 4                                          # 2 va chạm × 2 vị trí; làm tròn + doc_lech đã bỏ
+    assert n == 3                                          # chỉ khung vị trí chính xác (bảng ảnh cả khung chưa chỉ -> không vẽ); làm tròn + doc_lech đã bỏ
     doc = pymupdf.open(tmp_path / "vc.pdf")
+    assert all(a.type[1] == "Square" for p in doc for a in p.annots())      # chỉ rectangle, không biểu tượng Note phụ
+    assert any("≠" in a.info["content"] and "2000" in a.info["content"] for p in doc for a in p.annots())   # ghi thẳng số liệu
     page = doc[1]
     r = next(x.rect for x in page.annots() if x.type[1] == "Square" and "VC-002.2" in x.info["title"])
     vis = r * page.rotation_matrix                          # quay lại toạ độ hiển thị
@@ -169,11 +171,12 @@ def test_cli_va_cham(tmp_path, capsys):
     from docx import Document
     doc = Document(out / "Note phản hồi.docx")
     txt = " | ".join(p.text for p in doc.paragraphs)
-    assert "Note phản hồi" in txt and "Tr.1: VC-001.1, VC-001.2" in txt
+    assert "Note phản hồi" in txt and "Tr.1: VC-001" in txt
     t = doc.tables[0]
     assert [c.text for c in t.rows[0].cells][:3] == ["Trang", "Mã note", "Loại"]
     pages = [r.cells[0].text for r in t.rows[1:]]
-    assert pages == sorted(pages, key=int) and len(pages) == 6      # 3 va chạm (bỏ làm tròn) × 2 vị trí, xếp theo trang
+    assert pages == sorted(pages, key=int) and len(pages) == 3      # 1 dòng / va chạm (bỏ làm tròn), xếp theo trang
+    assert "≠" in t.rows[1].cells[4].text                          # số liệu ghi thẳng trong Word
     assert "Claude cần chỉ vị trí" in capsys.readouterr().out
 
 

@@ -23,14 +23,14 @@ PYTHONPATH=src python -m pccc_checker va-cham "data/output/<hồ sơ>" [--pdf "<
    - `logic`: kiểm tra logic giữa 2 trường.
    - Các số lệch nhau ≤ 0,5% coi là làm tròn và tự bỏ.
 2. Script định vị từng giá trị: tìm trong lớp chữ (`vector`); không thấy thì lấy khung cả bảng ảnh (`vung_anh`); vẫn không
-   thấy thì ghi chú ở góc trang (`trang`). Số ngắn (< 3 ký tự, vd số tầng "2") không dò trong lớp chữ, vì trùng khắp trang.
+   thấy thì KHÔNG vẽ (`trang`), chỉ liệt kê trong Note phản hồi.docx. Số ngắn (< 3 ký tự, vd số tầng "2") không dò trong lớp chữ, vì trùng khắp trang.
 3. **Claude** xử lý từng dòng script in ở mục "Claude cần chỉ vị trí":
    - `vung_anh`: mở đúng ảnh `crops/pNN_bangK.png` (chưa có thì chạy `crops <pdf> --pages N`), tìm ô chứa giá trị, ước
      bbox 0–1 **trong ảnh** (dòng × cột của bảng).
    - `vector?`: xem `so_cho`; chọn đúng chỗ (ảnh cắt vùng bbox) hoặc để nguyên.
    - `doc_lech`: xem ảnh bảng. Nếu Gemini đọc sai (ảnh ghi giống giá trị kia) → bỏ, ghi lý do. Nếu ảnh ghi khác thật thì giữ.
    - `logic`: giá trị gây lệch do Gemini lấy nhầm dòng → bỏ, ghi lý do và trỏ va chạm thật nếu có.
-   - `trang` (SCAN, không có ảnh bảng): chỉ chỉ vị trí khi đã có ảnh cắt; không có thì để ghi chú góc trang.
+   - `trang` (SCAN, không có ảnh bảng): chỉ chỉ vị trí khi đã có ảnh cắt; không có thì không vẽ, chỉ liệt kê trong Word.
    - Ghi các quyết định vào `va_cham_claude.json` (xem mẫu dưới). Mỗi lần xem tối đa 5 ảnh.
 4. Chạy lại với `--annotate` → `<tên pdf>_va_cham.pdf` (khung cam mỗi vị trí, ghi chú nêu đủ các giá trị + nơi ghi)
    và **Word `Note phản hồi.docx`** cùng thư mục (yêu cầu người dùng 14/10/2026): tổng hợp MỌI vị trí đã ghi chú trên

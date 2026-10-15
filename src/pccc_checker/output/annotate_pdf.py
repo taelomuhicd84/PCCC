@@ -25,6 +25,8 @@ def annotate(pdf_in: Path, findings: list[Finding], pdf_out: Path, min_severity:
         if pno >= doc.page_count:
             continue
         key = (pno, tuple(round(v) for v in f.bbox) if f.bbox else None)
+        if any(g.message == f.message for _, g in groups.get(key, [])):      # cùng chỗ, cùng nội dung -> chỉ ghi 1 lần
+            continue
         groups.setdefault(key, []).append((idx, f))
 
     count = 0

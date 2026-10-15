@@ -17,18 +17,19 @@ TEN_FILE = "Note phản hồi.docx"
 
 
 def rows_va_cham(items: list[dict]) -> list[dict]:
-    from ..pipeline.va_cham import LABEL
+    """1 dòng / 1 va chạm (không lặp A≠B rồi B≠A), ghi thẳng số liệu từng nơi + mức lệch."""
+    from ..pipeline.va_cham import chinh_xac, mo_ta
     out = []
     for it in items:
         if it.get("bo"):
             continue
-        for v in it["gia_tri"]:
-            vt = v.get("vi_tri") or {}
-            khac = "; ".join(f"{o['gia_tri']} (tr.{o.get('trang')}, {o['nguon']})" for o in it["gia_tri"] if o is not v)
-            out.append({"trang": vt.get("trang") or v.get("trang"), "ma": v["vt"], "loai": "Va chạm",
-                        "hm": it["hm"] or "khu đất", "noi_dung": f"{LABEL.get(it['truong'], it['truong'])}: "
-                        f"{v['gia_tri']} ({v['nguon']}) ≠ {khac}" + (f". {it['ghi_chu']}" if it.get("ghi_chu") else ""),
-                        "dieu_khoan": "", "vi_tri": "khung trên bản vẽ" if vt.get("bbox") else "ghi chú góc trang"})
+        vts = [v.get("vi_tri") or {} for v in it["gia_tri"]]
+        ok = sum(chinh_xac(vt.get("bbox")) for vt in vts)
+        trangs = sorted({v.get("trang") for v in it["gia_tri"] if v.get("trang")})
+        out.append({"trang": trangs[0] if trangs else None, "trangs": trangs, "ma": it["id"], "loai": "Va chạm",
+                    "hm": it["hm"] or "khu đất",
+                    "noi_dung": mo_ta(it) + (f". {it['ghi_chu']}" if it.get("ghi_chu") else ""), "dieu_khoan": "",
+                    "vi_tri": f"khoanh {ok}/{len(vts)} vị trí trên bản vẽ" + ("" if ok == len(vts) else "; còn lại chưa chỉ được vị trí")})
     return out
 
 
@@ -71,7 +72,9 @@ def build(rows: list[dict], out_file: Path, ho_so: str = "", pdf_notes: list[str
     doc.add_heading("1. Trang cần kiểm", 1)
     pages: dict = {}
     for r in rows:
-        pages.setdefault(r["trang"], []).append(str(r["ma"]))
+        for pg in r.get("trangs") or [r["trang"]]:
+            pages.setdefault(pg, []).append(str(r["ma"]))
+    pages = dict(sorted(pages.items(), key=lambda kv: kv[0] or 10 ** 6))
     p = doc.add_paragraph()
     for pg, ms in pages.items():
         run = p.add_run(f"Tr.{pg if pg else '—'}: ")

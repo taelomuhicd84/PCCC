@@ -1,5 +1,5 @@
 # Khung chung mọi skill chuyên đề (đọc 1 lần / lượt đối chiếu)
-0. Chỉ chạy chuyên đề có trong `rule_keys.file` của hạng mục (đã qua cổng `danh-gia-cong-nang`: ap_dung = true).
+0. Chỉ chạy chuyên đề có trong `rule_keys.file` của hạng mục (đã qua cổng đánh giá công năng (`knowled`/danh-gia-cong-nang): ap_dung = true).
    Không có → không chạy, không ghi dòng (NA đã ghi ở `rule_keys.khong_ap_dung`; `cho_danh_gia` → chạy đánh giá trước).
 1. Nạp ĐÚNG các file trong `rule_keys.file[<cd>]`, từng phần một lượt (bảng công trình trước, mẫu `he-thong/` sau).
    Không mở lại bản vẽ, không nạp file chuyên đề khác. Cột "Quy định" là căn cứ DUY NHẤT; dẫn tới bảng/QC chưa có → XM.

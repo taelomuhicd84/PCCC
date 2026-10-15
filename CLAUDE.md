@@ -33,6 +33,15 @@ trong `rule_keys.json`; (3) việc có đáp số chắc chắn giao cho script;
 4. Luật kiểm tra được bằng số → viết vào YAML để engine chạy, đừng để LLM kiểm tra lại mỗi lần.
 5. Subagent chỉ trả về tóm tắt ≤ 15 dòng + đường dẫn file; dữ liệu lớn nằm trong file.
 
+6. **Mẫu chung cho MỌI skill (bảng tra dài, nhiều chuyên đề):** script chuẩn bị → Gemini lượt đầu → script kiểm chứng →
+   subagent xét phần còn nghi → ngữ cảnh chính chỉ đọc ≤ 15 dòng. Ngữ cảnh chính KHÔNG nạp `rules/checklists/**` và chữ bản vẽ.
+   - `goi` lọc bảng tra: bỏ dòng tiêu đề, NA tự động theo `rules/dieu_kien.yaml` (số liệu thiếu thì KHÔNG cắt), XM tự động khi
+     quy định chỉ dẫn tới bảng số chưa chép, hạng mục giống nhau gộp 1 gói, dòng đã xét (đúng dòng + số liệu + chữ bản vẽ)
+     lấy từ bộ nhớ đệm `goi/cache.json` → chạy lại 0 token.
+   - `goi-gemini`: Gemini xét lô ≤ 45 dòng (1 PDF đúng trang). D chỉ giữ khi trích dẫn có thật trong chữ vector; KD của Gemini
+     luôn hạ XM cho Claude. `doi-chieu-worker` (sonnet) xét phần còn nghi, ghi kết quả GỌN `ID | TT | trang | lý do | evid` (không JSON).
+   - Skill mới: viết skill chỉ ≤ 40 dòng điều khiển; dữ liệu dài nằm trong file + lệnh CLI; `dong <ID>` xem đủ 1 dòng khi cần.
+
 ## Lệnh
 
 ```bash
@@ -47,13 +56,19 @@ python -m pccc_checker trang data/output/<tên> [--cd thoat-nan] [--html]   # da
 python -m pccc_checker hm-pages data/output/<tên> # hm_pages.json: trang -> hạng mục (check chạy riêng từng hạng mục)
 python -m pccc_checker va-cham data/output/<tên> [--annotate]   # va_cham.json + PDF ghi chú (skill xu-ly-va-cham)
 python -m pccc_checker findings data/output/<tên> # findings.json -> findings.jsonl; --check <file> sau khi ghi thêm
+python -m pccc_checker goi data/output/<tên> [--den thoat-nan|--cd ..] [--hm HM03,HM04] [--bang gara/chung]  # gói đối chiếu (0 token)
+python -m pccc_checker goi-gemini data/output/<tên> [--thu]   # Gemini xét lượt đầu, script kiểm chứng; còn nghi -> goi/*.can-claude.md
+python -m pccc_checker goi-nhap data/output/<tên>              # goi/*.ket-qua.txt (Claude ghi gọn) -> findings.jsonl + bộ nhớ đệm
+python -m pccc_checker dong <ID> [<ID>…]                       # in đủ 1 dòng bảng tra
+python -m pccc_checker cong-nang data/output/<tên> [--ap-dung]   # công năng TỪNG hạng mục: nhóm F, nhà hỗn hợp (quy tắc 70 %); knowledge/cong-nang/_tu-khoa.yaml = bảng train
+python -m pccc_checker xuat-bang data/output/<tên> [--hm HM01]   # điền findings.jsonl vào Word mẫu datamau/B*.docx (Nội dung thiết kế + Kết luận) -> bang_doi_chieu/
 python -m pccc_checker extract|check|annotate|dxf|rules ...
 python -m pytest -q           # test offline, không cần API key
 python scripts/make_sample_pdf.py data/input/sample.pdf
 ```
 
 Slash command: `/check-pccc <pdf>` (pipeline đầy đủ, 2 cổng), `/add-rule`, `/verify-rules`.
-Skill: `info-building` (bước 1–3, chỉ chép thông tin), `danh-gia-cong-nang` (kết luận công năng + chuyên đề / hệ thống thuộc diện), `gemini-web`, `cong-claude` (2 cổng), `doi-chieu` (bước 5), `qcvn06-pccc`.
+Skill: `info-building` (bước 1–3, chỉ chép thông tin), `knowled` (kho kiến thức để nạp/tra/so sánh; module `danh-gia-cong-nang` = kết luận công năng + chuyên đề / hệ thống thuộc diện), `gemini-web`, `cong-claude` (2 cổng), `doi-chieu` (bước 5), `qcvn06-pccc`.
 
 ## Quy ước khi phát triển
 

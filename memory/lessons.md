@@ -10,6 +10,8 @@ sửa chữa; bài học mới do Claude đề xuất để ở "Chờ duyệt" 
 - Trục đánh số lại giữa các hạng mục cùng bộ → gán nhầm trục hạng mục khác → axes.json theo từng HM, không gộp.
 - Chiều cao kiến trúc vs chiều cao PCCC → lấy đỉnh mái làm chiều cao PCCC → 1.4.9 đo từ mặt đường xe chữa cháy; PCCC ≤ chiều cao công trình (facts tự kiểm).
 
+- Ghi chữ vào Word mẫu `datamau/*.docx` (xuất bảng đối chiếu): style Normal của mẫu = `.VnTime` → run không đặt font bị méo dấu ("cỏch", "Tờn cụng trỡnh"). Mọi chữ ghi phải Times New Roman tường minh; `bang_doi_chieu._luu` chạy `chuan_font` quét MỌI run (thân, bảng, đầu/cuối trang) và chặn nếu còn run thiếu font. Kiểm sau xuất: Word COM → PDF → tìm chuỗi méo. Cột Nội dung thiết kế viết theo văn phong mẫu B17 BIBICO ("Đảm bảo theo quy định", "Không thuộc diện"…), không dùng từ nội bộ ("gói", mã dòng KS1-…).
+
 ## doc-thong-tin (skill 01 · info-building)
 - Font Arial Identity-H thiếu ToUnicode → chữ rác `3+Ҫ1&+81*` → tool tự sửa trong vector_text; `pages` vẫn ra toàn "other" thì kiểm font khác (VNI có vn_encoding.py) → bản vẽ ICIC.
 - Font VNI → vỡ dấu "TÖÔØNG NGAÊN CHAÙY" → intake giải mã tự động → khách sạn Hoàng Hùng (7 mẫu đã kiểm).

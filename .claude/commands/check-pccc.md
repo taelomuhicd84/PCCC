@@ -20,7 +20,7 @@ và ảnh cắt ở 2 cổng. Nguyên tắc + schema: `docs/ARCHITECTURE.md`. L�
    KHÔNG tự suy giá trị thay người dùng. Mọi hạng mục đều là hạng mục chính (kiểm tất cả).
 4b. **Va chạm** (chỉ trong full quy trình này) — skill `xu-ly-va-cham`: `va-cham <out>` → Claude chỉ vị trí ô trong ảnh cắt / bỏ va chạm do Gemini đọc
    lệch (`va_cham_claude.json`) → `va-cham <out> --annotate` → `*_va_cham.pdf` + `Note phản hồi.docx`. Không hỏi, không chọn giá trị.
-5. **Đánh giá công năng** — skill `danh-gia-cong-nang`: `danh-gia <out>` → điền `danh_gia_cong_nang.json` (loại hình, nhóm F,
+5. **Đánh giá công năng** — skill `knowled` (module `danh-gia-cong-nang`): `danh-gia <out>` → điền `danh_gia_cong_nang.json` (loại hình, nhóm F,
    chuyên đề + mẫu hệ thống thuộc diện). CỔNG ÁP DỤNG: chưa đánh giá `ap_dung: true` → chuyên đề không chạy.
    Rồi `keys <out>` → `rule_keys.json` (`file` = chỉ chuyên đề áp dụng; `khong_ap_dung`, `cho_danh_gia`).
 6. **Trích xuất phần tử + luật YAML**: subagent `drawing-reader` (extract) → `hm-pages <out>` (soát nhanh `hm_pages.json`:

@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -520,6 +521,370 @@ def cmd_findings(a, settings) -> Path:
     return f
 
 
+def cmd_knowled(a, settings) -> None:
+    """Kho kiến thức (skill knowled): tra / xem / nạp / duyệt — nạp theo nhu cầu, không nạp cả kho."""
+    from .pipeline import knowled
+    if a.act == "tim":
+        kq = knowled.tim(" ".join(a.args), a.top, a.nhom)
+        for sc, m, tr in kq:
+            print(f"{m['id']} [{'✓' if m['trang_thai'] == 'verified' else '? chờ duyệt'}] {m['tieu_de']}\n    …{tr}…")
+        if not kq:
+            print("không có trong kho — ghi vào knowledge/thieu/ hoặc nhờ người dùng nạp (knowled them)")
+    elif a.act == "doc":
+        for i in a.args:
+            m = knowled.lay(i)
+            print(f"# {m['id']} [{m['trang_thai']}] {m['tieu_de']} — nguồn: {m['nguon']}\n{m['noi_dung'][: a.toi_da]}" if m
+                  else f"{i}: không có trong kho")
+    elif a.act == "ds":
+        print(f"đã ghi {knowled.ghi_muc_luc()} — {len(knowled.muc_kho())} mục (gồm file nguồn mặc định)")
+    elif a.act == "them":
+        f = knowled.them(Path(a.args[0]), a.id, a.tieu_de or Path(a.args[0]).stem, a.nhom, a.tu_khoa or "", a.nguon or "", a.duyet)
+        print(f"đã nạp {f} ({'verified' if a.duyet else 'chờ duyệt — `knowled duyet <id>` sau khi đối chiếu nguyên văn'})")
+    elif a.act == "duyet":
+        print(f"đã duyệt {knowled.duyet(a.args[0])}")
+
+
+def cmd_xuat_bang(a, settings) -> None:
+    """findings.jsonl -> điền vào Word mẫu datamau/B*.docx (Nội dung thiết kế + Kết luận) -> <thư mục>/bang_doi_chieu/.
+    --gemini: Gemini viết lại cột Nội dung thiết kế theo văn phong mẫu + sửa chính tả (script kiểm số liệu; Claude giám sát)."""
+    from .output import bang_doi_chieu, viet_tk
+    out = Path(a.target)
+    if a.gemini:
+        from .extractors.gemini_extractor import backend_kwargs
+        from .extractors.gemini_web import GeminiWeb
+        ds = [d for d in bang_doi_chieu.thu_dong(out, a.hm) if d[3].get("ly_do") or d[3].get("evid")]
+        facts = (out / "thong_tin_chung.json").read_text(encoding="utf-8") if (out / "thong_tin_chung.json").exists() else "{}"
+        facts = json.loads(facts).get("tom_tat", "")
+        vf = out / "goi" / "tk_bang.json"
+        kq = json.loads(vf.read_text(encoding="utf-8")) if vf.exists() else {}
+        todo = [d for d in ds if d[0] not in kq]
+        kw = backend_kwargs(dict(settings["gemini"], backend="web"))["web"]
+        web = GeminiWeb(**{**kw, "timeout_s": a.timeout})
+        for i in range(0, len(todo), a.dong):
+            lo = todo[i:i + a.dong]
+            dv = {d[0]: viet_tk.dong_dau_vao(d[0], d[1], d[2], d[3], facts) for d in lo}
+            tf = out / "goi" / f"tk_lo{i // a.dong + 1}.txt"
+            viet_tk.tao_file(tf, list(dv.values()))
+            text = web.generate(settings["gemini"]["web"]["model"], tf.read_bytes(), viet_tk.LENH, tf.name, "text/plain")
+            (out / "goi" / f"tk_lo{i // a.dong + 1}.gemini.txt").write_text(text, encoding="utf-8")
+            ok = 0
+            got = viet_tk.parse(text)
+            for d in lo:
+                tk, gc = got.get(d[0], ("", ""))
+                why = viet_tk.kiem(d[0], d[3], tk, gc, dv[d[0]])
+                kq[d[0]] = dict(tk=tk, gc=gc, nguon="gemini") if not why else dict(tk="", gc="", nguon="script", tu_choi=why)
+                ok += not why
+            vf.write_text(json.dumps(kq, ensure_ascii=False, indent=1), encoding="utf-8")
+            print(f"  lô {i // a.dong + 1}: {len(lo)} dòng — nhận {ok}, từ chối {len(lo) - ok} (giữ bản script)")
+    for p, st in bang_doi_chieu.xuat(out, a.hm):
+        print(f"{p} — điền {st['dien']} hàng, chưa đánh giá {st['chua_danh_gia']}, không thấy hàng {st['khong_hang']}")
+
+
+def cmd_cong_nang(a, settings) -> None:
+    """Đề xuất công năng TỪNG hạng mục (nhóm F, hỗn hợp theo quy tắc 70 %) -> cong_nang_de_xuat.json; --ap-dung điền ô chắc chắn vào danh_gia_cong_nang.json."""
+    from .pipeline import cong_nang, danh_gia
+    from .pipeline.loai_hinh import chon
+    from .pipeline.rule_keys import _cung_hm
+    out = _out_of(a.target)
+    facts = json.loads((out / "project_facts.json").read_text(encoding="utf-8"))
+    pi = out / "project_info.json"
+    kv = (json.loads(pi.read_text(encoding="utf-8")).get("meta") or {}).get("khu_vuc") or [] if pi.exists() else []
+    rs = cong_nang.luat()
+    res = []
+    for h in facts["hang_muc"]:
+        ten = h["ten"][0]
+        khu, canh = cong_nang.khu_cua_hm(kv, ten, _cung_hm)
+        san = (h.get("dt_san_tong_m2") or [None])[0]
+        r = cong_nang.danh_gia_hm(ten, khu, san, rs, canh)
+        r.update(hm=h["id"], tong_san=san, khu=[k["ten"] for k in khu][:12])
+        res.append(r)
+    (out / "cong_nang_de_xuat.json").write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")
+    nhan = dict(don_nang="đơn năng", hon_hop="HỖN HỢP", khong_chac="KHÔNG CHẮC", ky_thuat="kỹ thuật/PCCC")
+    dg = danh_gia.doc(out)
+    n_ap = 0
+    for r in res:
+        k = r["ket_luan"].replace("-", "_")
+        ty = " · ".join(f"{g} {v:.0%}" for g, v in r["ty_le"].items())
+        print(f"{r['hm']} {r['ten']}: {nhan.get(k, k)}" + (f" — chính {r['chinh']}" if r["chinh"] else "") + (f" [{ty}]" if ty else ""))
+        for c in r["canh_bao"]:
+            print(f"     ⚠ {c}")
+        for c in r.get("ghi_chu", []):
+            print(f"     ℹ {c}")
+        if a.ap_dung and dg and r["ket_luan"] in ("don-nang", "hon-hop"):
+            d = danh_gia.cho_hm(dg, r["hm"])
+            if d is None:
+                continue
+            d["nhom_nha_tinh"] = d["nhom_nha_tinh"] or r["chinh"]
+            d["hon_hop"] = r["ket_luan"] == "hon-hop" if d["hon_hop"] is None else d["hon_hop"]
+            d["cong_nang_danh_gia"] = d["cong_nang_danh_gia"] or r["can_cu"]
+            if not d["can_cu"]:
+                d["can_cu"] = [r["can_cu"]]
+            if r["ket_luan"] == "hon-hop" and not d["loai_hinh"]:
+                d["loai_hinh"] = "hon-hop"
+            elif r["ket_luan"] == "don-nang" and not d["loai_hinh"]:
+                lh, _, _ = chon(r["ten"], " ".join(r["khu"]), r["chinh"], None)
+                d["loai_hinh"] = lh or d["loai_hinh"]
+            n_ap += 1
+    if a.ap_dung and dg:
+        _write_json(out / danh_gia.TEN_FILE, dg)
+        print(f"đã điền {n_ap} hạng mục chắc chắn vào {danh_gia.TEN_FILE}; hạng mục KHÔNG CHẮC để Claude/người dùng quyết")
+    print(f"cong_nang_de_xuat: {out / 'cong_nang_de_xuat.json'}")
+
+
+def cmd_dong(a, settings) -> None:
+    """In đủ 1 dòng bảng tra (khi gói `goi` đã cắt bớt cột Quy định)."""
+    from .pipeline.goi import dong_day_du
+    for i in a.id:
+        print(dong_day_du(i) or f"{i}: không có trong bảng tra")
+
+
+def cmd_goi(a, settings) -> None:
+    """Gói đối chiếu: script lọc dòng bảng tra (tiêu đề / NA / XM tự động / đã có trong bộ nhớ đệm) rồi chỉ đưa dòng cần xét."""
+    from .pipeline import goi
+    from .pipeline.chuyen_de import MUC
+    from .pipeline.consistency import read_jsonl, write_jsonl
+    from .pipeline.sheets import pages_for
+    out = _out_of(a.target)
+    facts = json.loads((out / "project_facts.json").read_text(encoding="utf-8"))
+    want = set(a.hm.split(",")) if a.hm else None
+    hms = [goi.tom_tat_hm(h) for h in facts["hang_muc"] if want is None or h["id"] in want]
+    slugs = [s for _, s, *_ in MUC]
+    rkf = out / "rule_keys.json"
+    ap = {h["hm"]: h.get("file") or {} for h in json.loads(rkf.read_text(encoding="utf-8"))["hang_muc"]} if rkf.exists() and not a.bang else {}
+    if not a.bang and not ap:
+        raise SystemExit("cần --bang <loại hình/bộ> hoặc rule_keys.json (chạy `keys` sau `danh-gia`)")
+    cds = slugs[:slugs.index(a.den) + 1] if a.den else [c.strip() for c in (a.cd or "").split(",") if c.strip()]
+    if not cds:                                           # không chỉ định: mọi chuyên đề đã áp dụng theo rule_keys
+        cds = [s for s in slugs if any(s in f for f in ap.values())]
+    if not cds:
+        raise SystemExit("không có chuyên đề nào áp dụng (rule_keys.file rỗng) — chạy danh-gia/keys hoặc dùng --cd/--den + --bang")
+    nhom: dict[tuple, list[dict]] = {}
+    for t in hms:
+        nhom.setdefault(goi.khoa_nhom(t) + (json.dumps(ap.get(t["hm"], {}), sort_keys=True),), []).append(t)
+    bases = {re.sub(r"\s*\d+.*$", "", h["ten"][0]).upper() for h in facts["hang_muc"]}
+    dk = goi.luat_dieu_kien()
+    dm = _danh_muc(out) if (out / "danh_muc_ban_ve.json").exists() else []
+    pdf = Path(a.pdf) if a.pdf else Path((json.loads((out / "project_info.json").read_text(encoding="utf-8")).get("meta") or {}).get("pdf") or "")
+    lines = goi.doc_lines(pdf) if pdf.is_file() else {}
+    fj = out / "findings.jsonl"
+    cu = read_jsonl(fj) if fj.exists() else []
+    gd = out / "goi"
+    gd.mkdir(exist_ok=True)
+    cache = goi.doc_cache(gd)
+    moi: list[dict] = []
+    tong = dict(raw=0, goi=0, xet=0, tong=0, hit=0)
+
+    def dong(x, cd, r, tt, why, **kw):
+        return dict(id=f"S-{x['hm']}-{r['id']}", hm=x["hm"], tang=None, cd=cd, rule=r["id"], yc="", ht="", tt=tt, ly_do=why,
+                    truc=None, trang=kw.get("trang"), bbox=kw.get("bbox"), conf=kw.get("conf", "H"), evid=kw.get("evid", ""),
+                    nguon=kw.get("nguon", "script"))
+
+    for g in nhom.values():
+        t0, ids = g[0], [x["hm"] for x in g]
+        for cd in cds:
+            files = goi.files_for(a.bang, cd) if a.bang else [PROJECT_ROOT / x for x in ap.get(t0["hm"], {}).get(cd, [])]
+            if not files:
+                continue
+            tr = pages_for(dm, cd) if dm else []
+            base = re.sub(r"\s*\d+.*$", "", t0["ten"]).upper()
+            ten_tr = {d["trang"]: (d["ten_ban_ve"] or "").upper() for d in dm}
+            khac = [b for b in bases if b != base and base not in b and b not in base]
+            # giữ trang của hạng mục này + trang chung (tên bản vẽ không nêu hạng mục nào khác), bỏ trang riêng hạng mục khác
+            tr = [p for p in tr if base in ten_tr.get(p, "") or not any(b in ten_tr.get(p, "") for b in khac)] or tr[:4]
+            txt_all = goi.chu_trang(lines, tr) if lines else {}
+            chu = " ".join(txt_all.values())                  # luôn vào khoá bộ nhớ đệm: bản vẽ đổi chữ thì xét lại
+            txt = txt_all if a.kem_chu else {}
+            xet, tdc, na, xm, hit, keys, bang_hm = [], 0, [], [], 0, {}, {}
+            for f in files:
+                for r in goi.parse_rows(f):
+                    k, why = goi.phan_loai(r, t0, dk, lines or None)
+                    if k == "TD":
+                        tdc += 1
+                    elif k == "XET":
+                        key = goi.khoa_cache(r, t0, chu)
+                        keys[r["id"]] = key
+                        if key in cache:                       # đã xét với đúng dòng + số liệu + chữ bản vẽ này
+                            hit += 1
+                            c = cache[key]
+                            moi += [dong(x, cd, r, c["tt"], c["ly_do"], trang=c.get("trang"), bbox=c.get("bbox"), evid=c.get("evid", ""),
+                                         conf="M", nguon="cache") for x in g]
+                        else:
+                            xet.append(r)
+                            if goi.bang_refs(r):
+                                bang_hm.setdefault(r["id"], goi.bang_refs(r))
+                    else:
+                        (na if k == "NA" else xm).append((r, why))
+                        moi += [dong(x, cd, r, k, why) for x in g]
+            L = [f"# Gói đối chiếu · {cd} · {', '.join(ids)} ({', '.join(x['ten'] for x in g)}) · bảng {a.bang or ', '.join(sorted({Path(x).parent.name for x in ap.get(t0['hm'], {}).get(cd, [])}))}",
+                 f"Số liệu: tầng nổi {t0['tang_noi']} · hầm {'có' if t0['co_ham'] else 'không' if t0['co_ham'] is False else '?'} · cao {t0['cao']} m · "
+                 f"nhóm {t0['nhom'] or '?'} · bậc {t0['bac'] or '?'} · S {t0['s'] or '?'} · hạng {t0['hang'] or '?'} · dt {t0['dt']}",
+                 f"Script đã xử lý: {tdc} tiêu đề (bỏ) · {len(na)} NA · {len(xm)} XM · {hit} dòng lấy từ bộ nhớ đệm — đã ghi findings.jsonl, KHÔNG đọc lại"]
+            if na:
+                L.append("NA tự động (rà nhanh, sai thì sửa rules/dieu_kien.yaml): " + "; ".join(f"{r['id']} {r['nd'][:30]}" for r, _ in na))
+            if xm:
+                L.append("XM tự động (bảng số liệu chưa có): " + "; ".join(r["id"] for r, _ in xm))
+            L += ["", f"## Chữ trên bản vẽ (trang {', '.join(map(str, tr)) or '—'}; đã bỏ khung tên)"]
+            L += [f"[tr.{p}] {s}" for p, s in txt.items()] or [f"(không kèm chữ để nhẹ gói; Gemini xem PDF các trang này. Cần chữ: goi --kem-chu)"]
+            L += ["", f"## Cần Claude xét ({len(xet)} dòng) — ghi kết quả gọn vào {'+'.join(ids)}_{cd}.ket-qua.txt"]
+            for r in xet:
+                L.append(f"- {r['id']} · {r['nd']}" + (f" ‖ LƯU Ý: {goi._cat(r['luu_y'], 300, r['id'])}" if r["luu_y"] else "")
+                         + f" ‖ QĐ: {goi._cat(r['qd'], goi.CAT_QD, r['id'])} ‖ ĐK: {r['dk']}")
+            bt = goi.bang_text([i for v in bang_hm.values() for i in v])
+            pb = gd / f"{'+'.join(ids)}_{cd}.bang.md"
+            if bt:
+                pb.write_text(bt + "\n", encoding="utf-8")
+                L += ["", "Bảng số tham chiếu (nguyên văn, trong kho knowled): "
+                      + ", ".join(f"qcvn06-bang-{i}" for i in dict.fromkeys(i for v in bang_hm.values() for i in v) if goi.bang_co(i))
+                      + f" — gói không kèm để nhẹ; đọc bằng `knowled doc <id>` khi dòng cần số (Gemini đã được gửi kèm)."]
+            elif pb.exists():
+                pb.unlink()
+            p = gd / f"{'+'.join(ids)}_{cd}.md"
+            p.write_text("\n".join(L) + "\n", encoding="utf-8")
+            (gd / f"{'+'.join(ids)}_{cd}.keys.json").write_text(json.dumps(keys), encoding="utf-8")
+            (gd / f"{'+'.join(ids)}_{cd}.meta.json").write_text(json.dumps(dict(ids=ids, cd=cd, pages=tr, xet=[r["id"] for r in xet], bang=bang_hm),
+                                                                          ensure_ascii=False), encoding="utf-8")
+            raw = sum(len(f.read_text(encoding="utf-8")) for f in files)
+            n = tdc + len(na) + len(xm) + hit + len(xet)
+            tong["raw"] += goi.tok("x" * raw); tong["goi"] += goi.tok(p.read_text(encoding="utf-8")); tong["xet"] += len(xet)
+            tong["tong"] += n; tong["hit"] += hit
+            print(f"  {'+'.join(ids)} {cd}: {n} dòng → bỏ {tdc} tiêu đề · {len(na)} NA · {len(xm)} XM · {hit} đệm · "
+                  f"cần xét {len(xet)} · ~{goi.tok('x' * raw)} → ~{goi.tok(p.read_text(encoding='utf-8'))} token — {p.name}")
+    giu = [r for r in cu if not (r.get("nguon") in ("script", "cache", "gemini") and r.get("cd") in cds and r.get("hm") in {x["hm"] for x in hms})]
+    write_jsonl(fj, giu + moi)
+    print(f"tổng: ~{tong['raw']} token bảng tra thô → ~{tong['goi']} token gói ({tong['xet']}/{tong['tong']} dòng cần Claude xét, "
+          f"{tong['hit']} từ bộ nhớ đệm); {len(moi)} dòng NA/XM/đệm do script ghi vào {fj.name}")
+
+
+def cmd_goi_gemini(a, settings) -> None:
+    """Gemini làm lượt đầu mọi dòng 'cần xét' (gửi PDF đúng trang + dòng quy định, gộp nhiều chuyên đề / lượt vì Gemini web
+    chậm theo SỐ LƯỢT); script kiểm chứng trích dẫn; chỉ phần còn nghi -> goi/*.can-claude.md cho Claude."""
+    from .extractors.gemini_extractor import backend_kwargs
+    from .extractors.gemini_web import GeminiWeb
+    from .pipeline import goi
+    from .pipeline.consistency import read_jsonl, summary, validate, write_jsonl
+    out = _out_of(a.target)
+    gd = out / "goi"
+    pdf = Path(a.pdf) if a.pdf else Path((json.loads((out / "project_info.json").read_text(encoding="utf-8")).get("meta") or {}).get("pdf") or "")
+    lines = goi.doc_lines(pdf)
+    fj = out / "findings.jsonl"
+    rows = read_jsonl(fj) if fj.exists() else []
+    cache = goi.doc_cache(gd)
+    cds = set(a.cd.split(",")) if a.cd else None
+    metas = []
+    for mf in sorted(gd.glob("*.meta.json"), key=lambda x: x.name):
+        m = json.loads(mf.read_text(encoding="utf-8"))
+        m["stem"] = mf.name[: -len(".meta.json")]
+        if (cds and m["cd"] not in cds) or not m["xet"] or (not a.lai and any(r.get("rule") == m["xet"][0] and r.get("nguon") == "gemini" for r in rows)):
+            continue
+        m["dong"] = {x.split(" ")[0]: x for x in goi.doc_dong_xet(gd / f"{m['stem']}.md")}
+        m["keys"] = json.loads((gd / f"{m['stem']}.keys.json").read_text(encoding="utf-8"))
+        m["so_lieu"] = next(ln for ln in (gd / f"{m['stem']}.md").read_text(encoding="utf-8-sig").splitlines() if ln.startswith("Số liệu:"))[8:]
+        metas.append(m)
+    lo: list[list[dict]] = []                               # lô: cùng nhóm hạng mục, ≤ a.dong dòng, ≤ a.toi_da_trang trang
+    for m in sorted(metas, key=lambda x: (x["ids"], x["cd"])):
+        if lo and lo[-1][0]["ids"] == m["ids"] and sum(len(x["xet"]) for x in lo[-1]) + len(m["xet"]) <= a.dong \
+                and len({p for x in lo[-1] + [m] for p in x["pages"] if p in lines}) <= a.toi_da_trang:
+            lo[-1].append(m)
+        else:
+            lo.append([m])
+    web, tong, ra_na = None, dict(g=0, d=0, na=0, claude=0), []
+    try:
+        for L in lo:
+            pages = sorted({p for x in L for p in x["pages"] if p in lines})
+            if not pages:
+                print(f"  {'+'.join(L[0]['ids'])} {[x['cd'] for x in L]}: không có trang bản vẽ để gửi — để Claude xét")
+                continue
+            dong = [x["dong"][r] for x in L for r in x["xet"]]
+            bt = "\n\n".join(b for b in (goi.doc_bang(gd / f"{x['stem']}.bang.md") for x in L) if b)
+            prompt = goi.prompt_gemini(L[0]["so_lieu"], pages, dong, bt)
+            ten = f"{'+'.join(L[0]['ids'])} [{', '.join(x['cd'] for x in L)}]"
+            if a.thu:
+                print(f"  lô {ten}: {len(dong)} dòng · {len(pages)} trang · prompt ~{goi.tok(prompt)} token (chưa gửi)")
+                continue
+            tf = gd / f"{L[0]['stem']}.gemini.txt"
+            if a.lai and tf.exists():                       # phân tích lại câu trả lời đã lưu, không gọi Gemini
+                text = tf.read_text(encoding="utf-8")
+            else:
+                if web is None:
+                    kw = backend_kwargs(dict(settings["gemini"], backend="web"))["web"]
+                    web = GeminiWeb(**{**kw, "timeout_s": a.timeout})
+                text = web.generate(settings["gemini"]["web"]["model"], goi.pdf_trang(pdf, pages), prompt, "goi.pdf", "application/pdf")
+                tf.write_text(text, encoding="utf-8")
+            for x in L:
+                can_bang = {r for r, ids_b in x.get("bang", {}).items() if goi.bang_thieu(ids_b)}
+                kq = goi.phan_tich_gemini(text, x["xet"], lines, can_bang)
+                can = []
+                for rid, k in kq.items():
+                    rows = [r for r in rows if not (r.get("rule") == rid and r.get("hm") in x["ids"] and r.get("cd") == x["cd"])]
+                    rows += [dict(id=f"G-{hm}-{rid}", hm=hm, tang=None, cd=x["cd"], rule=rid, yc="", ht="", tt=k["tt"], ly_do=k["ly_do"],
+                                  truc=None, trang=k["trang"], bbox=None, conf="M" if k["tt"] == "D" else "L", evid=k["evid"],
+                                  nguon="gemini") for hm in x["ids"]]
+                    tong["g"] += 1
+                    if k["tt"] == "NA":                 # NA Gemini không kiểm chứng được bằng trích dẫn -> chỉ rà soát, KHÔNG vào đệm
+                        tong["na"] += 1
+                        ra_na.append(f"{rid} tr.{k['trang'] or '?'} | {k['ly_do'][:110]}")
+                    elif k["tt"] == "D":                # D có trích dẫn thật -> vào bộ nhớ đệm
+                        tong["d"] += 1
+                        if rid in x["keys"]:
+                            cache[x["keys"][rid]] = {c: k[c] for c in ("tt", "ly_do", "trang", "evid")} | {"bbox": None}
+                    else:
+                        tong["claude"] += 1
+                        can.append(f"- {rid} [{k['g'] or '—'}→XM] tr.{k['trang'] or '?'} · Gemini: {k['ly_do'][:160]}"
+                                   + (f" · «{k['evid'][:120]}»" if k["evid"] else "") + "\n    DÒNG: " + x["dong"][rid][:700])
+                if can:
+                    cited = sorted({k["trang"] for k in kq.values() if k["tt"] not in ("D", "NA") and k["trang"] in lines})[:3] or \
+                        [q for q in x["pages"] if q in lines][:2]
+                    chu_t = goi.chu_trang(lines, cited)
+                    (gd / f"{x['stem']}.can-claude.md").write_text(
+                        f"# Còn nghi sau Gemini · {x['cd']} · {'+'.join(x['ids'])} · trang {x['pages']}\n" + "\n".join(can)
+                        + ("\n\n## Bảng số tham chiếu của các dòng trên\n"
+                           + goi.bang_text([i for rid_ in kq if kq[rid_]["tt"] not in ("D", "NA") for i in x.get("bang", {}).get(rid_, [])])
+                           if any(x.get("bang", {}).get(rid_) for rid_ in kq if kq[rid_]["tt"] not in ("D", "NA")) else "")
+                        + "\n\n## Chữ trên bản vẽ các trang Gemini viện dẫn (đã bỏ khung tên)\n"
+                        + "\n".join(f"[tr.{q}] {t}" for q, t in chu_t.items()) + "\n", encoding="utf-8")
+            print(f"  lô {ten}: gửi {len(dong)} dòng/{len(pages)} trang → xong")
+    finally:
+        if web is not None:
+            web.close()
+    if ra_na:
+        (gd / "_ra-soat-na.md").write_text("# NA do Gemini kết luận (conf L, chưa vào bộ nhớ đệm) — rà nhanh, sai thì đổi trạng thái\n"
+                                           + "\n".join("- " + z for z in ra_na) + "\n", encoding="utf-8")
+    rows, log = validate(rows)
+    write_jsonl(fj, rows)
+    (gd / "cache.json").write_text(json.dumps(cache, ensure_ascii=False), encoding="utf-8")
+    print(f"tổng {tong['g']} dòng qua Gemini: D kiểm chứng {tong['d']} · NA chờ rà {tong['na']} (_ra-soat-na.md) · còn cho Claude {tong['claude']} — {summary(rows)}")
+
+
+def cmd_goi_nhap(a, settings) -> None:
+    """Nhập kết quả gọn Claude ghi (goi/*.ket-qua.txt) -> findings.jsonl (mở rộng cho từng hạng mục trong nhóm) + bộ nhớ đệm."""
+    from .pipeline import goi
+    from .pipeline.consistency import read_jsonl, summary, validate, write_jsonl
+    out = _out_of(a.target)
+    gd = out / "goi"
+    fj = out / "findings.jsonl"
+    rows = read_jsonl(fj) if fj.exists() else []
+    cache = goi.doc_cache(gd)
+    n = 0
+    for f in sorted(gd.glob("*.ket-qua.txt")):
+        stem = f.name[: -len(".ket-qua.txt")]
+        ids, cd = stem.rsplit("_", 1)[0].split("+"), stem.rsplit("_", 1)[1]
+        keys = json.loads((gd / f"{stem}.keys.json").read_text(encoding="utf-8")) if (gd / f"{stem}.keys.json").exists() else {}
+        for k in goi.doc_ket_qua(f):
+            rows = [r for r in rows if not (r.get("rule") == k["rule"] and r.get("hm") in ids and r.get("cd") == cd)]
+            for hm in ids:
+                rows.append(dict(id=f"C-{hm}-{k['rule']}", hm=hm, tang=None, cd=cd, rule=k["rule"], yc="", ht="", tt=k["tt"],
+                                 ly_do=k["ly_do"], truc=None, trang=k["trang"], bbox=k["bbox"], conf="M", evid=k["evid"], nguon="claude"))
+            n += 1
+            if k["rule"] in keys:
+                cache[keys[k["rule"]]] = {x: k[x] for x in ("tt", "ly_do", "trang", "bbox", "evid")}
+    rows, log = validate(rows)
+    write_jsonl(fj, rows)
+    (gd / "cache.json").write_text(json.dumps(cache, ensure_ascii=False), encoding="utf-8")
+    for x in log:
+        print(f"  {x}")
+    print(f"đã nhập {n} dòng kết quả — {fj.name}: {summary(rows)}; bộ nhớ đệm {len(cache)} dòng")
+
+
 def cmd_rules(a, settings) -> None:
     from .rules import load_rules
     for r in load_rules(_rule_paths(settings, a.rules)):
@@ -652,6 +1017,30 @@ def main(argv: list[str] | None = None) -> None:
     sp.add_argument("target", nargs="?", help="thư mục kết quả"); sp.add_argument("--check", help="chỉ kiểm 1 file .jsonl")
     sp.add_argument("--hm", default="HM01", help="mã hạng mục cho dòng engine không ghi hạng mục (mặc định HM01)")
     sp.add_argument("--replace", action="store_true", help="ghi đè cả dòng do skill chuyên đề/reviewer ghi")
+    sp = sub.add_parser("goi", help="gói đối chiếu: script lọc dòng bảng tra (tiêu đề/NA/XM) trước, chỉ đưa dòng cần Claude xét")
+    sp.add_argument("target"); sp.add_argument("--bang", help="vd gara/chung (thư mục trong rules/checklists); bỏ trống = theo rule_keys.json")
+    sp.add_argument("--cd", help="chuyên đề, phân tách dấu phẩy"); sp.add_argument("--den", help="mọi chuyên đề từ mục 01 đến đây, vd thoat-nan")
+    sp.add_argument("--hm", help="HM03,HM04 (mặc định mọi hạng mục)"); sp.add_argument("--pdf")
+    sp.add_argument("--kem-chu", action="store_true", dest="kem_chu", help="kèm chữ vector các trang vào gói (mặc định không, nặng token)")
+    sp = sub.add_parser("goi-nhap", help="nhập goi/*.ket-qua.txt (Claude ghi gọn) -> findings.jsonl + bộ nhớ đệm"); sp.add_argument("target")
+    sp = sub.add_parser("goi-gemini", help="Gemini làm lượt đầu các dòng cần xét; script kiểm chứng; Claude chỉ xét phần còn nghi")
+    sp.add_argument("target"); sp.add_argument("--pdf"); sp.add_argument("--cd"); sp.add_argument("--thu", action="store_true", help="chỉ in cỡ prompt, không gửi")
+    sp.add_argument("--toi-da-trang", type=int, default=8, dest="toi_da_trang")
+    sp.add_argument("--lai", action="store_true", help="phân tích lại câu trả lời Gemini đã lưu (goi/*.gemini.txt), không gửi lại")
+    sp.add_argument("--dong", type=int, default=20, help="tối đa dòng / lượt gửi Gemini")
+    sp.add_argument("--timeout", type=int, default=600, help="giây chờ mỗi lượt")
+    sp = sub.add_parser("knowled", help="kho kiến thức: tim <câu> | doc <id> | ds | them <file> --nhom .. | duyet <id>")
+    sp.add_argument("act", choices=["tim", "doc", "ds", "them", "duyet"]); sp.add_argument("args", nargs="*")
+    sp.add_argument("--top", type=int, default=5); sp.add_argument("--nhom"); sp.add_argument("--toi-da", type=int, default=6000, dest="toi_da")
+    sp.add_argument("--id"); sp.add_argument("--tieu-de", dest="tieu_de"); sp.add_argument("--tu-khoa", dest="tu_khoa"); sp.add_argument("--nguon")
+    sp.add_argument("--duyet", action="store_true", help="them: coi là đã đối chiếu nguyên văn (verified)")
+    sp = sub.add_parser("xuat-bang", help="điền kết quả vào Word mẫu đối chiếu (datamau): Nội dung thiết kế + Kết luận -> bang_doi_chieu/")
+    sp.add_argument("target"); sp.add_argument("--hm")
+    sp.add_argument("--gemini", action="store_true", help="Gemini viết lại cột Nội dung thiết kế (văn phong mẫu, sửa chính tả)")
+    sp.add_argument("--dong", type=int, default=30); sp.add_argument("--timeout", type=int, default=600)
+    sp = sub.add_parser("cong-nang", help="đề xuất công năng từng hạng mục (nhóm F, nhà hỗn hợp theo 70 %%) — module danh-gia-cong-nang của knowled")
+    sp.add_argument("target"); sp.add_argument("--ap-dung", action="store_true", dest="ap_dung", help="điền hạng mục chắc chắn vào danh_gia_cong_nang.json")
+    sp = sub.add_parser("dong", help="in đủ 1 dòng bảng tra theo ID"); sp.add_argument("id", nargs="+")
     sub.add_parser("gemini-login", help="mở Chrome để đăng nhập Gemini web (backend: web)")
     sub.add_parser("gemini-status", help="kiểm tra đã đăng nhập Gemini web chưa (exit 1 nếu chưa)")
     sp = sub.add_parser("gemini-cookie", help="nạp cookie JSON (Cookie-Editor) vào .env một lần, xoá file gốc")
@@ -663,7 +1052,7 @@ def main(argv: list[str] | None = None) -> None:
         {"info": cmd_info, "extract": cmd_extract, "check": cmd_check, "annotate": cmd_annotate, "dxf": cmd_dxf,
          "run": cmd_run, "rules": cmd_rules, "pages": cmd_pages, "crops": cmd_crops, "gemini-login": cmd_gemini_login,
          "intake": cmd_intake, "hm-pages": cmd_hm_pages, "trang": cmd_trang, "va-cham": cmd_va_cham, "facts": cmd_facts, "keys": cmd_keys, "danh-gia": cmd_danh_gia, "findings": cmd_findings,
-         "gemini-status": cmd_gemini_status, "gemini-cookie": cmd_gemini_cookie}[a.cmd](a, settings)
+         "knowled": cmd_knowled, "cong-nang": cmd_cong_nang, "xuat-bang": cmd_xuat_bang, "goi": cmd_goi, "goi-nhap": cmd_goi_nhap, "goi-gemini": cmd_goi_gemini, "dong": cmd_dong, "gemini-status": cmd_gemini_status, "gemini-cookie": cmd_gemini_cookie}[a.cmd](a, settings)
     except PermissionError as e:                        # chưa đăng nhập Gemini web: dừng ngay, không đọc từng trang
         print(f"⚠ {e}", file=sys.stderr)
         sys.exit(2)

@@ -1,0 +1,39 @@
+# Điều kiện áp dụng dòng bảng tra — script `goi` tự ghi NA (nguon "script") cho dòng KHÔNG có đối tượng, Claude khỏi đọc.
+# nd = regex (không phân biệt hoa thường) trên cột "Nội dung đối chiếu"; khong_nd = loại trừ.
+# Hai loại điều kiện:
+#   khi: {co_ham: false, tang_noi_max: 1}  — theo số liệu hạng mục (project_facts); số liệu thiếu -> KHÔNG cắt
+#   tu_khoa: "regex"                        — NA khi cả hồ sơ (chữ vector) không có chữ nào khớp; hồ sơ scan nhiều -> KHÔNG cắt
+# Chỉ thêm mục khi chắc chắn; dòng nào sai thì sửa/xoá mục ở đây — danh sách dòng bị loại luôn được in ra để rà.
+- id: DK-HAM
+  nd: "\\b(tầng hầm|nửa hầm|bán hầm|ngầm|hầm)\\b"
+  khong_nd: "tầng nổi|\\bvà\\b"
+  khi: {co_ham: false}
+  ly_do: "hạng mục không có tầng hầm"
+- id: DK-THANG
+  nd: "(buồng thang|cầu thang|thang bộ|chiếu thang|khe hở thang|bản thang|lối lên mái|thang loại)"
+  khi: {tang_noi_max: 1, co_ham: false}
+  ly_do: "nhà 1 tầng nổi, không hầm nên không có thang/lối lên mái (xem lại nếu bản vẽ có sàn lửng)"
+- id: DK-TANG-TREN
+  nd: "^(các |tại )?tầng trên$"
+  khi: {tang_noi_max: 1, co_ham: false}
+  ly_do: "nhà chỉ có 1 tầng, không có tầng trên"
+- id: DT-MBA
+  nd: "máy biến áp|biến thế"
+  tu_khoa: "biến áp|biến thế|\\bMBA\\b|trạm điện"
+  ly_do: "không có máy biến áp"
+- id: DT-KHI
+  nd: "khí nén|khí hóa lỏng|khí tự nhiên|\\bLPG\\b|\\bCNG\\b"
+  tu_khoa: "khí nén|khí hóa lỏng|LPG|CNG|khí tự nhiên|\\bgas\\b"
+  ly_do: "không có phương tiện/thiết bị dùng khí"
+- id: DT-COKHI
+  nd: "cơ khí"
+  tu_khoa: "cơ khí|thang nâng xe|bãi đỗ xe tự động"
+  ly_do: "không có hệ thống đỗ xe cơ khí"
+- id: DT-DOC
+  nd: "đường dốc"
+  tu_khoa: "đường dốc|dốc lên|dốc xuống|ramp"
+  ly_do: "không có đường dốc"
+- id: DT-TMAY
+  nd: "thang máy"
+  tu_khoa: "thang máy"
+  ly_do: "không có thang máy"
